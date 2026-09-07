@@ -2,112 +2,100 @@
 
 ## What is AUB?
 
-**AUB** is a full electronic management and accounting system for an academy. It is not a mobile app alone. The goal is to automate academy management processes: student records, staff workflows, schedules, attendance, payments, documents, and reporting.
+**AUB** is a centralized electronic management and accounting system for an academy. It is not a mobile app alone and not “admin panel + app”. The goal is to automate academy processes: student records, staff workflows, schedules, attendance, payments, documents, and reporting.
+
+The **CRM/backend (`AUB_admin`) is the core**. Web workplaces, the admin interface, and Flutter clients are interfaces on that core.
 
 ## Business goal
 
-Create a centralized digital platform for the academy that:
+Create one digital platform that:
 
 - replaces fragmented spreadsheets and manual processes;
-- gives administrators a full CRM/admin panel;
-- gives staff role-specific workplaces with limited access;
-- in the future, provides mobile access for students, parents, and teachers.
+- gives administrators a full CRM / admin interface;
+- gives staff role-specific **web workplaces**;
+- gives students, parents, and teachers **mobile access** through Flutter, once an HTTPS API exists.
 
-## Main system concept
+## Access channels
 
-The system has a **central CRM/admin core** and multiple future access channels:
+| Channel | Audience | Code | Status (2026-09-07) |
+|---------|----------|------|---------------------|
+| Admin / superadmin web | Administrators | `AUB_admin` Inertia | Implemented; dashboard is a placeholder |
+| Staff web workplaces | Secretariat, teachers, other staff | `AUB_admin` | Phase 1 RBAC implemented; teacher record not linked to login |
+| Flutter — students | Students | `AUB_app` | Repository exists; default template; no API |
+| Flutter — parents | Parents / guardians | `AUB_app` (mode) | Planned on the same app; no API |
+| Flutter — teachers | Teachers | `AUB_app` (mode) | Planned on the same app; no API |
 
-| Channel | Audience | Status |
-|---------|----------|--------|
-| Full admin panel | Administrators | Installed + AUB modules in progress |
-| Role-based workplaces | Secretariat, teachers, other staff | **Implemented** (Phase 1, 2026-07-06) |
-| Mobile app — students | Students | Future |
-| Mobile app — parents | Parents/guardians | Future |
-| Mobile app — teachers | Teachers | Future |
+## Repositories
 
-## Current installed state
+| Entity | GitHub | Role |
+|--------|--------|------|
+| **AUB_admin** | [`Owiiiii1/AUB_admin`](https://github.com/Owiiiii1/AUB_admin) | CRM, database, business logic, web admin/workplaces, future API |
+| **AUB_app** | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) | Flutter app `aub`, bundle id `com.owlsolutions.aub` |
 
-The project at `/var/www/aub` was freshly installed on **2026-07-06** with:
+Flutter must use **HTTPS API only**. `routes/api.php` does not exist. Sanctum / Passport / JWT are not installed.
 
-- **Laravel** 13.18.1
-- **`owlsolutions/custom-admin-kit`** v0.4.0 (admin preset)
-- **Inertia.js + React + Vite + Tailwind + Ziggy**
-- **MySQL** database `aub`
+Production of the core: `/var/www/aub` at `https://aub.owlsolutions.net`. That folder is **not** a git repository. Tech Lead uses GitHub as source of truth.
 
-Login page is served at **`/`** (root). Legacy `/login` redirects to `/`.
+## Installed core (web)
 
-Test administrator exists: `admin@admin.com` (created via `owl-admin:make-admin`).
+Fresh Laravel 13 host on **2026-07-06**, then academy modules through **2026-07-20**. Stack verified **2026-09-07**: Laravel **13.18.1**, kit **v0.4.0**, PHP **8.3.6**, MySQL **8.0.46**.
 
-## Installed admin/CRM foundation
+Login is at **`/`**. `/login` redirects to `/`.
 
-The following are **working** in the current deployment:
+| Route | Purpose | Notes |
+|-------|---------|-------|
+| `/` | Login | Guest |
+| `/dashboard` | Home | **Placeholder** page |
+| `/customers` | Students list + profile | Table `customers` |
+| `/teachers` | Teachers list + profile | No `users` link |
+| `/courses-groups` | Courses and groups | |
+| `/lessons` | Lesson catalog | **Redirects** to Settings → Academy → Lessons |
+| `/schedule-service` | Weekly schedule + hybrid AI | |
+| `/settings` | Users, roles, app, AI, academy | Lessons catalog lives here |
+| `/statistics/logs` | CRUD activity log | Not a full access audit |
+| `/profile` | Current user | |
+| `/workplace` | Non-admin landing | Thin page |
+| `/documents`, `/communication`, `/events`, `/archive`, `/costume-service` | Coming soon | Placeholders |
+| `/owl-admin/health` | Kit health | |
 
-| Route | Purpose |
-|-------|---------|
-| `/` | Login (guest, redesigned AUB UI) |
-| `/dashboard` | Admin dashboard |
-| `/customers` | **Students** — list + full-page profile |
-| `/teachers` | Teachers list + profile |
-| `/courses-groups` | Courses and groups |
-| `/lessons` | Lesson catalog |
-| `/schedule-service` | Weekly schedule board + AI scheduling |
-| `/settings` | Users, roles, app, AI, academy (tabbed) |
-| `/statistics/logs` | Activity audit log |
-| `/profile` | User profile |
-| `/workplace` | Non-admin landing |
-| `/documents`, `/communication`, `/events`, `/archive`, `/costume-service` | Placeholders ("Coming soon") |
-| `/owl-admin/health` | Kit health check |
+**Removed from routing/menu** (legacy kit tables remain): `/orders`, `/services`, `/staff`, `/calendar`.
 
-**Removed from active UI** (kit legacy, tables remain): `/orders`, `/services`, `/staff`, `/calendar`.
+Production `route:list`: **84** web routes. **Zero** Flutter API endpoints.
 
-## Generic kit vs AUB-specific modules
+## Generic kit vs academy modules
 
-| Generic kit (installed) | AUB implementation | Status |
-|-------------------------|-------------------|--------|
-| `customers` table/page | **Students** — extended profile on `customers` | Partial (2026-07-06+) |
-| `services` table/page | **Courses** — separate `courses` table | Implemented |
-| `staff` table/page (directory) | **Teachers** + **Staff Roles** | Teachers done; RBAC done |
-| `orders` table/page | **Enrollments** — `course_group_customer` pivot | Partial |
-| `calendar` page | **Weekly schedule** at `/schedule-service` | Implemented |
-| User management in `/settings` | **Role-based access control** | Implemented |
+| Generic kit | AUB meaning | Status |
+|-------------|-------------|--------|
+| `customers` | Students (interim) | Partial |
+| `services` | Not courses — separate `courses` | Courses implemented |
+| `staff` directory | Not RBAC — separate `teachers` + `roles` | Teachers + RBAC implemented |
+| `orders` | Not enrollments — pivot `course_group_customer` | Partial |
+| `calendar` page | Weekly schedule at `/schedule-service` | Implemented |
 
-**Important:** The kit's `staff` module is a generic CRM staff directory. It is **not** the planned Staff Roles & Role-Based Workplaces system. The kit's `staff.role` column is a free-text field, not RBAC.
+Kit `staff.role` is free text, **not** access control.
 
-## Full admin panel vs role-based workplaces
+## MVP snapshot
 
-- **Full admin panel** — all menu items, all CRM modules, settings, user management. Intended only for **Administrator** role users.
-- **Role-based workplace** — a limited screen set for non-admin staff (e.g. Secretariat, Teacher). Same visual style (AdminLayout), but menu shows only allowed items. **Implemented** — see [USER_ROLES_AND_ACCESS.md](USER_ROLES_AND_ACCESS.md).
+**Ready or in use:** Phase 1 roles; teachers; courses/groups; lessons catalog; weekly schedule + hybrid AI; users/`can_write`/`can_delete`; CRUD activity log.
 
-## MVP scope summary
+**Partial:** students on `customers`; parents as embedded fields; enrollments without statuses; document uploads in profile only.
 
-**Completed or in progress:**
+**Missing:** attendance; payments; standalone documents/communication modules; mobile API; token auth; field-level ACL.
 
-1. Staff Roles & Role-Based Workplaces ✅ (Phase 1, 2026-07-06)
-2. Core academy records: students (partial), teachers, courses, groups, lessons, enrollments (partial)
-3. Operations: weekly schedule + hybrid AI ✅; attendance, standalone documents — pending
-4. Accounting basics: not started
-5. Admin users and permissions (via roles system) ✅
+**Next major technical stage:** [API Foundation](NEXT_STEPS.md) — Flutter may be developed in parallel, but features need an API contract.
 
-**Explicitly out of MVP Phase 1 core:**
+Costume/show/ticket modules stay optional (Phase 6).
 
-- Costume management (`servizio costumi`)
-- Show/event participation (`servizio spettacoli`)
-- Tickets, costume rental, participation fees
-- Mobile apps (planned for later phases)
-
-## Server and domain
+## Server
 
 | Item | Value |
 |------|-------|
-| Project path | `/var/www/aub` |
+| GitHub core | `Owiiiii1/AUB_admin` |
+| Production path | `/var/www/aub` (not a git repo) |
 | Web root | `/var/www/aub/public` |
 | Domain | `https://aub.owlsolutions.net` |
 | Server IP | `178.156.234.23` |
 | Linux user | `deploy` |
 | Admin kit | `owlsolutions/custom-admin-kit` v0.4.0 |
 
-## First planned AUB-specific development step
-
-**Staff Roles & Role-Based Workplaces** — see [USER_ROLES_AND_ACCESS.md](USER_ROLES_AND_ACCESS.md), [MODULE_ROADMAP.md](MODULE_ROADMAP.md), and [NEXT_STEPS.md](NEXT_STEPS.md).
-
-Status: **implemented (Phase 1, 2026-07-06)**. Current work: **Phase 2–3** (students, teachers, courses, schedule).
+Details: [ARCHITECTURE.md](ARCHITECTURE.md), [CURRENT_STATE.md](CURRENT_STATE.md), [SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md).

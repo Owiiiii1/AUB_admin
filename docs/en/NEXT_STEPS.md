@@ -1,113 +1,122 @@
 # AUB — Next Steps
 
-Practical development steps ordered by priority.
+Practical order of work. Source of truth for what is already built: [CURRENT_STATE.md](CURRENT_STATE.md).
 
-## Current focus: complete Phase 2 + start Phase 3 operations
+**Status (2026-09-07):** Phase 1 complete. Phase 2 partial. Weekly schedule + hybrid AI in use. Flutter repository exists. **HTTPS API does not exist.**
 
-**Status:** Phase 1 complete (2026-07-06). Phase 2 partially complete. Weekly schedule + AI scheduling usable (2026-07-20).
+## Current technical priority: API Foundation
 
-See [CURRENT_STATE.md](CURRENT_STATE.md) and [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHEDULE_SERVICE.md).
+Flutter development **may run in parallel** with web/backend. Mobile **features** require a stable API contract.
 
-### Recently completed (2026-07-06 — 2026-07-20)
+The old rule “do not start mobile until web is stable” is **withdrawn**.
 
-- [x] Student profile on extended `customers` table (full-page UI, documents, parents modals)
-- [x] Teachers module (list + profile)
-- [x] Courses & groups module (`/courses-groups`)
-- [x] Lessons catalog (`/lessons`)
-- [x] Weekly schedule service (`/schedule-service`): board, conflicts, publish/copy/clear
-- [x] Hybrid AI scheduling (preferences → `DeterministicSchedulePlanner`), `schedule_ai_runs` log
-- [x] Course study window (shifts 08–13 / 13–18), multiple teachers per group+lesson
-- [x] Planning grid 5 min with visual 30-min rows; teacher daily limit 8h
-- [x] General / Group views; AI assistant instructions for supported levers
-- [x] Activity logs (statistics page)
-- [x] Settings consolidation (users, roles, app, AI, academy tabs)
-- [x] UI/branding: login redesign, AUB colors, Singo Sans, Italian default locale
-- [x] Placeholder menu sections (documents, communication, events, archive, costume service)
+### API Foundation (next major stage — not implemented)
 
-### Near-term schedule improvements (optional)
+Candidate contents (Tech Lead has **not** locked the token library):
 
-- [ ] Actionable AI recommendations (auto add/split teachers, not only re-prompt)
-- [ ] PDF export
-- [ ] Manual UI snap at 5 min (drag/resize still 30 min)
-- [ ] Room capacity vs narrow study windows for large courses
+- `routes/api.php` (or equivalent) and API versioning
+- Token authentication — **Laravel Sanctum is a recommended candidate**, not an approved decision
+- Flutter login, `/me`, secure logout / token revoke
+- Authorization for student / parent / teacher / staff API actors
+- API Resources / DTO
+- Error format
+- Rate limiting
+- Basic integration tests
+
+Until this lands in `AUB_admin`, `AUB_app` stays a template (`com.owlsolutions.aub`).
 
 ---
 
-## Recommended next steps (priority order)
+## Already done (2026-07-06 — 2026-07-20), still true
 
-### 1. Attendance tracking (Phase 3)
+- [x] Student profile on extended `customers`
+- [x] Teachers directory
+- [x] Courses & groups
+- [x] Lessons catalog (Settings → Academy, not `Lessons/Index.jsx`)
+- [x] Weekly schedule board + hybrid AI
+- [x] Activity CRUD log
+- [x] Settings tabs (users, roles, app, AI, academy)
+- [x] Flutter GitHub repository `Owiiiii1/AUB_app` (2026-09, template only)
 
-- Mark presence per scheduled lesson / group
-- Teacher workplace integration
-- Depends on: weekly schedule + course groups (done)
+### Optional schedule polish (web)
 
-### 2. Enrollment workflow (Phase 2 completion)
+- [ ] Actionable AI recommendations (not only re-prompt)
+- [ ] PDF export
+- [ ] Manual 5-minute snap in UI
+- [ ] Room capacity vs narrow course windows
+
+---
+
+## Recommended product steps (after or alongside API Foundation)
+
+Order can be adjusted by Tech Lead; API Foundation unblocks Flutter.
+
+### 1. Enrollment workflow (Phase 2)
 
 - Statuses (active, withdrawn, completed)
-- Transfer between groups with history
-- Decide: keep `customers` or migrate to dedicated `students` table
+- Transfers with history
+- Decide: keep `customers` or migrate to `students`
 
-### 3. Parents as separate entity (Phase 2)
+### 2. Parents as a real entity (Phase 2)
 
-- `parents` table + `student_parent` pivot
-- Replace embedded father/mother columns when ready
-- Future: parent mobile access channel
+- `parents` + `student_parent`
+- Needed for a parent Flutter mode
 
-### 4. Documents module (Phase 3)
+### 3. Teacher ↔ User (Phase 2)
 
-- Standalone `/documents` page (currently placeholder)
-- Central document list, types, retention rules
-- Reuse existing upload paths from student profile
+- `teachers.user_id`
+- Required for teacher workplace login and teacher Flutter mode
 
-### 5. Communication module (Phase 3)
+### 4. Attendance (Phase 3)
 
-- `/communication` placeholder → messaging/notifications
-- Message icon in student list (currently non-functional)
+- Mark presence per scheduled lesson / group
+- Depends on schedule + groups (done) and on teacher identity (partial)
 
-### 6. Teacher ↔ user account linking (Phase 2)
+### 5. Documents module (Phase 3)
 
-- `teachers.user_id` for teacher workplace login
-- Role-based field visibility on student profile
+- Standalone `/documents` (now placeholder)
+- Move children’s files off the **public** disk (privacy gap)
 
----
+### 6. Communication (Phase 3)
 
-## Later steps
+- `/communication` placeholder → messaging
+- Student-list message icon is non-functional
 
-| Step | Module | Phase |
-|------|--------|-------|
-| Events, archive, costume service | Placeholder → full modules | Phase 6 (optional) |
-| Payments/invoices | Accounting | Phase 4 |
-| Privacy/consent records + App Store preparation | Compliance + mobile | Phase 4–5 |
-| PDF export for schedule | Operations | Phase 3 |
-| Mobile API | External access | Phase 5 |
+### 7. Field-level and scoped access
+
+- Teacher sees only assigned students
+- Hide parent contacts / medical fields by role
+- View/access audit for sensitive records (current log is CRUD, not reads)
 
 ---
 
-## Client clarification questions (still open)
+## Later
 
-### Academy data
+| Step | Phase |
+|------|-------|
+| Payments / invoices | 4 |
+| Consent records, public Privacy Policy, App Store prep | 4–5 / compliance |
+| Events, archive, costumes | 6 optional |
+| Git-based deploy GitHub → `/var/www/aub` | ops (production is not a git repo today) |
 
-- Confirm interim `customers`-as-students approach vs dedicated `students` table migration timing
+---
+
+## Open client questions
+
+- Timing of `customers` → `students` migration
 - Enrollment statuses and transfer rules
-- Teacher login requirements (web only vs mobile)
-- Payment structure and Italian fiscal invoice requirements
-
-### Privacy and localization
-
-- Field-level access matrix per role (teacher vs secretariat vs admin)
-- Consent workflow for photos and data processing
-- Import from existing spreadsheets?
-
-### Optional services (Phase 6 — not MVP)
-
-- Costume service scope and billing integration
-- Events vs shows participation
+- Teacher login: web, Flutter, or both
+- Italian fiscal invoice rules
+- Final field-level matrix (teacher vs secretariat vs admin)
+- Consent workflow for photos and processing
+- Costume/events scope (Phase 6)
 
 ---
 
-## Do not do now
+## Do not do now (unless a dedicated task says otherwise)
 
-- Do not delete legacy kit tables (`orders`, `services`, `staff`) without explicit decision
-- Do not modify `vendor/owlsolutions/custom-admin-kit/`
-- Do not expose secrets in documentation
-- Do not implement mobile apps before core web workflows are stable
+- Do not delete legacy kit tables without an explicit decision
+- Do not edit `vendor/owlsolutions/custom-admin-kit/`
+- Do not expose secrets
+- Do not treat Sanctum as “the” API choice until Tech Lead confirms
+- Do not implement API or Flutter features in a docs-only task

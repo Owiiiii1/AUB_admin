@@ -1,161 +1,99 @@
 # AUB — Privacy and Data Protection
 
-> This is technical/project documentation, **not final legal text**. Legal review by qualified counsel is required before production use and App Store publication.
+> Technical/project notes, **not** final legal text. Counsel must review before App Store / public policies.
 
-## Overview
-
-AUB is an academy management system that will process **personal data** and **children's data**. Privacy and data protection must be designed into the system from the start, not added later.
+AUB processes **personal data** and **children’s data**. Interfaces: web admin, staff workplaces, future Flutter (`AUB_app`) via HTTPS API (API not built).
 
 ## Role-based access as a privacy requirement
 
-The planned **Staff Roles & Role-Based Workplaces** system is a **privacy requirement**, not only a convenience feature.
+RBAC is required for data minimization. **Web RBAC exists.** Field-level rules and Flutter API authorization **do not**.
 
-- Staff must access only data required for their job
-- Teachers should not see payment or parent contact data unless explicitly granted
-- Health and sensitive notes require the highest access restriction
-- Parent and student access (future mobile channels) must be limited to their own data
+- Staff should see only what their job needs — **intent**, not fully enforced
+- Teachers should not see payments or parent contacts unless granted — **not implemented**
+- Parent/student Flutter access must be limited to own data — **no API yet**
 
-Without role-based access control, the system cannot comply with data minimization principles.
+## Controller / processor
 
-## Data controller and processor roles
+| Role | Entity |
+|------|--------|
+| Data Controller | The academy (AUB) |
+| Data Processor | OwlSolutions / developers when they access server, DB, backups, admin |
 
-| Role | Entity | Responsibility |
-|------|--------|----------------|
-| **Data Controller** (Titolare del trattamento) | The academy (AUB) | Determines purposes and means of processing |
-| **Data Processor** (Responsabile del trattamento) | OwlSolutions / developer | Processes data on behalf of the controller when accessing server, database, backups, admin panel, or support tools |
+DPA still recommended; not a system feature.
 
-**Recommendation:** Register the server and database under the academy's ownership where possible. Processing agreements (DPA) should be signed between the academy and any technical provider with system access.
+## Data types
 
-## Types of data processed
+| Category | Examples | Sensitivity |
+|----------|----------|-------------|
+| Staff | Names, emails of users/teachers | Personal |
+| Students | Names, birth data, addresses on `customers` | **Children’s data** |
+| Parents | Embedded father/mother fields | Personal |
+| Health-adjacent | Medical certificate expiry, document scans | May be **special category** |
+| AI keys | `ai_provider_settings.api_key` | Secrets (encrypted at rest in Laravel) |
+| Logs | IP, user agent on `activity_logs` | Limited personal |
 
-| Data category | Examples | Sensitivity |
-|---------------|----------|-------------|
-| Staff personal data | Names, emails, phones of employees | Personal data |
-| Student personal data | Names, dates of birth, addresses | **Children's data** |
-| Parent/guardian data | Names, emails, phones, addresses | Personal data |
-| Financial data | Payments, invoices, debts | Personal + financial |
-| Health/sensitive notes | Medical info, special needs | **Special category** (if stored) |
-| Consent records | Photo consent, data processing consent | Children's data |
-| System logs | IP addresses, login times | Personal data (limited) |
-| AI provider keys | API keys in `ai_provider_settings` | Technical secrets |
+Consent records and privacy-policy versions are **planned entities only**.
 
-## Children's data — special care
+## Children’s data
 
-The academy serves minors. Enhanced protection applies:
+Italy: under 14, online consent generally needs a parent/guardian. Digital channels (web + future Flutter) must record consent. **Not implemented.**
 
-- Collect only necessary data fields
-- Restrict access by role (see [USER_ROLES_AND_ACCESS.md](USER_ROLES_AND_ACCESS.md))
-- Do not display children's data to unauthorized roles
-- Plan audit logging for access to student records
+Student files are stored on the Laravel **public** disk (`students/{id}/documents`). Treat as a **privacy gap** (URLs may be guessable/public if the symlink is live). Do not describe this as private storage.
 
-### Italy — consent for minors online
+## GDPR principles vs reality
 
-Under Italian law (D.Lgs. 196/2003 as amended, GDPR, and related guidance):
+| Principle | Reality |
+|-----------|---------|
+| Transparency | No public Privacy Policy yet |
+| Minimization | RBAC exists; field-level visibility **does not** |
+| Accuracy | Edit workflows exist; view-audit **does not** |
+| Storage limitation | Retention policy not defined |
+| Integrity | HTTPS, hashed passwords, CSRF on web |
 
-- For children **under 14**, online consent for data processing generally requires authorization from a parent or legal guardian
-- The academy must obtain and record valid consent before processing children's data through digital channels (web, mobile apps)
-- Consent records must be stored with version reference to the privacy policy in effect
+## Technical measures
 
-**Planned entity:** `ConsentRecord` linked to `PrivacyPolicyVersion` — see [DATA_MODEL_DRAFT.md](DATA_MODEL_DRAFT.md).
+### Implemented
 
-## GDPR principles applied to AUB
+- HTTPS (`https://aub.owlsolutions.net`)
+- Session authentication (web)
+- Password hashing
+- CSRF (Laravel + Inertia)
+- `.env` not in git
+- Encrypted AI API keys in DB
+- Role-based **menu/route** access (`role.*` middleware)
+- `can_write` / `can_delete`
+- CRUD activity logging (`ActivityLogger`) — not a full access/view audit
 
-| Principle | AUB implementation |
-|-----------|---------------------|
-| Lawfulness, fairness, transparency | Privacy policy, consent records |
-| Purpose limitation | Module-based data collection; no scope creep |
-| Data minimization | Role-based field visibility; minimal required fields |
-| Accuracy | Edit workflows with audit trail (planned) |
-| Storage limitation | Retention policies (to be defined with academy) |
-| Integrity and confidentiality | Auth, RBAC, encrypted connections (HTTPS), hashed passwords |
-| Accountability | Documentation, consent records, access logs (planned) |
+### Requires follow-up (not implemented)
 
-## Technical security measures (current and planned)
+- Private storage for children’s documents
+- Field-level access
+- Teacher → only assigned students
+- Access/view audit for sensitive records
+- Consent / privacy-policy entities
+- Mobile token security
+- API authorization matrix
+- Subject access export / erasure workflows
 
-### Current (implemented)
+Do not list RBAC or “access logging” as planned if the reader might think nothing exists — RBAC and CRUD logs **exist**; they are incomplete.
 
-- HTTPS via Nginx (`https://aub.owlsolutions.net`)
-- Session-based authentication
-- Password hashing (bcrypt)
-- CSRF protection (Laravel + Inertia)
-- `.env` secrets not in version control
-- AI API keys stored in database (access restricted to authenticated admin)
+## AI
 
-### Planned
+Schedule AI sends **preferences / operational schedule data** to the configured provider. Keys must never appear in docs. If personal data is sent, DPIA may be required — not documented per field today.
 
-- Role-based access control (Phase 1)
-- Field-level visibility by role
-- Access audit logging
-- Consent management module
-- Privacy policy version tracking
-- Data export for subject access requests
-- Data deletion/anonymization workflows
+## App Store / Flutter
 
-## App Store and mobile publication
+Repository `Owiiiii1/AUB_app` exists. Publication still needs a Privacy Policy URL, accurate data disclosures, and parental consent for minors. Token design is part of API Foundation (Sanctum is a candidate only).
 
-When mobile apps are published (Phase 5):
+## Retention
 
-- Privacy Policy URL required (App Store, Google Play)
-- App Privacy Details must accurately describe data collected
-- Children's app considerations (COPPA-like requirements, age gates, parental consent)
-- Minimum necessary data collection for app functionality
+Undefined with the academy. Typical ranges (guidance only): enrollment + legal period; financial often 10 years in Italy; logs 90–365 days.
 
-## AI Settings privacy note
-
-The installed AI Settings module (`/ai-settings`) allows configuring external AI provider API keys (OpenAI, Anthropic, Gemini).
-
-- API keys are sensitive — never expose in logs or documentation
-- If AI features process personal data in the future, additional DPIA (Data Protection Impact Assessment) may be required
-- Document which data is sent to AI providers before enabling production AI features
-
-## Data retention
-
-Retention periods must be defined with the academy owner:
-
-- Student records: typically duration of enrollment + legal retention period
-- Financial records: per Italian accounting/tax law (often 10 years)
-- Consent records: duration of processing + proof period
-- System logs: recommended 90–365 days
-
-**Status:** Retention policy not yet defined — client clarification required.
-
-## Subject rights (GDPR Articles 15–22)
-
-The system should eventually support:
-
-- Right of access (export student/parent data)
-- Right to rectification (edit records)
-- Right to erasure (with legal exceptions)
-- Right to restriction of processing
-- Right to data portability
-
-**Status:** Not implemented — planned for later phases.
-
-## Documentation and legal text
+## Legal docs
 
 | Document | Status |
 |----------|--------|
-| This technical privacy doc | Current |
-| Privacy Policy (public-facing) | Not created — legal review required |
-| Terms of Service | Not created — legal review required |
-| DPA with processor | Not created — legal review required |
-| Cookie policy | Not required yet (session cookies only) |
+| This technical note | Current as of 2026-09-07 |
+| Public Privacy Policy / ToS / DPA / cookie policy | Not created |
 
-## Changes requiring privacy doc update
-
-Update this document when:
-
-- New modules collect personal or children's data
-- Role permissions change
-- Mobile apps are planned or launched
-- AI features process user data
-- Data is shared with third parties
-- Retention or deletion policies are defined
-
-See [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md).
-
-## Contact and responsibility
-
-Data protection responsibility lies with the **academy (Data Controller)**. Technical implementation support is provided by the development team as **Data Processor** when applicable.
-
-Final legal texts, consent forms, and privacy policies must be approved by the academy and qualified legal counsel before production use.
+Update this file when modules collect new personal data, roles change, Flutter ships, or AI starts sending personal fields.

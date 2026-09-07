@@ -1,12 +1,16 @@
 # AUB — Server Deployment
 
-## Server and project info
+## What is deployed here
+
+This document covers **AUB_admin** production (web core). Flutter (`AUB_app`) is a separate GitHub repository and is **not** deployed to `/var/www/aub`.
 
 | Item | Value |
 |------|-------|
+| GitHub (source of truth for Tech Lead) | `https://github.com/Owiiiii1/AUB_admin` |
 | Server IP | `178.156.234.23` |
 | Linux user | `deploy` |
 | Project path | `/var/www/aub` |
+| Git on server | **Not a git repository** (2026-09-07) |
 | Web root | `/var/www/aub/public` |
 | Domain | `https://aub.owlsolutions.net` |
 | Admin kit | `owlsolutions/custom-admin-kit` v0.4.0 |
@@ -15,47 +19,50 @@
 | MySQL | 8.0.46 |
 | Nginx | 1.24.0 (Ubuntu) |
 
-Nginx config: `/etc/nginx/sites-available/aub.owlsolutions.net`  
+Nginx: `/etc/nginx/sites-available/aub.owlsolutions.net`  
 `server_name aub.owlsolutions.net;`  
 `root /var/www/aub/public;`
 
-## Standard deployment commands
+## GitHub vs production
 
-Run from `/var/www/aub`:
+- Tech Lead reviews **GitHub `main`**.
+- Production is a **file tree**. There is no `git pull` on the server today.
+- After Cursor pushes docs or code to GitHub, copying files to `/var/www/aub` is a **separate ops step** unless the task forbids touching production (docs-only tasks must not change server state).
+- Do not initialize git on production unless Tech Lead opens that task.
+
+## Standard commands (when deploying AUB_admin files)
+
+Run from `/var/www/aub` after files are in place:
 
 ```bash
-# Install dependencies
 composer install --no-dev --optimize-autoloader
 npm ci
 npm run build
 
-# Database
-php artisan migrate --force
+php artisan migrate --force   # only if new migrations shipped
 
-# Cache (production)
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
-## Development commands
+Docs-only updates do not require migrate or npm build.
+
+## Development (local clone of AUB_admin)
 
 ```bash
 composer install
 npm install
-npm run dev          # Vite dev server
-
+npm run dev
 php artisan migrate
-php artisan serve    # Local dev only
+php artisan serve            # local only
 ```
 
 ## Permissions
 
-Web server user: `www-data`  
-Project owner: `deploy:www-data`
-
-Safe permission setup (excludes `node_modules` and `vendor`):
+Web user: `www-data`  
+Owner: `deploy:www-data`
 
 ```bash
 sudo chown -R deploy:www-data /var/www/aub
@@ -76,37 +83,24 @@ sudo chmod -R ug+rwx /var/www/aub/storage /var/www/aub/bootstrap/cache
 ## Diagnostics
 
 ```bash
-# Versions
 php artisan --version
 composer show owlsolutions/custom-admin-kit
-
-# Routes and migrations
-php artisan route:list
-php artisan migrate:status
-
-# Admin kit health
+php artisan route:list          # expect 84 web routes; no /api Flutter routes
+php artisan migrate:status      # 37 files, all Ran, batches 1–29
 php artisan owl-admin:smoke --preset=admin
 php artisan owl-admin:doctor --preset=admin
-
-# Logs
 tail -80 storage/logs/laravel.log
 
-# Frontend build
-cat public/build/manifest.json
-
-# HTTP checks
 curl -I https://aub.owlsolutions.net/
 curl -I https://aub.owlsolutions.net/owl-admin/health
 curl -I https://aub.owlsolutions.net/customers
 curl -I https://aub.owlsolutions.net/dashboard
 ```
 
-Expected HTTP responses:
-
 | URL | Expected |
 |-----|----------|
-| `/` | 200 (login page) |
-| `/owl-admin/health` | 200 (JSON health) |
+| `/` | 200 (login) |
+| `/owl-admin/health` | 200 JSON |
 | `/customers` (guest) | 302 → `/` |
 | `/dashboard` (guest) | 302 → `/` |
 
@@ -117,44 +111,32 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## Environment configuration
+## Environment
 
-Environment variables are in `/var/www/aub/.env` (not committed to git).
+`/var/www/aub/.env` is not in git.
 
-Required keys (values not shown here):
+Required keys (values never documented): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`.
 
-- `APP_NAME`, `APP_KEY`, `APP_URL`
-- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+**Never expose secret values.**
 
-Optional kit keys:
+## Kit commands (already installed)
 
-- `OWL_ADMIN_BRAND`, `OWL_ADMIN_LOGO`
-- `OWL_ADMIN_ROUTE_PREFIX`, `OWL_ADMIN_LOGIN_PATH`
-- `OWL_ADMIN_EMAIL`, `OWL_ADMIN_PASSWORD` (for `--seed`)
-
-**Never expose secret values in documentation or logs.**
-
-## Admin kit commands reference
+Do not re-run install unless intentional.
 
 ```bash
-# Install (already done — do not re-run unless intentional)
-php artisan owl-admin:install --preset=admin --backup --migrate --no-smoke
-php artisan owl-admin:frontend-setup --preset=admin --backup --install-npm --run-build
-
-# Create admin user
 php artisan owl-admin:make-admin --email=admin@admin.com --password=admin
-
-# Diagnostics
 php artisan owl-admin:doctor --preset=admin
 php artisan owl-admin:smoke --preset=admin
 ```
 
+Test admin email is for development only.
+
 ## Post-deploy checklist
 
-- [ ] `composer install` succeeded
-- [ ] `npm run build` succeeded
-- [ ] Migrations applied
-- [ ] Config/route/view cached
-- [ ] `owl-admin:smoke` passed
-- [ ] HTTP checks return expected status codes
-- [ ] No errors in `storage/logs/laravel.log`
+- [ ] Intended files copied (not a git pull today)
+- [ ] `composer install` if PHP deps changed
+- [ ] `npm run build` if frontend changed
+- [ ] Migrations only if new files shipped
+- [ ] Caches rebuilt
+- [ ] HTTP checks
+- [ ] Laravel log clean of new errors

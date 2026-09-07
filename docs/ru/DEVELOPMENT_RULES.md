@@ -1,145 +1,124 @@
 # AUB — Правила разработки
 
-Правила для Cursor AI и всей будущей разработки проекта AUB.
+Правила для Cursor и всей разработки AUB.
+
+## Репозитории и роли
+
+| Роль | Кто |
+|------|-----|
+| Project Manager / tester | Пользователь |
+| Tech Lead | ChatGPT (для Tech Lead источник истины — GitHub) |
+| Programmer | Cursor |
+
+| Репо | GitHub | Ответственность |
+|------|--------|-----------------|
+| AUB_admin | `Owiiiii1/AUB_admin` | Ядро: CRM, БД, логика, web-workplaces, API |
+| AUB_app | `Owiiiii1/AUB_app` | Только Flutter; клиент HTTPS API |
+
+Production `/var/www/aub` **не** git-репозиторий (2026-09-07). Не выдумывать git-pull деплой, пока Tech Lead его не задаст.
+
+Во Flutter **нельзя** класть Bitrix/webhook, учётные данные БД или `APP_KEY`. Только API.
 
 ## Основные принципы
 
-1. **Не реализовывать недокументированные бизнес-модули** без предварительного обновления документации.
-2. **Не смешивать бизнес-логику AUB в `custom-admin-kit`.** Пакет — только базовая административная/CRM основа.
-3. **Модули AUB должны находиться в проекте AUB** (`/var/www/aub`), а не в `vendor/`.
-4. **Не дублировать уже установленную общую CRM/административную функциональность.**
-5. **Staff Roles & Role-Based Workplaces — первый AUB-специфичный шаг**, если владелец проекта не изменит это вручную.
+1. Не реализовывать недокументированные бизнес-модули без обновления docs.
+2. Не класть бизнес-логику AUB в `custom-admin-kit`.
+3. Модули AUB живут в `AUB_admin` (или во `AUB_app` для Flutter UI), никогда в `vendor/`.
+4. Не дублировать уже установленное generic CRM/admin — расширять.
+5. AUB — система **ядро + интерфейсы**, не «админ-панель».
+6. Mobile можно вести параллельно; **функции** требуют API-контракта.
 
-## Перед добавлением любого модуля
+## Перед добавлением модуля
 
 - [ ] Прочитать [CURRENT_STATE.md](CURRENT_STATE.md) и [MVP_SCOPE.md](MVP_SCOPE.md)
-- [ ] Выполнить `php artisan route:list` — проверить существующие маршруты
-- [ ] Изучить `app/Models/`, `app/Http/Controllers/`, `resources/js/Pages/` — избегать дублирования
-- [ ] Убедиться, что модуль ещё не предоставляется admin kit
-- [ ] Обновить документацию (en + ru) до или параллельно с реализацией
+- [ ] `php artisan route:list` (или аналог в `AUB_app`)
+- [ ] Просмотреть models/controllers/pages
+- [ ] Обновить docs **en + ru** в той же задаче
+- [ ] Полностью перезаписать `docs/Development/Cursor_Work_Report.md` (AUB_admin)
 
-## Generic kit — не дублировать
+## Generic kit — не пересобирать
 
-Это **уже установлено и работает**. Не пересоздавать:
-
-| Функция | Расположение |
-|---------|----------|
-| Auth (login, logout) | `AuthenticatedSessionController`, `Auth/Login.jsx` |
-| Dashboard | `Dashboard.jsx`, route `dashboard` |
-| User management | `Settings\UserController`, `/settings` |
-| Profile | `ProfileController`, `/profile` |
-| Generic customers | `CustomersController`, `/customers` — **расширен как модуль Students** |
-| Generic orders | Удалён из маршрутов (legacy-таблица осталась) |
-| Generic services | Удалён из маршрутов (legacy-таблица осталась) |
-| Generic staff directory | Удалён из маршрутов; использовать `TeachersController` |
-| Calendar placeholder | Удалён; использовать `/schedule-service` |
-| AI Settings | Объединено в `/settings?tab=ai` |
-| App settings page | Объединено в `/settings?tab=app` |
-| Statistics/logs page | `/statistics/logs` — просмотр журнала активности |
-| Health check | `/owl-admin/health` |
-| Admin layout + UI components | `AdminLayout.jsx`, `Components/ui/` |
-| Doctor/smoke commands | `owl-admin:doctor`, `owl-admin:smoke` |
-
-**Расширять, а не пересоздавать.** Пример: добавить выбор роли в существующую форму пользователя, а не создавать второй модуль управления пользователями.
-
-Если в меню уже есть placeholder (например **Сервис расписаний** на `/schedule-service`), реализуй модуль AUB на этом маршруте — не добавляй дублирующий пункт меню. Документируй в `WEEKLY_SCHEDULE_SERVICE.md`.
+| Функция | Где / примечание |
+|---------|------------------|
+| Auth (session login/logout) | `AuthenticatedSessionController`, `Auth/Login.jsx` |
+| Dashboard | `Dashboard.jsx` — **заглушка** |
+| Пользователи | `Settings\UserController` |
+| Профиль | `ProfileController` |
+| Студенты | `CustomersController` / `customers` (interim) |
+| Orders / services / staff / calendar | Legacy без маршрутов |
+| AI / app settings | вкладки `/settings` |
+| Каталог уроков | Настройки → Академия (`LessonsTab.jsx`); `/lessons` редирект |
+| Расписание | `/schedule-service` |
+| Журнал | `/statistics/logs` |
+| Health | `/owl-admin/health` |
 
 ## Границы пакетов
 
 ```
-vendor/owlsolutions/custom-admin-kit/   ← DO NOT EDIT (base foundation)
-/var/www/aub/app/                       ← AUB business logic here
-/var/www/aub/resources/js/Pages/        ← AUB pages here
-/var/www/aub/database/migrations/       ← AUB migrations here
-/var/www/aub/docs/                      ← Documentation here
+vendor/owlsolutions/custom-admin-kit/   ← НЕ РЕДАКТИРОВАТЬ
+AUB_admin app/, resources/, database/, docs/
+AUB_app lib/                            ← только Flutter
 ```
 
-Если файлы kit требуют кастомизации, редактировать **опубликованные копии** в проекте AUB, а не stubs в vendor.
+## Секреты
 
-## Правила области MVP
+- Никогда не печатать `DB_PASSWORD`, `APP_KEY`, API keys, tokens
+- `.env` не коммитится
+- Честно описывать security: [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md)
 
-- **Не** добавлять модули costume/show/ticket/rental в ядро MVP преждевременно
-- Отмечать опциональные сервисы как Фаза 6 в [MODULE_ROADMAP.md](MODULE_ROADMAP.md)
-- Контроль доступа (Фаза 1) должен предшествовать доменным модулям академии (Фаза 2+)
-
-## Безопасность и секреты
-
-- **Никогда не раскрывать секреты** в документации, логах, чате или коммитах
-- Не выводить: `DB_PASSWORD`, `APP_KEY`, API keys, tokens, credentials
-- Хранить секреты только в `.env` (не коммитить)
-- Тестовые учётные данные администратора (`admin@admin.com`) только для разработки
-
-## После изменений backend/frontend
-
-Выполнить соответствующие команды:
+## После изменений backend/frontend (AUB_admin)
 
 ```bash
-php artisan migrate          # after new migrations
-npm run build                # after every frontend change (required for UI updates)
-php artisan optimize:clear   # clear caches after build/config changes
+php artisan migrate          # только если есть новые миграции
+npm run build                # после JS/CSS/Inertia
+php artisan optimize:clear
 php artisan view:cache       # production
 php artisan config:cache     # production
 php artisan route:cache      # production
-php artisan storage:link     # required for student/teacher photo uploads
-php artisan owl-admin:smoke --preset=admin   # verify install
+php artisan storage:link     # upload студентов/преподавателей (сейчас public disk)
 ```
 
-**Правило:** после любого изменения `resources/js/`, `resources/css/` или Inertia-страниц запускать `npm run build` и очищать кеш перед проверкой в браузере.
+Деплой на production сейчас — **копирование файлов**, не `git pull`.
 
-## Правила документации
+## Документация
 
-- **Всегда обновлять обе** версии: `docs/en/` и `docs/ru/` в одной задаче
-- Русская версия должна быть **полным точным переводом**, а не кратким изложением
-- Обновлять [CURRENT_STATE.md](CURRENT_STATE.md) после каждого реализованного модуля
-- Обновлять [DATA_MODEL_DRAFT.md](DATA_MODEL_DRAFT.md) при добавлении/изменении сущностей
-- Обновлять [USER_ROLES_AND_ACCESS.md](USER_ROLES_AND_ACCESS.md) при изменении прав доступа
-- При изменениях, затрагивающих данные детей, обновлять [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md)
+- Всегда обновлять `docs/en/` и `docs/ru/` вместе
+- Русская версия — полный перевод
+- После каждой задачи Cursor перезаписывать `docs/Development/Cursor_Work_Report.md`
+
+## Рабочий процесс Cursor (обязательно)
+
+После каждой задачи Cursor:
+
+1. Вносит изменения
+2. Запускает нужные проверки (без destructive-команд)
+3. Обновляет соответствующую документацию (en + ru)
+4. **Полностью перезаписывает** `docs/Development/Cursor_Work_Report.md`
+5. Commit
+6. Push в `main`
+7. Отвечает пользователю **только**: `готово`
+
+Tech Lead затем проверяет report + GitHub diff.
+
+В docs-only задаче не менять PHP/JS/миграции/маршруты/конфиг/`.env`/`vendor`.
+
+## Кастомизации хоста — сохранять
+
+- Вход на `/`
+- Маршруты kit CRM сняты
+- Консолидация settings, включая каталог уроков
+- Локаль по умолчанию `it`
+- Студенты на расширенном `customers`, пока нет отдельной задачи миграции
+
+## Приватность при разработке
+
+- Проектировать с RBAC с самого начала
+- Field-level и scoped access **ещё не реализованы** — не считать их готовыми
+- Файлы детей сейчас на диске **public** — известный разрыв
 
 ## Стиль кода
 
-- Использовать чёткие границы модулей (Model → Controller → Page → Route)
-- Предпочитать небольшие проверенные шаги крупным непроверенным изменениям
-- Следовать существующим соглашениям кода (Inertia pages, AdminLayout, UI components)
-- Минимизировать область изменений — менять только то, что требует задача
-- Не переусложнять (без преждевременных абстракций)
-
-## Удаление файлов/папок
-
-- **Перед удалением файлов или папок вне области текущей задачи запрашивать подтверждение**
-- Не удалять базы данных без явного запроса
-- Не создавать ручные резервные копии без явного запроса
-
-## Git и развёртывание
-
-- Не коммитить `.env` или секреты
-- Не делать force-push в main без явного одобрения
-- Следовать существующему стилю сообщений коммитов
-
-## Кастомизации хоста, уже применённые
-
-Они отличаются от значений kit по умолчанию — сохранять, если не меняются намеренно:
-
-- Вход на `/` вместо `/login` (`routes/web.php`)
-- `/login` перенаправляет на `/` (`routes/owl-admin-auth.php`)
-- Брендинг AUB: редизайн login, sidebar `#1A2B44`, карточки `#EBF1FF`, шрифт Singo Sans
-- Итальянский (`it`) — локаль UI по умолчанию
-- Generic kit CRM-маршруты удалены; студенты на расширенном `customers`
-- Settings/roles/AI объединены во вкладках `/settings`
-
-Документировать любые новые кастомизации в [CURRENT_STATE.md](CURRENT_STATE.md).
-
-## Разработка с учётом приватности
-
-- Проектировать все модули с role-based access с самого начала
-- Минимизировать поля, показываемые каждой роли
-- Логировать доступ к чувствительным данным (будущий audit trail)
-- См. [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md)
-
-## Рабочий процесс Cursor
-
-1. Прочитать соответствующую документацию перед кодированием
-2. Изучить текущее состояние проекта (routes, models, pages)
-3. Реализовать минимально корректное изменение
-4. Выполнить migrations/build/smoke
-5. Обновить docs (en + ru)
-6. Сообщить, что изменилось и что было проверено
+- Небольшие проверенные шаги
+- Следовать существующим соглашениям
+- Минимизировать область
+- Перед удалением файлов вне задачи — спрашивать

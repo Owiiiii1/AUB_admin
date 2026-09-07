@@ -1,61 +1,68 @@
 # AUB — Развёртывание на сервере
 
-## Информация о сервере и проекте
+## Что здесь деплоится
+
+Документ про production **AUB_admin** (web-ядро). Flutter (`AUB_app`) — отдельный GitHub-репозиторий и **не** выкладывается в `/var/www/aub`.
 
 | Параметр | Значение |
-|------|-------|
-| Server IP | `178.156.234.23` |
+|----------|----------|
+| GitHub (истина для Tech Lead) | `https://github.com/Owiiiii1/AUB_admin` |
+| IP | `178.156.234.23` |
 | Linux user | `deploy` |
-| Project path | `/var/www/aub` |
+| Путь проекта | `/var/www/aub` |
+| Git на сервере | **Не git-репозиторий** (2026-09-07) |
 | Web root | `/var/www/aub/public` |
-| Domain | `https://aub.owlsolutions.net` |
+| Домен | `https://aub.owlsolutions.net` |
 | Admin kit | `owlsolutions/custom-admin-kit` v0.4.0 |
 | PHP | 8.3.6 |
 | Node.js | 20.20.0 |
 | MySQL | 8.0.46 |
 | Nginx | 1.24.0 (Ubuntu) |
 
-Конфигурация Nginx: `/etc/nginx/sites-available/aub.owlsolutions.net`  
+Nginx: `/etc/nginx/sites-available/aub.owlsolutions.net`  
 `server_name aub.owlsolutions.net;`  
 `root /var/www/aub/public;`
 
-## Стандартные команды развёртывания
+## GitHub vs production
 
-Выполнять из `/var/www/aub`:
+- Tech Lead смотрит **GitHub `main`**.
+- Production — **файловое дерево**. `git pull` на сервере сейчас нет.
+- После push Cursor в GitHub копирование в `/var/www/aub` — **отдельный ops-шаг**, если задача не запрещает трогать production (docs-only не меняет сервер).
+- Не инициализировать git на production, пока Tech Lead не откроет такую задачу.
+
+## Стандартные команды (когда выкладываются файлы AUB_admin)
+
+Из `/var/www/aub` после появления файлов:
 
 ```bash
-# Install dependencies
 composer install --no-dev --optimize-autoloader
 npm ci
 npm run build
 
-# Database
-php artisan migrate --force
+php artisan migrate --force   # только если приехали новые миграции
 
-# Cache (production)
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
-## Команды для разработки
+Обновление только документации не требует migrate или npm build.
+
+## Разработка (локальный клон AUB_admin)
 
 ```bash
 composer install
 npm install
-npm run dev          # Vite dev server
-
+npm run dev
 php artisan migrate
-php artisan serve    # Local dev only
+php artisan serve            # только local
 ```
 
-## Права доступа
+## Права
 
 Пользователь веб-сервера: `www-data`  
-Владелец проекта: `deploy:www-data`
-
-Безопасная настройка прав (исключает `node_modules` и `vendor`):
+Владелец: `deploy:www-data`
 
 ```bash
 sudo chown -R deploy:www-data /var/www/aub
@@ -76,85 +83,60 @@ sudo chmod -R ug+rwx /var/www/aub/storage /var/www/aub/bootstrap/cache
 ## Диагностика
 
 ```bash
-# Versions
 php artisan --version
 composer show owlsolutions/custom-admin-kit
-
-# Routes and migrations
-php artisan route:list
-php artisan migrate:status
-
-# Admin kit health
+php artisan route:list          # ожидается 84 web-маршрута; нет /api для Flutter
+php artisan migrate:status      # 37 файлов, все Ran, batch 1–29
 php artisan owl-admin:smoke --preset=admin
 php artisan owl-admin:doctor --preset=admin
-
-# Logs
 tail -80 storage/logs/laravel.log
 
-# Frontend build
-cat public/build/manifest.json
-
-# HTTP checks
 curl -I https://aub.owlsolutions.net/
 curl -I https://aub.owlsolutions.net/owl-admin/health
 curl -I https://aub.owlsolutions.net/customers
 curl -I https://aub.owlsolutions.net/dashboard
 ```
 
-Ожидаемые HTTP-ответы:
-
 | URL | Ожидается |
-|-----|----------|
-| `/` | 200 (login page) |
-| `/owl-admin/health` | 200 (JSON health) |
-| `/customers` (guest) | 302 → `/` |
-| `/dashboard` (guest) | 302 → `/` |
+|-----|-----------|
+| `/` | 200 (login) |
+| `/owl-admin/health` | 200 JSON |
+| `/customers` (гость) | 302 → `/` |
+| `/dashboard` (гость) | 302 → `/` |
 
-## Перезагрузка Nginx
+## Reload Nginx
 
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## Конфигурация окружения
+## Окружение
 
-Переменные окружения находятся в `/var/www/aub/.env` (не коммитятся в git).
+`/var/www/aub/.env` не в git.
 
-Обязательные ключи (значения здесь не показаны):
+Обязательные ключи (значения не документируются): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`.
 
-- `APP_NAME`, `APP_KEY`, `APP_URL`
-- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
+**Никогда не раскрывать секреты.**
 
-Опциональные ключи kit:
+## Команды kit (уже установлено)
 
-- `OWL_ADMIN_BRAND`, `OWL_ADMIN_LOGO`
-- `OWL_ADMIN_ROUTE_PREFIX`, `OWL_ADMIN_LOGIN_PATH`
-- `OWL_ADMIN_EMAIL`, `OWL_ADMIN_PASSWORD` (for `--seed`)
-
-**Никогда не раскрывать секретные значения в документации или логах.**
-
-## Справочник команд admin kit
+Не перезапускать install без намерения.
 
 ```bash
-# Install (already done — do not re-run unless intentional)
-php artisan owl-admin:install --preset=admin --backup --migrate --no-smoke
-php artisan owl-admin:frontend-setup --preset=admin --backup --install-npm --run-build
-
-# Create admin user
 php artisan owl-admin:make-admin --email=admin@admin.com --password=admin
-
-# Diagnostics
 php artisan owl-admin:doctor --preset=admin
 php artisan owl-admin:smoke --preset=admin
 ```
 
-## Чеклист после развёртывания
+Тестовый email администратора — только для разработки.
 
-- [ ] `composer install` выполнен успешно
-- [ ] `npm run build` выполнен успешно
-- [ ] Миграции применены
-- [ ] Config/route/view закэшированы
-- [ ] `owl-admin:smoke` пройден
-- [ ] HTTP-проверки возвращают ожидаемые коды статуса
-- [ ] Нет ошибок в `storage/logs/laravel.log`
+## Чеклист после деплоя
+
+- [ ] Нужные файлы скопированы (сейчас не git pull)
+- [ ] `composer install` если менялись PHP-зависимости
+- [ ] `npm run build` если менялся frontend
+- [ ] Миграции только если приехали новые файлы
+- [ ] Кэши пересобраны
+- [ ] HTTP-проверки
+- [ ] В логе Laravel нет новых ошибок

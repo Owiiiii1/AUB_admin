@@ -1,21 +1,33 @@
 # AUB — Текущее состояние
 
-Документ отражает фактическое состояние на **2026-07-20**.
+Документ отражает **проверенное** состояние на **2026-09-07** (код + миграции + production `route:list` / `migrate:status`). Текст от 2026-07-20 считается устаревшим там, где он противоречит фактам.
+
+См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
 ## Версии
 
 | Компонент | Версия |
 |-----------|--------|
 | Laravel | 13.18.1 |
-| PHP | 8.3.6 |
-| Node.js | 20.20.0 |
+| PHP | 8.3.6 (production) |
+| Node.js | 20.20.0 (production) |
 | `owlsolutions/custom-admin-kit` | v0.4.0 |
 | `inertiajs/inertia-laravel` | 3.1.1 |
+| `@inertiajs/react` | 2.3.27 |
 | `tightenco/ziggy` | 2.6.3 |
+| React | 18.3.1 |
+| Vite | 8.1.3 |
+| Tailwind CSS | 4.3.2 |
 
-Production-сборка существует: `public/build/manifest.json`
+Production-сборка есть **на сервере** (`public/build/manifest.json`). Каталог **gitignored**, поэтому клон GitHub не содержит собранных ассетов.
 
-## Маршруты (78 зарегистрированных)
+На production есть `storage:link`.
+
+В хост-приложении нет `laravel/sanctum`, Passport, JWT.
+
+## Маршруты (84 на production)
+
+`php artisan route:list` 2026-09-07: **Showing [84] routes**. Файла `routes/api.php` **нет**, API для Flutter **нет**.
 
 ### Auth
 
@@ -27,36 +39,36 @@ Production-сборка существует: `public/build/manifest.json`
 | POST | `/login` | — |
 | POST | `/logout` | `logout` |
 
-### Админка (требуется auth + role middleware)
+Маршрутов password reset (`password.request` и т.п.) **нет**.
+
+### Админка (auth + role middleware)
 
 | URI | Name | Примечания |
 |-----|------|------------|
-| `/dashboard` | `dashboard` | |
-| `/customers`, `/customers/create`, `/customers/{id}` | `customers.*` | Список студентов + полноэкранный профиль |
-| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | Список преподавателей + профиль |
+| `/dashboard` | `dashboard` | **Заглушка** Home |
+| `/customers`, `/customers/create`, `/customers/{id}` | `customers.*` | Студенты на `customers` |
+| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | Нет `user_id` |
 | `/courses-groups` | `courses-groups.*` | Курсы, группы, привязка студентов/уроков |
-| `/lessons` | `lessons.*` | Каталог уроков по дисциплинам |
-| `/schedule-service` | `weekly-schedule.*` | Доска недельного расписания (алиасы `/schedules`, `/weekly-schedule`) |
+| `/lessons` | `lessons.*` | **GET index редиректит** на `/settings?tab=academy&academyTab=lessons` |
+| `/schedule-service` | `weekly-schedule.*` | Алиасы `/schedules`, `/weekly-schedule` |
 | `/documents` | `placeholder.documents` | Скоро будет |
 | `/communication` | `placeholder.communication` | Скоро будет |
 | `/events` | `placeholder.events` | Скоро будет |
 | `/archive` | `placeholder.archive` | Скоро будет |
 | `/costume-service` | `placeholder.costume-service` | Скоро будет |
-| `/settings` | `settings.*` | Вкладки: пользователи, роли, приложение, ИИ, академия |
+| `/settings` | `settings.*` | Вкладки: users, roles, app, AI, academy (залы + **каталог уроков**) |
 | `/roles` | `roles.*` | Редирект → `/settings?tab=roles` |
 | `/ai-settings` | `ai-settings.*` | Редирект → `/settings?tab=ai` |
 | `/app-settings` | — | Редирект → `/settings?tab=app` |
-| `/statistics/logs` | `statistics.logs` | Просмотр журнала активности |
+| `/statistics/logs` | `statistics.logs` | Журнал CRUD, не view-audit |
 | `/profile` | `profile.*`, `password.update` | |
-| `/workplace` | `workplace` | Landing для non-admin |
+| `/workplace` | `workplace` | Тонкий landing для non-admin |
 
-Маршруты записи/удаления дополнительно защищены middleware `can.write` / `can.delete`.
+Запись/удаление: `can.write` / `can.delete`. CRUD ролей дополнительно `administrator`.
 
-### Удалены из активных маршрутов (generic kit)
+### Удалены из маршрутов (generic kit)
 
-У этих модулей kit таблицы и контроллеры остались, но **маршруты и пункты меню удалены**:
-
-- `/orders`, `/services`, `/staff`, `/calendar`
+Контроллеры и таблицы остались; **маршруты и пункты меню сняты**: `/orders`, `/services`, `/staff`, `/calendar`.
 
 ### System
 
@@ -64,264 +76,175 @@ Production-сборка существует: `public/build/manifest.json`
 |-----|------|
 | `/owl-admin/health` | `owl-admin.health` |
 | `/up` | Laravel health |
-| `/storage/{path}` | Публичный доступ к файлам (нужен `php artisan storage:link`) |
+| `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` |
+| `/storage/{path}` через symlink | Файлы public disk (нужен `storage:link`) |
 
----
+Разница со старым числом «78» — serve-маршруты filesystem, `/up` и полный набор schedule/academy. **Измерено: 84.**
 
-## Миграции (29 batch-записей выполнено)
+## Миграции
 
-| Migration | Назначение |
-|-----------|------------|
-| Laravel core (users, cache, jobs) | Система |
-| Kit CRM (customers, services, staff, orders, order_staff, ai_provider_settings) | Legacy-схема kit — частично заменена |
-| `2026_07_06_120000` … `120100` | Роли + seed Administrator |
-| `2026_07_06_130000` … `143000` | Очистка меню: переименование students, удаление orders/calendar/staff/services/ai-settings |
-| `2026_07_06_140000` | Консолидация settings |
-| `2026_07_06_150000` | Таблица `activity_logs` |
-| `2026_07_06_210000` | Поля профиля студента в `customers` |
-| `2026_07_06_221000` | `gender` в `customers` |
-| `2026_07_08_120000` | `courses`, `course_groups`, `course_group_customer` |
-| `2026_07_08_140000` … `140100` | `teachers` + seed меню |
-| `2026_07_08_150000` | Одна группа курса на дисциплину |
-| `2026_07_08_160000` | `users.can_delete` |
-| `2026_07_08_170000` | Одна группа курса на студента |
-| `2026_07_08_180000` … `182000` | `lessons`, pivot-таблицы, `course_group_lesson` |
-| `2026_07_08_181000` | Связи уроков; удаление `duration_minutes` |
-| `2026_07_08_190000` | `users.can_write` |
-| `2026_07_20_100000` | Таблицы недельного расписания |
-| `2026_07_20_153500` | Снятие unique на `course_group_lesson.lesson_id` |
-| `2026_07_20_174500` | Несколько преподавателей на группу+урок |
-| `2026_07_20_175000` | `lessons.duration_minutes` |
-| `2026_07_20_183000` | `course_groups.color` |
-| `2026_07_20_203000` | `schedule_weeks.work_starts_at` / `work_ends_at` |
-| `2026_07_20_221000` | Таблица `schedule_ai_runs` |
-| `2026_07_20_224500` | `courses.study_starts_at` / `study_ends_at` + seed смен |
+**37 файлов** в `database/migrations/`. Production: **все Ran**, batch **1–29**.
 
----
+Ядро Laravel: users (включая sessions / password_reset_tokens), cache, jobs.
 
-## Таблицы базы данных (используются)
+Kit: `customers`, `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
+
+AUB: роли, seed меню, activity_logs, поля профиля студента, teachers, courses/groups, lessons/pivots, `can_write` / `can_delete`, недельное расписание, AI-прогоны, учебные окна, несколько преподавателей на группу+урок.
+
+Не путать «29 batch» с «29 файлами».
+
+## Таблицы
+
+### Используются
 
 | Таблица | Назначение |
 |---------|------------|
 | `users` | Auth; `role_id`, `can_write`, `can_delete` |
 | `roles`, `role_menu_items` | RBAC |
-| `customers` | **Студенты** (расширенный профиль — interim на таблице kit) |
-| `teachers` | Преподаватели академии |
-| `courses`, `course_groups` | Курсы и группы; у курса — учебное окно `study_starts_at` / `study_ends_at` |
-| `course_group_customer` | Студент ↔ группа (pivot) |
-| `lessons` | Каталог уроков (`duration_minutes`) |
-| `lesson_teacher`, `lesson_course`, `course_group_lesson` | Связи уроков; несколько преподавателей на группу+урок |
-| `academy_buildings`, `academy_rooms` | Локации для расписания |
-| `schedule_weeks`, `scheduled_lessons` | Недельное расписание (рабочие часы недели) |
-| `schedule_ai_runs` | Журнал ИИ-распределений |
-| `activity_logs` | Аудит CRUD-действий |
-| `ai_provider_settings` | Ключи AI-провайдеров |
-| Kit legacy (UI не использует): `services`, `staff`, `orders`, `order_staff` | Таблицы есть; маршруты удалены |
+| `customers` | **Студенты** (interim-таблица kit) |
+| `teachers` | Преподаватели; **не** связаны с `users` |
+| `courses`, `course_groups` | Курсы/группы; учебное окно курса |
+| `course_group_customer` | Зачисление; unique `customer_id` (одна группа на студента) |
+| `lessons` | Каталог (`duration_minutes`) |
+| `lesson_teacher`, `lesson_course`, `course_group_lesson` | Связи уроков; несколько преподавателей |
+| `academy_buildings`, `academy_rooms` | Локации |
+| `schedule_weeks`, `scheduled_lessons` | Недельное расписание |
+| `schedule_ai_runs` | Журнал ИИ |
+| `activity_logs` | CRUD (+ login/logout) |
+| `ai_provider_settings` | Encrypted ключи провайдеров |
 
----
+### Legacy kit (нет активных маршрутов)
+
+`services`, `staff`, `orders`, `order_staff`.
 
 ## Модели
 
 | Model | Статус |
 |-------|--------|
 | User | Реализована — role, `can_write`, `can_delete` |
-| Role, RoleMenuItem | Реализованы (Фаза 1) |
-| Customer | **Расширена как профиль студента** |
-| Teacher | Реализована |
-| Course, CourseGroup | Реализованы (у Course — учебное окно смены) |
+| Role, RoleMenuItem | Реализованы (фаза 1) |
+| Customer | **Профиль студента** (нет inverse `courseGroups()`) |
+| Teacher | Реализована; нет `user_id` |
+| Course, CourseGroup | Реализованы |
 | Lesson | Реализована |
 | AcademyBuilding, AcademyRoom | Реализованы |
 | ScheduleWeek, ScheduledLesson, ScheduleAiRun | Реализованы |
 | ActivityLog | Реализована |
-| Service, Staff, Order | Legacy kit — нет активных маршрутов |
+| AiProviderSetting | Реализована (`api_key` encrypted) |
+| Service, Staff, Order | Legacy kit — не в маршрутах |
 
-Отдельных моделей `Student` и `Parent` пока нет — данные хранятся в `customers` (студент + встроенные поля отца/матери).
+Моделей `Student` и `Parent` нет. Поля отца/матери на `customers`.
 
----
+## Контроллеры / сервисы
 
-## Контроллеры
+| Область | Расположение |
+|---------|--------------|
+| Студенты | `CustomersController` |
+| Преподаватели | `TeachersController` |
+| Курсы/группы | `CoursesGroupsController` |
+| Каталог уроков | `LessonsController` (UI через Settings) |
+| Недельное расписание | `WeeklyScheduleController` |
+| ИИ-планировщик | `Services/WeeklySchedule/*`, `Services/Ai/*` |
+| Журнал | `ActivityLogController`, `ActivityLogger` |
+| Роли / пользователи / AI / академия | `RolesController`, `Settings/*` |
+| Auth / профиль | `AuthenticatedSessionController`, `ProfileController` |
+| Workplace | `WorkplaceController` |
 
-| Controller | Назначение |
-|------------|------------|
-| `CustomersController` | Список студентов, полноэкранный профиль CRUD, загрузка файлов, удаление с паролем |
-| `TeachersController` | Список + профиль преподавателя |
-| `CoursesGroupsController` | Курсы, группы, привязка студентов/уроков |
-| `LessonsController` | CRUD каталога уроков |
-| `WeeklyScheduleController` | Доска недельного расписания |
-| `ActivityLogController` | Статистика / журнал активности |
-| `RolesController` | CRUD ролей (вкладка settings) |
-| `WorkplaceController` | Landing для non-admin |
-| `Settings/*` | Пользователи, язык, AI, здания/залы академии |
-| `Auth/AuthenticatedSessionController` | Login, logout |
-| `ProfileController` | Профиль пользователя |
+Контроллеры kit `OrdersController`, `ServicesController`, `StaffController`, `CalendarController` **не подключены к маршрутам**.
 
-Контроллеры kit (`OrdersController`, `ServicesController`, `StaffController`, `CalendarController`) существуют, но не подключены к маршрутам.
+## Inertia / React
 
----
+| Страница | Path | Статус |
+|----------|------|--------|
+| Login | `Auth/Login.jsx` | Реализовано |
+| Dashboard | `Dashboard.jsx` | **Заглушка** |
+| Студенты | `Customers/Index.jsx`, `Customers/Profile.jsx` | Реализовано |
+| Преподаватели | `Teachers/Index.jsx`, `Teachers/Profile.jsx` | Реализовано |
+| Курсы и группы | `CoursesGroups/Index.jsx` | Реализовано |
+| Каталог уроков | `Settings/Tabs/LessonsTab.jsx` | Реализовано; **нет** `Lessons/Index.jsx` |
+| Недельное расписание | `WeeklySchedule/Index.jsx` | Реализовано |
+| Настройки | `Settings/Index.jsx` + `Tabs/*` | Реализовано; вкладка academy «general» — текст-заглушка |
+| Статистика | `Statistics/Logs.jsx` | Реализовано |
+| Профиль | `Profile/Edit.jsx` | Реализовано |
+| Workplace | `Workplace/Index.jsx` | Тонкий landing |
+| Скоро будет | `Placeholder/ComingSoon.jsx` | Заглушки |
+| Остатки kit | `Orders`, `Services`, `Staff`, `Calendar`, `Roles/Index`, `AiSettings/Index`, `AppSettings/Index` | Файлы есть; не активный UI |
 
-## Inertia/React-страницы
+Layouts: `AdminLayout.jsx`, `AuthLayout.jsx`.
 
-| Page | Path |
-|------|------|
-| Login (редизайн) | `Auth/Login.jsx` |
-| Dashboard | `Dashboard.jsx` |
-| Список студентов | `Customers/Index.jsx` |
-| Профиль студента (создание/редактирование) | `Customers/Profile.jsx` |
-| Список преподавателей | `Teachers/Index.jsx` |
-| Профиль преподавателя | `Teachers/Profile.jsx` |
-| Курсы и группы | `CoursesGroups/Index.jsx` |
-| Уроки | `Lessons/Index.jsx` |
-| Недельное расписание | `WeeklySchedule/Index.jsx` |
-| Заглушки разделов | `Placeholder/ComingSoon.jsx` |
-| Настройки (вкладки) | `Settings/Index.jsx` + `Tabs/*` |
-| Статистика / логи | `Statistics/Logs.jsx` |
-| Профиль | `Profile/Edit.jsx` |
-| Workplace | `Workplace/Index.jsx` |
+## Меню
 
-Layouts: `AdminLayout.jsx`, `AuthLayout.jsx`
+Динамические пункты из `role_menu_items`: `dashboard`, `students` → `customers.index`, `teachers`, `settings` (флаг admin_only в конфиге), `statistics`.
 
----
+**Всегда в extra-списке `AdminLayout`** (и в `always_allowed_route_patterns` для любого пользователя с ролью):
 
-## Структура меню админки
+| Key | Route | Статус |
+|-----|-------|--------|
+| coursesAndGroups | `courses-groups.index` | Реализовано |
+| scheduleService | `weekly-schedule.index` | Реализовано |
+| documents, communication, events, costumeService, archive | `placeholder.*` | Заглушки |
 
-Динамические пункты из `role_menu_items` (через prop `adminMenu`):
+Отдельного пункта `lessons` в боковом extra-меню **нет**. Каталог — Настройки → Академия.
 
-| menu_key | Подпись (IT) | Route |
-|----------|--------------|-------|
-| dashboard | Home | `dashboard` |
-| students | Studenti | `customers.index` |
-| teachers | Insegnanti | `teachers.index` |
-| settings | Impostazioni | `settings.index` |
-| statistics | Statistiche | `statistics.logs` |
-
-Дополнительные пункты в `AdminLayout` (всегда доступны авторизованным):
-
-| Key | Подпись (IT) | Route | Статус |
-|-----|--------------|-------|--------|
-| coursesAndGroups | Corsi e gruppi | `courses-groups.index` | Реализовано |
-| lessons | Lezioni | `lessons.index` | Реализовано |
-| scheduleService | Servizio orari | `weekly-schedule.index` | Реализовано |
-| documents | Documenti | `placeholder.documents` | Заглушка |
-| communication | Comunicazioni | `placeholder.communication` | Заглушка |
-| events | Eventi | `placeholder.events` | Заглушка |
-| costumeService | Servizio costumi | `placeholder.costume-service` | Заглушка |
-| archive | Archivio | `placeholder.archive` | Заглушка (разделитель сверху) |
-
-Конфиг: `config/aub-menu.php`
-
----
-
-## UI и брендинг (2026-07-06 — 2026-07-20)
-
-| Область | Изменение |
-|---------|-----------|
-| Страница login | Split-layout, фоновые изображения, лого AUB, заголовки Singo Sans, кнопка `#1A2B44` |
-| AuthLayout | Desktop/mobile фоны (`login-chatgpt-reference.png`, `login-mobile-girl.png`) |
-| Боковое меню | Фон `#1A2B44`, белое лого AUB, локализованный заголовок панели |
-| Переключатель языка | Dropdown с иконкой Globe (login + admin), локали: **it** (по умолчанию), uk, en, ru |
-| Основные кнопки | `#1A2B44` / hover `#132033` |
-| Карточки виджетов | `.app-widget` фон `#EBF1FF` |
-| Таблица студентов | Колонки фото + возраст; кликабельные строки; иконка сообщения (не работает) |
-| Профиль студента | Полноэкранная форма; фото на аватаре; модалки родителей; загрузка документов; удаление с паролем |
-| Настройки | Вкладки; роли и AI перенесены из отдельных пунктов меню |
-| Шрифт | Singo Sans — `public/fonts/singo-sans/singo-sans-regular.ttf`, `.font-singo` в `app.css` |
-
-Референсы: `docs/ref/login/`, `docs/ref/loginMobile/`, `docs/ref/STprofile/`
-
----
+Конфиг: `config/aub-menu.php`. Флаг `admin_only` **не** enforced в `RoleAccess::syncRoleMenuItems`.
 
 ## Локализация
 
-| Локаль | UI | Laravel validation |
-|--------|-----|-------------------|
-| it | UI админки по умолчанию | `lang/it/validation.php` |
-| en | Поддерживается | `lang/en/validation.php` |
-| ru | Поддерживается | `lang/ru/validation.php` |
-| uk | Поддерживается | `lang/uk/validation.php` |
+Локали UI: **it** (по умолчанию), en, ru, uk. Есть `lang/*/validation.php`. Экраны студентов также используют inline `translations`.
 
-Страницы студентов используют inline-объекты `translations` по локали.
+`.env.example` — скелет Laravel `APP_LOCALE=en`; default в `config/app.php` — `it`.
 
----
+## Студенты (interim)
 
-## Статус модуля студентов (interim-архитектура)
+Реализовано на **`customers`**. Файлы: `storage/app/public/students/{id}/documents` (диск public) — **не** `customers/`. Фото преподавателей: `teachers/{id}/photos`.
 
-**Реализовано поверх таблицы `customers`** — отдельной таблицы `students` пока нет.
-
-### Поля профиля
-
-- Личные: имя/фамилия (обязательны при создании), пол, codice fiscale, дата/место рождения, адрес, email, телефон, заметки
-- Родители: блоки отца и матери (имя, телефон, email, заметки) через модалки; legacy `parent_phone`/`parent_email` сохранены
-- Курс: `course_aa_2026_27`, `other_courses`, `is_existing_student`, `form_filled_at`
-- Документы: срок медсправки, документ родителя, формы регламента, фото (загрузка через аватар в шапке)
-- Файлы: `storage/app/public/customers/` — **нужен** `php artisan storage:link`
-
-### Поведение UI
-
-- Список `/customers` — фото, имя, возраст, курс; строка открывает профиль
-- Создание `/customers/create`, редактирование `/customers/{id}`
-- Подтверждение сохранения; удаление — подтверждение + пароль текущего пользователя
-
----
+Field-level ограничений нет: роль с доступом к `customers.*` видит контакты родителей и срок медсправки.
 
 ## Сводка по фазам
 
 | Фаза | Модуль | Статус |
 |------|--------|--------|
-| 0 | Основа admin kit | ✅ Завершена |
-| 1 | Роли и workplaces | ✅ Завершена (2026-07-06) |
-| 2 | Студенты | 🟡 Частично — расширенный `customers`, без отдельной сущности |
-| 2 | Родители | 🟡 Частично — только встроенные поля отца/матери |
-| 2 | Преподаватели | ✅ Завершено |
-| 2 | Курсы / группы | ✅ Завершено |
-| 2 | Зачисления | 🟡 Частично — pivot `course_group_customer` |
-| 2 | Каталог уроков | ✅ Завершено |
-| 3 | Недельное расписание | ✅ Завершено + ИИ-гибрид, окна курсов, сетка 5/30 (2026-07-20) |
-| 3 | Загрузка документов студента | 🟡 Частично — в профиле, без отдельного модуля |
-| 3 | Посещаемость | ❌ Не начато |
-| 3 | Модуль документов (меню) | ❌ Только заглушка |
-| 3 | Коммуникации | ❌ Только заглушка |
-| 4+ | Платежи, mobile, опциональные сервисы | ❌ Не начато |
-
----
+| 0 | Основа admin kit | Завершена |
+| 1 | Роли и workplaces | Завершена (2026-07-06) |
+| 2 | Студенты | Частично — `customers` |
+| 2 | Родители | Частично — встроенные поля |
+| 2 | Преподаватели | Справочник готов; нет связи с user |
+| 2 | Курсы / группы | Готово |
+| 2 | Зачисления | Частично — только pivot |
+| 2 | Каталог уроков | Готово (Настройки → Академия) |
+| 3 | Недельное расписание | Готово + гибридный ИИ (2026-07-20) |
+| 3 | Загрузка файлов студента | Частично — public disk, нет модуля документов |
+| 3 | Посещаемость | Не начато |
+| 3 | Документы / коммуникации в меню | Заглушки |
+| 4+ | Платежи | Не начато |
+| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть |
 
 ## Что НЕ реализовано
 
-- Отдельные таблицы/модели `students` / `parents`
+- Отдельные таблицы `students` / `parents`
 - Полный workflow зачислений (статусы, переводы, история)
-- Учёт посещаемости
-- Платежи / счета / бухгалтерия
-- Отдельная страница управления документами
-- Коммуникации / сообщения
-- События, архив, сервис костюмов (только заглушки в меню)
-- Mobile API и приложения для родителей/студентов
-- PDF-экспорт расписания
-- Полностью «исполняемые» ИИ-рекомендации (кнопка только дописывает промпт и перезапускает create)
-- Ограничение видимости полей профиля по ролям
-
-Подробности модуля расписания: [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHEDULE_SERVICE.md).
-
----
+- Посещаемость
+- Платежи / счета
+- Отдельные модули документов и коммуникаций
+- События, архив, костюмы (заглушки меню)
+- **`routes/api.php`, API resources, Sanctum/Passport/JWT`**
+- Функции Flutter сверх шаблона
+- PDF-экспорт расписания (кнопка-заглушка)
+- Исполняемые рекомендации ИИ (только re-prompt)
+- Field-level visibility; ограничение преподавателя своими студентами
+- Сущности согласий / privacy policy
+- Access/view audit чувствительных записей
+- Private storage документов детей
+- Git-deploy с GitHub в `/var/www/aub`
 
 ## Кастомизации хоста (сохранять)
 
-- Login на `/` вместо `/login`
-- `/login` редиректит на `/`
-- Generic kit CRM-маршруты удалены из меню и routing
-- Settings, roles, AI объединены во вкладках `/settings`
-- Итальянский — локаль UI по умолчанию
-
----
+- Вход на `/`
+- Маршруты kit CRM сняты
+- Settings / roles / AI / academy (включая уроки) под `/settings`
+- Итальянский UI по умолчанию
+- Брендинг AUB (login, sidebar `#1A2B44`, Singo Sans)
 
 ## После изменений frontend/backend
 
-```bash
-npm run build
-php artisan optimize:clear
-php artisan view:cache
-# после новых миграций:
-php artisan migrate
-# для фото студентов:
-php artisan storage:link
-```
-
-См. [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md).
+См. [DEVELOPMENT_RULES.md](DEVELOPMENT_RULES.md) и [SERVER_DEPLOYMENT.md](SERVER_DEPLOYMENT.md). Production — **не** git checkout.
