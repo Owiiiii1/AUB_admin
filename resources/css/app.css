@@ -1,0 +1,25 @@
+@import './owl-admin.css';
+
+@import 'tailwindcss';
+@plugin "tailwindcss-animate";
+
+@font-face {
+    font-family: 'Singo Sans';
+    src: url('/fonts/singo-sans/singo-sans-regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-singo: 'Singo Sans', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-singo {
+    font-family: var(--font-singo);
+}

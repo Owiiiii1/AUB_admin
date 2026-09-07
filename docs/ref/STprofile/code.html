@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+
+<html class="light" lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AUB Sistema Gestionale - Profilo Studente</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Oswald (Headlines) & Work Sans (Body) -->
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#1a2b44",
+                    "inverse-primary": "#b6c7e7",
+                    "on-background": "#1b1c1c",
+                    "outline": "#75777e",
+                    "surface-container-highest": "#e5e2e1",
+                    "on-primary": "#ffffff",
+                    "on-surface": "#1b1c1c",
+                    "outline-variant": "#c5c6ce",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed-dim": "#e9c349",
+                    "on-tertiary-container": "#9f9073",
+                    "graphite-text": "#222222",
+                    "error-container": "#ffdad6",
+                    "surface-ivory": "#FCFBF7",
+                    "tertiary-fixed-dim": "#d6c4a5",
+                    "primary-fixed-dim": "#b6c7e7",
+                    "inverse-surface": "#303030",
+                    "on-surface-variant": "#44474d",
+                    "on-secondary-fixed": "#241a00",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#eae7e7",
+                    "surface-tint": "#4f5f7b",
+                    "background": "#fcf9f8",
+                    "surface": "#fcf9f8",
+                    "tertiary": "#1d1503",
+                    "surface-container": "#f0eded",
+                    "on-tertiary-fixed-variant": "#51452d",
+                    "primary-fixed": "#d5e3ff",
+                    "border-subtle": "#E5E5E5",
+                    "inverse-on-surface": "#f3f0ef",
+                    "surface-bright": "#fcf9f8",
+                    "secondary-fixed": "#ffe088",
+                    "on-secondary": "#ffffff",
+                    "primary": "#04162e",
+                    "tertiary-fixed": "#f3e0c0",
+                    "on-tertiary-fixed": "#231a06",
+                    "on-secondary-container": "#745c00",
+                    "on-primary-container": "#8292b0",
+                    "tertiary-container": "#332913",
+                    "surface-container-low": "#f6f3f2",
+                    "on-secondary-fixed-variant": "#574500",
+                    "surface-dim": "#dcd9d9",
+                    "on-primary-fixed": "#091c34",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed-variant": "#374762",
+                    "heritage-red": "#E61F19",
+                    "on-tertiary": "#ffffff",
+                    "surface-variant": "#e5e2e1",
+                    "secondary": "#735c00",
+                    "secondary-container": "#fed65b",
+                    "error": "#ba1a1a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "sidebar-width": "280px",
+                    "stack-md": "16px",
+                    "margin-page": "40px",
+                    "container-max-width": "1440px",
+                    "stack-lg": "32px",
+                    "stack-sm": "8px"
+            },
+            "fontFamily": {
+                    "label-caps": ["Work Sans"],
+                    "body-sm": ["Work Sans"],
+                    "body-lg": ["Work Sans"],
+                    "headline-sm": ["Oswald"],
+                    "display-lg": ["Oswald"],
+                    "body-md": ["Work Sans"],
+                    "headline-md": ["Oswald"]
+            },
+            "fontSize": {
+                    "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-sm": ["18px", {"lineHeight": "1.4", "letterSpacing": "0.03em", "fontWeight": "500"}],
+                    "display-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "0.03em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            background-color: #FCFBF7; /* surface-ivory */
+        }
+        .sidebar-active-indicator {
+            position: absolute;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background-color: #e9c349; /* secondary-fixed-dim */
+        }
+    </style>
+</head>
+<body class="font-body-md text-on-surface">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed left-0 top-0 bottom-0 flex flex-col py-margin-page bg-primary dark:bg-primary-container border-r border-outline-variant dark:border-outline w-[280px] z-50 overflow-y-auto">
+<div class="px-8 mb-10 flex flex-col items-center">
+<img alt="Accademia Ucraina di Balletto Logo" class="h-24 w-auto object-contain mb-4" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3q78YAD_BUXizZnItQvPs_TiL1roh7cKR_n6CCTspuVYmQNKD2qSx31SiwuLsf4pPFcszljBZNh45a747aCbTWaogRjH-cPcUd4MfxJm5bxxVYzt-zXRSTVVTS3V271ANCzJuLzexK8RnFG0l-yrYQXaEgxfCOMeBXBSxCfd47mVYva9rrpAaUgAcSi3U7g1HAfO1afopFU_fSTpFf-dIQ--X0GIPy3WYAAKVOLyvBi0O7Ra3jQJT87Qe7iaLUBiAmE6EQMTyUC_v"/>
+<h1 class="text-headline-md font-headline-md text-on-primary dark:text-inverse-primary tracking-widest uppercase">AUB</h1>
+<p class="font-label-caps text-label-caps text-on-primary-container/80 mt-1">Academy Administration</p>
+</div>
+<nav class="flex-1">
+<ul class="space-y-1">
+<!-- Students Tab - Active -->
+<li class="relative">
+<a class="flex items-center px-8 py-3 text-secondary-fixed-dim font-bold border-l-4 border-secondary-fixed-dim bg-primary-container/50 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-body-md text-body-md">Studenti</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">family_restroom</span>
+<span class="font-body-md text-body-md">Genitori</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">school</span>
+<span class="font-body-md text-body-md">Corsi e gruppi</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">schedule</span>
+<span class="font-body-md text-body-md">Orari</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">description</span>
+<span class="font-body-md text-body-md">Documenti</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">medical_services</span>
+<span class="font-body-md text-body-md">Certificati medici</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">mail</span>
+<span class="font-body-md text-body-md">Comunicazioni</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">calendar_today</span>
+<span class="font-body-md text-body-md">Eventi</span>
+</a>
+</li>
+<li>
+<a class="flex items-center px-8 py-3 text-on-primary/70 hover:text-on-primary hover:bg-primary-container/30 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined mr-4">archive</span>
+<span class="font-body-md text-body-md">Archivio</span>
+</a>
+</li>
+</ul>
+</nav>
+</aside>
+<!-- Top Navigation Bar -->
+<header class="flex justify-between items-center ml-[280px] px-margin-page h-20 w-[calc(100%-280px)] bg-surface-ivory dark:bg-surface-container-lowest border-b border-border-subtle dark:border-outline-variant fixed top-0 z-40">
+<div class="flex items-center">
+<div class="bg-surface-container px-4 py-2 flex items-center gap-3 w-80">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-full placeholder:text-on-surface-variant" placeholder="Cerca studente..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="relative text-on-surface-variant hover:text-primary transition-opacity duration-200">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-0 right-0 w-2 h-2 bg-heritage-red rounded-full border-2 border-surface-ivory"></span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-opacity duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="flex items-center gap-3 ml-2 pl-6 border-l border-border-subtle">
+<div class="text-right">
+<p class="font-label-caps text-label-caps text-primary">Segreteria AUB</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Administrator</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden border border-border-subtle">
+<img class="w-full h-full object-cover" data-alt="A portrait of a professional administrative staff member for a prestigious ballet academy, wearing a crisp dark navy blazer and white shirt. The background is a soft, warm-toned secretariat office with elegant wooden details. High-end editorial photography style with shallow depth of field, warm natural lighting, and a serene, authoritative mood." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqTCb7x2lUoPTG5Q_co6o4lpzYHSzaLQRH2xl9gLM1Tb4vuiur4O_mB4OE7DeRfikzmGukt8nB-cHZV6F4EeafCmBwtG4D5BRX-5tL99QE0wfLyrikzp-BpNzxIKO8a5HW80s-B0GfpB8XgqKMSZ7V3K1KpAhGlm6UoMvM7fK4_IkUi_5XlR2F-yExLopSvY-nRRamRm_5GqJwNN5kziOiII1Dp5zGjd5gO5_1pvdC2A1knUSqf-ITT-MQMiz6_qdipbeSbfWNM_TB"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[280px] mt-20 p-margin-page min-h-screen">
+<div class="max-w-[1440px] mx-auto">
+<!-- Page Header -->
+<div class="mb-10">
+<h2 class="font-headline-sm text-headline-sm text-primary uppercase tracking-[0.2em]">Profilo Studente</h2>
+<div class="w-12 h-1 bg-secondary-fixed-dim mt-2"></div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Profile Header Card (Large) -->
+<div class="col-span-12 bg-white border border-border-subtle p-8 flex items-center gap-10 shadow-[0px_4px_20px_rgba(0,0,0,0.04)]">
+<div class="relative">
+<div class="w-40 h-40 border border-border-subtle overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional studio portrait of a young ballet student, aged about sixteen, with her hair in a tight, elegant bun. She is wearing a simple black leotard against a minimalist warm beige studio background. The lighting is soft and artistic, highlighting the disciplined posture and grace expected in a prestigious ballet academy. High-resolution editorial photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0XHZWWyuB0NDZn_sAHZNClmzTuZ1yXcrlxrUKaRxPHXsG03qB_xmXuNMwAFMQnUvQp6gqqtp65JqFXZQcrOhqObYUyMyg6SvkgEULIbzRifQpkMOF4RG_s4HSSO-EI5P61dzJEbymi5eT5bQVRfHWU8XOo5y0dEqjqmnDHRNtQKbuuy7wqKXb-KXPYG1ph96YvUaMV6xMXwn-o3fXPI0IJD85ekj6oOgvR1ViZy2XLAbRV3j3uB-si1XnZcNnh9nGS-pEFvsjS6n1"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-primary text-on-primary p-2 rounded-full shadow-lg hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-display-lg text-display-lg text-primary uppercase mb-1">Sofia Rossi</h3>
+<div class="flex gap-4">
+<span class="inline-flex items-center font-label-caps text-label-caps px-3 py-1 bg-surface-container text-on-primary-container">ANNO ACCADEMICO 2023/24</span>
+<span class="inline-flex items-center font-label-caps text-label-caps px-3 py-1 bg-primary text-on-primary">LIVELLO INTERMEDIO 2</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">ID STUDENTE: AUB-2023-4492</span>
+<div class="flex gap-2">
+<button class="px-6 py-2 border border-primary text-primary font-label-caps text-label-caps hover:bg-surface-ivory transition-colors">MODIFICA ANAGRAFICA</button>
+<button class="px-6 py-2 bg-primary text-on-primary font-label-caps text-label-caps hover:bg-primary-container transition-colors">STAMPA SCHEDA</button>
+</div>
+</div>
+</div>
+<div class="mt-6 grid grid-cols-4 gap-8 py-6 border-t border-border-subtle">
+<div>
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Data di Nascita</p>
+<p class="font-body-md text-body-md font-semibold">14 Maggio 2008 (15 anni)</p>
+</div>
+<div>
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Città</p>
+<p class="font-body-md text-body-md font-semibold">Milano, IT</p>
+</div>
+<div>
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Codice Fiscale</p>
+<p class="font-body-md text-body-md font-semibold">RSS SFO 08E54 F205Z</p>
+</div>
+<div>
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Iscrizione</p>
+<p class="font-body-md text-body-md font-semibold">01/09/2021</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Parents & Contacts -->
+<div class="col-span-12 lg:col-span-4 space-y-gutter">
+<div class="bg-white border border-border-subtle p-8 h-full">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">family_restroom</span>
+<h4 class="font-headline-sm text-headline-sm text-primary">Contatti Genitori</h4>
+</div>
+<div class="space-y-6">
+<div class="p-4 bg-surface-ivory border-l-2 border-secondary-fixed-dim">
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase mb-1">Madre (Referente)</p>
+<p class="font-body-md text-body-md font-bold text-primary">Elena Bianchi</p>
+<div class="mt-2 space-y-1">
+<div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">call</span>
+<span>+39 347 123 4567</span>
+</div>
+<div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">mail</span>
+<span>elena.bianchi@email.it</span>
+</div>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low border-l-2 border-outline-variant">
+<p class="font-label-caps text-[10px] text-on-surface-variant uppercase mb-1">Padre</p>
+<p class="font-body-md text-body-md font-bold text-primary">Marco Rossi</p>
+<div class="mt-2 space-y-1">
+<div class="flex items-center gap-2 text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">call</span>
+<span>+39 333 987 6543</span>
+</div>
+</div>
+</div>
+<button class="w-full py-3 border border-border-subtle text-primary font-label-caps text-label-caps hover:bg-surface-ivory flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> AGGIUNGI RECAPITO
+                            </button>
+</div>
+</div>
+</div>
+<!-- Schedule & Weekly Calendar -->
+<div class="col-span-12 lg:col-span-8 bg-white border border-border-subtle p-8">
+<div class="flex justify-between items-center mb-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<h4 class="font-headline-sm text-headline-sm text-primary">Orario Settimanale</h4>
+</div>
+<button class="text-primary font-label-caps text-label-caps flex items-center gap-1 hover:underline">
+                            Vedi calendario completo <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+<div class="grid grid-cols-5 gap-2 h-64">
+<div class="flex flex-col gap-2">
+<div class="font-label-caps text-[10px] text-on-surface-variant text-center pb-2 border-b border-border-subtle">LUN</div>
+<div class="flex-1 bg-surface-container-low p-2">
+<div class="bg-primary/5 p-2 border-l-2 border-primary">
+<p class="text-[10px] font-bold text-primary">16:30 - 18:30</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Ballet Classique</p>
+<p class="text-[8px] text-on-tertiary-container">Sala 1 - Maestro V. Sokolov</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="font-label-caps text-[10px] text-on-surface-variant text-center pb-2 border-b border-border-subtle">MAR</div>
+<div class="flex-1 bg-surface-ivory p-2 flex flex-col gap-2">
+<div class="bg-primary/5 p-2 border-l-2 border-primary">
+<p class="text-[10px] font-bold text-primary">17:00 - 18:30</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Pointe Work</p>
+</div>
+<div class="bg-primary/5 p-2 border-l-2 border-secondary-fixed-dim">
+<p class="text-[10px] font-bold text-primary">18:30 - 19:30</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Contemporary</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="font-label-caps text-[10px] text-on-surface-variant text-center pb-2 border-b border-border-subtle">MER</div>
+<div class="flex-1 bg-surface-container-low p-2">
+<div class="bg-primary/5 p-2 border-l-2 border-primary">
+<p class="text-[10px] font-bold text-primary">16:30 - 18:30</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Ballet Classique</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="font-label-caps text-[10px] text-on-surface-variant text-center pb-2 border-b border-border-subtle">GIO</div>
+<div class="flex-1 bg-surface-ivory p-2">
+<div class="bg-primary/5 p-2 border-l-2 border-primary">
+<p class="text-[10px] font-bold text-primary">17:00 - 19:00</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Repertoire</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<div class="font-label-caps text-[10px] text-on-surface-variant text-center pb-2 border-b border-border-subtle">VEN</div>
+<div class="flex-1 bg-surface-container-low p-2">
+<div class="bg-primary/5 p-2 border-l-2 border-primary">
+<p class="text-[10px] font-bold text-primary">16:30 - 18:30</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Ballet Classique</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Statuses Section (Medical & Docs) -->
+<div class="col-span-12 lg:col-span-7 bg-white border border-border-subtle p-8">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">verified_user</span>
+<h4 class="font-headline-sm text-headline-sm text-primary">Documentazione e Stato Medico</h4>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Medical Certificate -->
+<div class="flex items-center justify-between p-4 border border-border-subtle hover:border-primary transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">medical_information</span>
+</div>
+<div>
+<p class="font-body-md font-bold text-primary">Certificato Medico Agonistico</p>
+<p class="text-body-sm text-on-surface-variant">Scadenza: 15/11/2023</p>
+</div>
+</div>
+<span class="inline-flex items-center font-label-caps text-[10px] px-3 py-1 bg-error-container text-on-error-container font-bold border border-error/20">
+                                SCADE PRESTO
+                            </span>
+</div>
+<!-- Insurance -->
+<div class="flex items-center justify-between p-4 border border-border-subtle hover:border-primary transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">gavel</span>
+</div>
+<div>
+<p class="font-body-md font-bold text-primary">Assicurazione Infortuni</p>
+<p class="text-body-sm text-on-surface-variant">Validità: 31/08/2024</p>
+</div>
+</div>
+<span class="inline-flex items-center font-label-caps text-[10px] px-3 py-1 bg-green-50 text-green-700 font-bold border border-green-200">
+                                COMPLETO
+                            </span>
+</div>
+<!-- Privacy Consent -->
+<div class="flex items-center justify-between p-4 border border-border-subtle hover:border-primary transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">privacy_tip</span>
+</div>
+<div>
+<p class="font-body-md font-bold text-primary">Informativa Privacy e Liberatoria</p>
+<p class="text-body-sm text-on-surface-variant">Firmato il 02/09/2023</p>
+</div>
+</div>
+<span class="inline-flex items-center font-label-caps text-[10px] px-3 py-1 bg-green-50 text-green-700 font-bold border border-green-200">
+                                COMPLETO
+                            </span>
+</div>
+</div>
+</div>
+<!-- Event Participation -->
+<div class="col-span-12 lg:col-span-5 bg-white border border-border-subtle p-8">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-primary">celebration</span>
+<h4 class="font-headline-sm text-headline-sm text-primary">Eventi e Performance</h4>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="flex flex-col items-center justify-center w-14 h-14 border border-border-subtle shrink-0">
+<span class="font-headline-sm text-primary">20</span>
+<span class="font-label-caps text-[9px] uppercase">DIC</span>
+</div>
+<div>
+<p class="font-body-md font-bold text-primary">Gala d'Inverno - Teatro Arcimboldi</p>
+<p class="text-body-sm text-on-surface-variant">Ruolo: Solista "Il Lago dei Cigni"</p>
+<span class="inline-block mt-1 font-label-caps text-[10px] text-on-tertiary-container uppercase tracking-wide">CONFERMATO</span>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="flex flex-col items-center justify-center w-14 h-14 border border-border-subtle shrink-0 opacity-50">
+<span class="font-headline-sm text-primary">15</span>
+<span class="font-label-caps text-[9px] uppercase">MAG</span>
+</div>
+<div>
+<p class="font-body-md font-bold text-primary">Esami di Fine Anno</p>
+<p class="text-body-sm text-on-surface-variant">Sessione Estiva 2024</p>
+<span class="inline-block mt-1 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-wide">DA PIANIFICARE</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Communication History -->
+<div class="col-span-12 bg-white border border-border-subtle p-8">
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+<h4 class="font-headline-sm text-headline-sm text-primary">Registro Comunicazioni Recenti</h4>
+</div>
+<div class="flex gap-2">
+<button class="px-4 py-2 border border-border-subtle text-primary font-label-caps text-[11px] hover:bg-surface-ivory">FILTRA</button>
+<button class="px-4 py-2 bg-primary text-on-primary font-label-caps text-[11px] flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">send</span> NUOVO MESSAGGIO
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="border-b border-border-subtle">
+<tr>
+<th class="py-4 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Data</th>
+<th class="py-4 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Tipo</th>
+<th class="py-4 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Oggetto</th>
+<th class="py-4 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Destinatario</th>
+<th class="py-4 font-label-caps text-[10px] text-on-surface-variant uppercase tracking-widest">Stato</th>
+<th class="py-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-subtle">
+<tr class="hover:bg-surface-ivory transition-colors group">
+<td class="py-4 text-body-sm">12 Ott 2023, 14:22</td>
+<td class="py-4">
+<span class="inline-flex items-center gap-1 text-primary font-label-caps text-[10px]">
+<span class="material-symbols-outlined text-sm">mail</span> EMAIL
+                                        </span>
+</td>
+<td class="py-4 text-body-sm font-semibold text-primary">Convocazione straordinaria prova costumi</td>
+<td class="py-4 text-body-sm">elena.bianchi@email.it</td>
+<td class="py-4">
+<span class="text-green-600 font-label-caps text-[10px] flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">done_all</span> CONSEGNATO
+                                        </span>
+</td>
+<td class="py-4 text-right">
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-primary">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-ivory transition-colors group">
+<td class="py-4 text-body-sm">05 Ott 2023, 09:15</td>
+<td class="py-4">
+<span class="inline-flex items-center gap-1 text-primary font-label-caps text-[10px]">
+<span class="material-symbols-outlined text-sm">sms</span> SMS
+                                        </span>
+</td>
+<td class="py-4 text-body-sm font-semibold text-primary">Variazione orario lezione Martedì 10/10</td>
+<td class="py-4 text-body-sm">+39 347 123 4567</td>
+<td class="py-4">
+<span class="text-green-600 font-label-caps text-[10px] flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">done_all</span> LETTO
+                                        </span>
+</td>
+<td class="py-4 text-right">
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-primary">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+<tr class="hover:bg-surface-ivory transition-colors group">
+<td class="py-4 text-body-sm">01 Set 2023, 11:30</td>
+<td class="py-4">
+<span class="inline-flex items-center gap-1 text-primary font-label-caps text-[10px]">
+<span class="material-symbols-outlined text-sm">mail</span> EMAIL
+                                        </span>
+</td>
+<td class="py-4 text-body-sm font-semibold text-primary">Conferma iscrizione anno accademico 2023/24</td>
+<td class="py-4 text-body-sm">elena.bianchi@email.it</td>
+<td class="py-4">
+<span class="text-green-600 font-label-caps text-[10px] flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">done_all</span> LETTO
+                                        </span>
+</td>
+<td class="py-4 text-right">
+<button class="opacity-0 group-hover:opacity-100 transition-opacity text-primary">
+<span class="material-symbols-outlined">visibility</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-6 flex justify-center">
+<button class="text-on-surface-variant font-label-caps text-[11px] hover:text-primary transition-colors">CARICA ALTRE COMUNICAZIONI</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual FAB - suppressed according to rules for Details screens -->
+<script>
+        // Simple micro-interaction for hover states
+        document.querySelectorAll('.group').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.classList.add('translate-x-1');
+            });
+            row.addEventListener('mouseleave', () => {
+                row.classList.remove('translate-x-1');
+            });
+        });
+
+        // Search bar focus effect
+        const searchInput = document.querySelector('input[type="text"]');
+        const searchContainer = searchInput.parentElement;
+        searchInput.addEventListener('focus', () => {
+            searchContainer.classList.add('border-primary');
+            searchContainer.classList.add('shadow-sm');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchContainer.classList.remove('border-primary');
+            searchContainer.classList.remove('shadow-sm');
+        });
+    </script>
+</body></html>

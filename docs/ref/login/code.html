@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="light" lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | AUB Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .login-card-shadow {
+            box-shadow: 0px 4px 20px rgba(0,0,0,0.04);
+        }
+        .transition-authoritative {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary": "#735c00",
+                        "surface-tint": "#4f5f7b",
+                        "on-surface-variant": "#44474d",
+                        "surface-ivory": "#FCFBF7",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#303030",
+                        "tertiary-fixed": "#f3e0c0",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "primary": "#04162e",
+                        "surface-container-highest": "#e5e2e1",
+                        "error-container": "#ffdad6",
+                        "heritage-red": "#E61F19",
+                        "inverse-primary": "#b6c7e7",
+                        "on-tertiary-fixed": "#231a06",
+                        "background": "#fcf9f8",
+                        "primary-fixed-dim": "#b6c7e7",
+                        "on-primary-fixed-variant": "#374762",
+                        "surface": "#fcf9f8",
+                        "secondary-fixed": "#ffe088",
+                        "on-surface": "#1b1c1c",
+                        "surface-bright": "#fcf9f8",
+                        "secondary-fixed-dim": "#e9c349",
+                        "tertiary": "#1d1503",
+                        "tertiary-fixed-dim": "#d6c4a5",
+                        "surface-dim": "#dcd9d9",
+                        "on-background": "#1b1c1c",
+                        "inverse-on-surface": "#f3f0ef",
+                        "outline-variant": "#c5c6ce",
+                        "outline": "#75777e",
+                        "surface-container-low": "#f6f3f2",
+                        "on-tertiary-fixed-variant": "#51452d",
+                        "border-subtle": "#E5E5E5",
+                        "secondary-container": "#fed65b",
+                        "on-secondary-fixed-variant": "#574500",
+                        "on-tertiary-container": "#9f9073",
+                        "on-primary": "#ffffff",
+                        "surface-variant": "#e5e2e1",
+                        "on-primary-container": "#8292b0",
+                        "on-primary-fixed": "#091c34",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#745c00",
+                        "on-error": "#ffffff",
+                        "primary-container": "#1a2b44",
+                        "tertiary-container": "#332913",
+                        "surface-container-high": "#eae7e7",
+                        "surface-container": "#f0eded",
+                        "primary-fixed": "#d5e3ff",
+                        "on-secondary-fixed": "#241a00",
+                        "error": "#ba1a1a",
+                        "graphite-text": "#222222"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-width": "280px",
+                        "container-max-width": "1440px",
+                        "stack-md": "16px",
+                        "margin-page": "40px",
+                        "stack-sm": "8px",
+                        "gutter": "24px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Work Sans"],
+                        "body-md": ["Work Sans"],
+                        "headline-md": ["Oswald"],
+                        "body-sm": ["Work Sans"],
+                        "headline-sm": ["Oswald"],
+                        "display-lg": ["Oswald"],
+                        "body-lg": ["Work Sans"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.08em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "0.03em", "fontWeight": "500"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "headline-sm": ["18px", {"lineHeight": "1.4", "letterSpacing": "0.03em", "fontWeight": "500"}],
+                        "display-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface-ivory font-body-md text-on-surface antialiased">
+<!-- Split Layout Container -->
+<main class="flex min-h-screen w-full">
+<!-- Left Side: Visual Anchor -->
+<section class="relative hidden w-1/2 md:block overflow-hidden bg-primary">
+<!-- Background Image -->
+<div class="absolute inset-0 z-0">
+<img alt="Professional ballet photography" class="h-full w-full object-cover opacity-60 mix-blend-overlay grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2rUq2GV5gSyIHDEcVN6L_ESVAQwIYjwVRjyzqPeRGK7fjnrrYC1ru_Y9aTvxFmIWbGEZPBY-wYSB8TXQMZBetlV6ZvWvxrLMsptjB-BJKdsyYPXTA66sMhyFE7uxJoBvVFqKF9L4CKdLlqUBqe5aA83Ic2iEOSvA7Q64mSnOkLDjzteWQjfQICLZzVVwiuJmYtQpLeX3mXe2AQZo1K6Y4dEBKOrCCvQcOgl9rCzIGYbdkmnxk8gVw8g"/>
+</div>
+<!-- Branding Overlay -->
+<div class="relative z-10 flex h-full flex-col justify-between p-margin-page">
+<div class="flex items-center gap-4">
+<img alt="AUB Logo" class="h-16 w-auto object-contain brightness-0 invert" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEJ5tBnrMwhq_mYgQ1UZXRgnZYmmbEac5u_IpeJeNss3MkkIUBCTiHIVs-5kVs0rRHJl1lyCdhQoFVO-1R1RRc8Lf-gdBuOQAdgUAZBKbbAF3zyo2OMmWEWJfLVsNYHEqriFi_fvtfm8QwJXNi5b60VyJOVnG3taaXqYXhIqwbXFdOCd9XNhxEy_gnX9kDtQThUa7n3gobRipmw3r5dmdehfjJ0wtBNyrxsRyyWp3BolqDWWEBqIjLpCSY5oJ_LtNB-EI"/>
+</div>
+<div class="max-w-md">
+<h2 class="font-headline-md text-display-lg text-white mb-4 uppercase leading-none">
+                        Accademia Ucraina di Balletto
+                    </h2>
+<div class="h-1 w-24 bg-secondary-fixed-dim mb-6"></div>
+<p class="font-body-lg text-white/80 max-w-sm">
+                        Eccellenza tecnica e tradizione classica nel cuore di Milano. Benvenuti nell'area riservata al personale amministrativo.
+                    </p>
+</div>
+<div class="flex gap-8 text-white/50 font-label-caps uppercase text-label-caps">
+<span>Est. 2005</span>
+<span>Milano, Italia</span>
+</div>
+</div>
+</section>
+<!-- Right Side: Login Form -->
+<section class="flex w-full flex-col items-center justify-center bg-surface-ivory px-6 md:w-1/2 lg:px-12">
+<div class="w-full max-w-md">
+<!-- Mobile Logo -->
+<div class="mb-12 flex justify-center md:hidden">
+<img alt="AUB Logo" class="h-12 w-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEjxseAvDvSwql4uueaKvkfT-7FM6tQgGRkC8vYhxqKWa7hfsjvz5ZiN-NWw7t32W73ywuYrvP1enugk7DIzOIDJrJqJ67F6raN4prQDHwGgu8_nXBiMpkuGNq2pIwhz4zEaRwaBrrAIKDvcyJEtudFzCFVkJApw7T-JP43jZ2yEVqi-sdJXReh8FEBa_D2GLhoxsdPboc2bqKh_AO19MyYy2FrAM5CcBgWL_IvHqIK2Izo5BggAPsdb2VADWud0qOekA"/>
+</div>
+<header class="mb-10 text-center md:text-left">
+<h1 class="font-headline-md text-display-lg text-primary uppercase mb-2">
+                        Accedi al portale
+                    </h1>
+<p class="font-body-md text-on-surface-variant">
+                        Inserisci le tue credenziali per accedere alla gestione dell'Accademia.
+                    </p>
+</header>
+<form class="space-y-6" id="loginForm">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="email">
+                            Email
+                        </label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">mail</span>
+<input class="w-full rounded-none border border-border-subtle bg-white px-12 py-4 font-body-md text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-authoritative" id="email" placeholder="nome.cognome@accademiaucraina.it" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex items-center justify-between">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="password">
+                                Password
+                            </label>
+<a class="font-label-caps text-label-caps text-secondary hover:text-primary transition-colors uppercase" href="#">
+                                Password dimenticata?
+                            </a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">lock</span>
+<input class="w-full rounded-none border border-border-subtle bg-white px-12 py-4 font-body-md text-on-surface outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-authoritative" id="password" required="" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary" onclick="togglePassword()" type="button">
+<span class="material-symbols-outlined" id="visibilityIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Login Button -->
+<button class="w-full bg-primary py-5 px-8 text-white font-label-caps text-label-caps uppercase tracking-widest hover:bg-primary-container active:scale-[0.98] transition-authoritative flex items-center justify-center gap-2 group" type="submit">
+                        Accedi
+                        <span class="material-symbols-outlined transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</form>
+<footer class="mt-12 border-t border-border-subtle pt-8 text-center md:text-left">
+<p class="font-body-sm text-outline text-sm">
+                        Problemi con l'accesso? <br class="md:hidden"/> Contatta la <a class="text-secondary font-medium underline underline-offset-4" href="mailto:segreteria@accademiaucraina.it">Segreteria Didattica</a>.
+                    </p>
+</footer>
+</div>
+<!-- Atmospheric micro-text -->
+<div class="absolute bottom-8 right-8 hidden lg:block">
+<p class="font-label-caps text-[10px] text-outline/40 uppercase tracking-[0.2em] [writing-mode:vertical-rl]">
+                    AUB Management System v4.0.2
+                </p>
+</div>
+</section>
+</main>
+<script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const visibilityIcon = document.getElementById('visibilityIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                visibilityIcon.innerText = 'visibility_off';
+            } else {
+                passwordInput.type = 'password';
+                visibilityIcon.innerText = 'visibility';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Subtle button loading state simulation
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span>';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                alert('Sistemi in fase di caricamento...');
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }, 1000);
+        });
+    </script>
+</body></html>

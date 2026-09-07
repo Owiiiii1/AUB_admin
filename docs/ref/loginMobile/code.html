@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html class="light" lang="it"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AUB Management - Login</title>
+<!-- Google Fonts: Oswald for headlines, Work Sans for body -->
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&amp;family=Work+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "graphite-text": "#222222",
+                "outline": "#75777e",
+                "secondary-fixed-dim": "#e9c349",
+                "on-tertiary": "#ffffff",
+                "surface-tint": "#4f5f7b",
+                "on-error-container": "#93000a",
+                "tertiary-fixed": "#f3e0c0",
+                "on-secondary-fixed-variant": "#574500",
+                "surface-container-highest": "#e5e2e1",
+                "surface-container-low": "#f6f3f2",
+                "on-primary-container": "#8292b0",
+                "on-secondary-container": "#745c00",
+                "surface-container-lowest": "#ffffff",
+                "tertiary": "#1d1503",
+                "surface-dim": "#dcd9d9",
+                "primary-fixed-dim": "#b6c7e7",
+                "on-surface": "#1b1c1c",
+                "primary": "#04162e",
+                "tertiary-fixed-dim": "#d6c4a5",
+                "secondary-container": "#fed65b",
+                "background": "#fcf9f8",
+                "surface-container": "#f0eded",
+                "on-surface-variant": "#44474d",
+                "error": "#ba1a1a",
+                "on-tertiary-container": "#9f9073",
+                "border-subtle": "#E5E5E5",
+                "inverse-surface": "#303030",
+                "surface-bright": "#fcf9f8",
+                "secondary-fixed": "#ffe088",
+                "on-background": "#1b1c1c",
+                "surface-container-high": "#eae7e7",
+                "on-tertiary-fixed-variant": "#51452d",
+                "primary-container": "#1a2b44",
+                "on-error": "#ffffff",
+                "surface": "#fcf9f8",
+                "on-primary": "#ffffff",
+                "on-tertiary-fixed": "#231a06",
+                "tertiary-container": "#332913",
+                "surface-ivory": "#FCFBF7",
+                "on-secondary-fixed": "#241a00",
+                "surface-variant": "#e5e2e1",
+                "inverse-primary": "#b6c7e7",
+                "on-primary-fixed": "#091c34",
+                "primary-fixed": "#d5e3ff",
+                "secondary": "#735c00",
+                "outline-variant": "#c5c6ce",
+                "heritage-red": "#E61F19",
+                "inverse-on-surface": "#f3f0ef",
+                "error-container": "#ffdad6",
+                "on-secondary": "#ffffff",
+                "on-primary-fixed-variant": "#374762"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "spacing": {
+                "stack-lg": "32px",
+                "container-max-width": "1440px",
+                "sidebar-width": "280px",
+                "gutter": "24px",
+                "stack-sm": "8px",
+                "margin-page": "40px",
+                "stack-md": "16px"
+            },
+            "fontFamily": {
+                "body-md": ["Work Sans"],
+                "body-lg": ["Work Sans"],
+                "headline-sm": ["Oswald"],
+                "headline-md": ["Oswald"],
+                "display-lg": ["Oswald"],
+                "body-sm": ["Work Sans"],
+                "label-caps": ["Work Sans"]
+            },
+            "fontSize": {
+                "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                "headline-sm": ["18px", {"lineHeight": "1.4", "letterSpacing": "0.03em", "fontWeight": "500"}],
+                "headline-md": ["24px", {"lineHeight": "1.3", "letterSpacing": "0.03em", "fontWeight": "500"}],
+                "display-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                "label-caps": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.08em", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: "FILL" 0, "wght" 300, "GRAD" 0, "opsz" 24;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-surface-ivory min-h-screen flex flex-col font-body-md text-on-surface antialiased overflow-x-hidden">
+<!-- Top Section: Visual Photography Split -->
+<header class="relative w-full h-[40vh] min-h-[300px] bg-primary overflow-hidden">
+<img alt="Ballerina photography" class="w-full h-full object-cover opacity-50 grayscale mix-blend-overlay" src="https://lh3.googleusercontent.com/aida/AP1WRLuUjweg5psrdrVUAG3OuUGmevfueult3wyALOLaBZZu-h-zDlnv5UzN8NaMZOo69zVT7WLY8Vw02sfI9a_195rq_uoWFyctWFOeZF4-mnb5uQBBZXLXPSeyNR1dY5X24C6j4Ynat4IICXq3CeHPri8sCAiFy1LcXAVwJg57uo90TZHM2HifwjaFOdzD5_-iSHpMCk1BaPdWJYW-cQ8QZlahxo0mqAmcwLQqHShMiFDv9cSsIhiLGo2Jo0DC"/>
+<!-- Logo Overlay -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="bg-white p-4 shadow-xl">
+<img alt="AUB Logo" class="w-24 h-auto" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBiivbaRYkD-3T3tC10MZUkZnPMKmKmNhGXCTAn6-wamd_HAIOQjtMuCV0PXCTqpAB5xXuhisiv-Cmr_4uePm_ziaY0M9fTVBJxza-_Q5vt2uMgaPXjKds4OS58G25Bh9iLWfVAfw9-VSjriiQonP87jR1GPmBzcp6EN9fymun2jG_Xx1hnolylS2bwu8C7epWo4AL0nlpBNXum35Ar2-KNWvn55b4kIau3FS1i1oG2ICjc_p4qdsHJOZBzZcNPZfADIU"/>
+</div>
+</div>
+</header>
+<!-- Bottom Section: Login Form Container -->
+<main class="flex-grow flex flex-col bg-surface-ivory px-6 py-10">
+<div class="w-full max-w-md mx-auto">
+<!-- Heading -->
+<div class="mb-8 text-center sm:text-left">
+<h1 class="font-headline-md text-primary uppercase mb-2 tracking-wide">
+                    Accedi al Portale
+                </h1>
+<p class="font-body-sm text-on-surface-variant">
+                    Inserisci le tue credenziali per accedere alla gestione dell'Accademia.
+                </p>
+</div>
+<!-- Form -->
+<form action="#" class="space-y-6">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="block font-label-caps text-on-surface-variant uppercase" for="email">
+                        Email
+                    </label>
+<div class="relative">
+<input class="w-full bg-white border border-border-subtle rounded-none py-4 px-4 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all duration-200" id="email" name="email" placeholder="nome.cognome@accademia.it" required="" type="email"/>
+<span class="absolute right-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-outline">mail</span>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block font-label-caps text-on-surface-variant uppercase" for="password">
+                            Password
+                        </label>
+</div>
+<div class="relative">
+<input class="w-full bg-white border border-border-subtle rounded-none py-4 px-4 text-body-md focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all duration-200" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-outline hover:text-primary" id="togglePassword" type="button">
+<span class="material-symbols-outlined">visibility_off</span>
+</button>
+</div>
+</div>
+<!-- Action Button -->
+<div class="pt-4">
+<button class="w-full bg-primary text-on-primary py-5 px-6 font-headline-sm uppercase tracking-[0.2em] hover:bg-primary-container transition-colors duration-300 active:scale-[0.98] flex items-center justify-center gap-2 group" type="submit">
+                        ACCEDI
+                        <span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</form>
+<!-- Footer Links -->
+<div class="mt-12 pt-8 border-t border-border-subtle text-center space-y-4">
+<a class="block font-body-sm text-primary hover:underline underline-offset-4" href="#">
+                    Password dimenticata?
+                </a>
+<div class="pt-2">
+<span class="font-body-sm text-on-surface-variant">Problemi di accesso?</span>
+<a class="block font-body-sm text-primary font-medium mt-1 hover:underline underline-offset-4" href="#">
+                        Contatta la Segreteria Didattica
+                    </a>
+</div>
+</div>
+</div>
+</main>
+<!-- Page Footer -->
+<footer class="py-8 px-6 text-center bg-surface-ivory border-t border-border-subtle/30">
+<p class="font-label-caps text-[10px] text-outline tracking-widest uppercase opacity-60">
+            © 2024 Accademia Ucraina di Balletto • Academy Administration System
+        </p>
+</footer>
+<script>
+        // Password visibility toggle
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const input = document.getElementById('password');
+            const icon = this.querySelector('.material-symbols-outlined');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                input.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        });
+    </script>
+</body></html>
