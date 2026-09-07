@@ -13,7 +13,9 @@
 
 Parent и Student — **не** роли админки. Это планируемые **каналы Flutter (и возможно web)** к API `AUB_admin`. API ещё нет.
 
-Управление костюмами — будущий **сервис**, не роль.
+**DECIDED:** Parent/Student не должны становиться RBAC-ролями админки только потому, что им нужен login. Authentication identity ≠ административный RBAC. Модель User → профили Teacher/Parent/Student — **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)).
+
+Управление костюмами — будущий **сервис**, не роль. Упаковка Flutter Store (одно приложение с режимами vs несколько apps/flavors) — **OPEN**.
 
 ## Реализовано (web)
 
@@ -63,9 +65,9 @@ Parent и Student — **не** роли админки. Это планируе�
 | Administrator | Полная web-админка |
 | Admin | Возможно урезанный админ — не подтверждено |
 | Secretariat | Студенты, зачисления, расписание, позже платежи; без системных настроек |
-| Teacher | Свои группы, расписание, посещаемость; без платежей/контактов родителей без разрешения |
-| Parent | Flutter: только свои дети |
-| Student | Flutter: только себя |
+| Teacher | Свои группы, расписание, **посещаемость студентов**, позже **свой check-in**; без платежей/контактов родителей без разрешения |
+| Parent | Канал Flutter: только свои дети — **не** web-роль админки |
+| Student | Канал Flutter: только себя — **не** web-роль админки |
 
 ## Админка vs workplaces vs Flutter
 
@@ -93,7 +95,9 @@ Parent / Student / Teacher (mobile)
 | Контакты родителей | ✓ | ✓ (намерение) | — (намерение) | R себя F | — |
 | Платежи | ✓ | ✓ (намерение) | — | R свои F | — |
 | Медицина / sensitive | ✓ | R (намерение) | — | — | — |
-| Посещаемость | ✓ | ✓ | W свои (намерение) | — | — |
+| Student Attendance (ребёнок на session) | ✓ | ✓ | W свои (намерение) | R свой ребёнок F (OPEN) | — |
+| Teacher Check-in / присутствие | ✓ / ручная правка | ✓ (намерение) | W своё F | — | — |
+| Оценки / табель | ✓ | ? OPEN | W разрешённые предметы/группы F | R F OPEN | R F OPEN |
 | Правка расписания | ✓ | ✓ (намерение) | R (намерение) | R F | R F |
 | Users / roles / AI | ✓ | — | — | — | — |
 
@@ -105,11 +109,13 @@ Parent / Student / Teacher (mobile)
 
 ## Требует доработки (не реализовано)
 
-- Field-level access
-- Преподаватель → только назначенные студенты
+- Field-level access (**Security Foundation** до широкого mobile)
+- Преподаватель → только назначенные студенты/группы
 - Матрица API-авторизации
 - Безопасность мобильных токенов
 - Access/view audit чувствительных записей
 - Сущности согласий
+- 2FA для административного персонала
+- Модель identity: User ↔ Teacher; профили Parent/Student; несколько профилей у одного User
 
-См. [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md), [CURRENT_STATE.md](CURRENT_STATE.md).
+См. [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md), [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md), [CURRENT_STATE.md](CURRENT_STATE.md).

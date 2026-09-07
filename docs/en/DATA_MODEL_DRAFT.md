@@ -78,7 +78,9 @@ Photos: public disk `teachers/{id}/photos`.
 `course_groups`: `course_id`, `name`, `color`, `sort_order`.  
 `course_group_customer`: `course_group_id`, `customer_id`, `discipline` (column remains).  
 
-**Enrollment rule now:** unique `customer_id` — **one group per student**. The earlier unique `(customer_id, discipline)` was replaced by `2026_07_08_170000`.
+**Enrollment constraint in code:** unique `customer_id` — **at most one CourseGroup per student in the database**. This is **not** a confirmed academy business rule. If a child may attend several disciplines at once, the unique index is a **HIGH PRIORITY product/architecture conflict**. Do not change the migration until PM/academy answers. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+
+The earlier unique `(customer_id, discipline)` was replaced by `2026_07_08_170000`.
 
 ### lessons + pivots
 
@@ -88,7 +90,7 @@ Photos: public disk `teachers/{id}/photos`.
 
 ### Weekly schedule (2026-07-20)
 
-`academy_buildings`, `academy_rooms` (`capacity`, `room_type`).  
+`academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **No lat/lng/radius columns today.** Geofence fields are a **conceptual** requirement for Teacher Check-in, not implemented.  
 `schedule_weeks`: Monday `week_start_date`, Friday `week_end_date`, `work_starts_at` / `work_ends_at`, `draft`/`published`/`locked`.  
 `scheduled_lessons`: week, building, room, group, teacher, lesson, date/time, color, status.  
 `schedule_ai_runs`: prompt, preferences JSON, metrics, report, warnings.
@@ -98,18 +100,23 @@ UI: visual 30 min, planning 5 min. See [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHED
 
 ---
 
-## D. Planned (not separate entities yet)
+## D. Planned / conceptual (no final schema, no migrations)
 
-| Entity | Notes |
-|--------|--------|
-| Student | Today: `customers`. Dedicated table optional |
-| Parent / `student_parent` | Today: father/mother columns |
-| Enrollment workflow | Statuses, dates, history — today pivot only |
-| AttendanceRecord | Not started |
-| Payment / Invoice | Not started |
-| Document (table) | Today: path columns + public files |
-| ConsentRecord / PrivacyPolicyVersion | Not started |
-| Teacher.user_id | Required for teacher login / Flutter teacher mode |
+Do not treat this list as an approved database.
+
+| Topic | Notes | Status |
+|-------|--------|--------|
+| Student / Parent tables | Today: `customers` + embedded parents | OPEN |
+| Enrollment workflow | Statuses, history | OPEN |
+| **Student Attendance** | Presence on a **session** (lesson/rehearsal/…). Not teacher GPS | OPEN |
+| **Teacher Check-in** | One-shot GPS + geofence (**PRELIMINARY** mechanism). Bind to day vs session **OPEN**. Possible fields: lat, lng, accuracy, timestamp, status `on_time`/`late`/`manual`/`rejected` | PRELIMINARY / OPEN |
+| Academic Progress | Grades, periods, report cards, history — grading system **OPEN** | OPEN |
+| Unified calendar | Variant A `ScheduledSession` vs Variant B separate entities. Tech Lead not decided. **Do not change `scheduled_lessons` now** | OPEN |
+| Production / RehearsalGroup / Rehearsal / Performance / Cast | RehearsalGroup **≠** CourseGroup (**PRELIMINARY**). Rehearsals on child calendar + conflicts (**PRELIMINARY**). ProductionStaff unapproved | PRELIMINARY / OPEN |
+| Document entity + **private** storage | Today: public disk paths | OPEN (required before wide mobile) |
+| ConsentRecord / PrivacyPolicyVersion | Not started | OPEN |
+| Teacher.user_id + User actor profiles | Identity model OPEN | OPEN |
+| Payment / Invoice | Not started | OPEN |
 
 Do not reuse kit `orders` as enrollments or invoices.
 

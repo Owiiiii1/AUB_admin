@@ -10,9 +10,7 @@ CRM/backend — **ядро**. К ядру подключаются интерф�
 |-----------|-----------|---------------------|
 | Admin / superadmin web | Администраторы | Реализовано (Inertia web) |
 | Web-workplaces персонала | Секретариат, преподаватели, другой персонал | Фаза 1 реализована; логин преподавателя не связан с `teachers` |
-| Flutter — студенты | Студенты | Репозиторий есть; API ещё нет |
-| Flutter — родители | Родители / опекуны | Тот же app / режим; API ещё нет |
-| Flutter — преподаватели | Преподаватели | Тот же app / режим; API ещё нет |
+| Flutter — студенты / родители / преподаватели | Не-админ акторы | Репозиторий есть; **API нет**. Одно Store-приложение vs flavors — **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)) |
 
 Не проектировать продукт вокруг одной admin panel.
 
@@ -60,7 +58,7 @@ Flutter можно разрабатывать параллельно с backend.
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  Flutter AUB_app                                         │
-│  студенты / родители / преподаватели (режимы)            │
+│  student / parent / teacher (дистрибуция OPEN)           │
 │  GitHub: Owiiiii1/AUB_app                                │
 └────────────────────────────┬─────────────────────────────┘
                              │ HTTPS API  (ещё не построен)
@@ -142,6 +140,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. **Стек API-токенов
 - Студенты: interim расширенная таблица `customers` (таблицы `students` нет)
 - Родители: встроенные колонки на `customers` (таблицы `parents` нет)
 - Преподаватели: `teachers` **не** связаны с `users`
+- Зачисления: `course_group_customer` unique `customer_id` ⇒ **одна CourseGroup на студента в БД**. Соответствует ли это академии — **HIGH PRIORITY OPEN**
 - Legacy-таблицы kit (`orders`, `services`, `staff`, `order_staff`) есть; маршруты удалены
 - Spatie-подобные таблицы прав удалялись при создании AUB `roles` (2026-07-06). Текущее наличие пустых leftover-таблиц в MySQL не перепроверялось
 
@@ -157,7 +156,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. **Стек API-токенов
 
 **Реализовано:** RBAC, `can_write`, `can_delete`, CRUD activity logging, session auth, encrypted AI keys.
 
-**Не реализовано (не описывать как готовое):** field-level ACL; «преподаватель видит только своих студентов»; access/view audit чувствительных записей; сущности согласий; матрица API-авторизации; private disk для документов детей (загрузки идут на диск **public**).
+**Не реализовано (не описывать как готовое):** field-level ACL; «преподаватель видит только своих студентов»; access/view audit чувствительных записей; сущности согласий; матрица API-авторизации; private disk для документов детей (загрузки на диск **public**); **2FA** админов. Это **Security Foundation** до широкого mobile rollout.
 
 `config/aub-menu.php` `always_allowed_route_patterns` даёт любому аутентифицированному пользователю **с ролью** доступ к `courses-groups.*`, `lessons.*`, `weekly-schedule.*`, заглушкам, профилю, workplace — шире, чем `role_menu_items`.
 
@@ -196,8 +195,39 @@ Production `php artisan route:list`: **84** маршрута. Версионир
 
 Пока контракта нет, Flutter-репозиторий не может реализовать реальные функции академии против backend.
 
+## Identity vs административный RBAC (принцип DECIDED)
+
+`User` сегодня — **web session identity**. `Teacher` — строка справочника, не логин. Parent/Student — не сущности.
+
+**DECIDED:** Parent и Student **не** добавлять как RBAC-роли админки только потому, что им нужен вход. Authentication identity и административная роль — разные понятия.
+
+Граф User → профили Teacher / Parent / Student — **OPEN**. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+
+## Student Attendance vs Teacher Presence
+
+Два домена:
+
+- **Student Attendance** — отметка ребёнка на конкретном занятии / репетиции / session.
+- **Teacher Check-in / Staff Presence** — преподаватель физически в академии.
+
+**PRELIMINARY check-in:** кнопка Flutter «Пришёл», разовая геолокация (не background tracking), geofence на backend (lat/lng/radius площадки). Статусы-набросок: `on_time`, `late`, `manual`, `rejected`. QR только fallback. Привязка к **смене/дню** или к **session** — **OPEN**.
+
+## Единый календарь (OPEN)
+
+Реализовано: только `scheduled_lessons`. Не заменять, пока Tech Lead не выберет:
+
+- **A** — одна `ScheduledSession` с типами, или
+- **B** — разные сущности + агрегирующий слой календаря.
+
+**PRELIMINARY:** репетиции обязаны быть в едином календаре ребёнка и в conflict detection с обычными занятиями.
+
+## Productions (домен PRELIMINARY)
+
+Не «опциональный event фазы 6». `RehearsalGroup` ≠ `CourseGroup`. Workflow — discovery. Costume Service может остаться отдельным сервисом. Приоритет задаёт **PM** после discovery.
+
 ## Ключевые правила
 
 1. **Никогда не размещать бизнес-логику AUB в `custom-admin-kit`.**
 2. **Никогда не обращаться к БД или секретам из Flutter.** Только HTTPS API.
 3. **Не считать production `/var/www/aub` git-remote**, пока явно не спроектирован deploy workflow.
+4. **Не выдумывать ответы** на пункты [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).

@@ -1,101 +1,64 @@
 # AUB — Дорожная карта модулей
 
-Фазы описывают **продуктовые возможности**. Это не шлагбаум «сначала весь web, потом Flutter». **API Foundation** можно вести параллельно с остатком фаз 2–3.
+Номера ниже — **крупные продуктовые направления**, не замороженный бизнес-приоритет. PM может переставить их после discovery (особенно **Productions**). Backend и Flutter развиваются **параллельно**; их соединяет **API-контракт**.
 
-## Фаза 0 — Базовая платформа ✅
+Снимок реализованного web: [CURRENT_STATE.md](CURRENT_STATE.md). Открытые пункты: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
-- [x] Laravel 13 в `/var/www/aub` (также GitHub `Owiiiii1/AUB_admin`)
-- [x] `custom-admin-kit` v0.4.0
-- [x] Session auth на `/`
-- [x] Пользователи в settings
-- [x] Локали it/en/ru/uk
-- [x] Заготовки generic CRM; orders/services/staff/calendar **позже сняты с маршрутов**
-- [x] Inertia + React + Vite + Tailwind
+## Уже в production (web-ядро)
 
-## Фаза 1 — Основа доступа ✅ (2026-07-06)
+- Laravel 13 + kit v0.4.0, session auth, RBAC фазы 1
+- Студенты на `customers` (частично); родители встроены; справочник преподавателей (нет `user_id`)
+- Курсы / группы; каталог уроков в Настройки → Академия
+- Недельное расписание + гибридный ИИ (только `scheduled_lessons`)
+- CRUD-журнал; вкладки settings
+- Репозиторий Flutter есть; **API нет**
 
-- [x] `roles`, `role_menu_items`, `users.role_id`
-- [x] `can_write`, `can_delete`
-- [x] UI ролей в Settings
-- [x] Динамическое меню + middleware
-- [x] Защита от lockout
+---
 
-Известные пробелы (не провал фазы 1): нет field-level ACL; `always_allowed_route_patterns` шире меню роли.
+## Направления (0–22+)
 
-## Фаза 2 — Основные записи академии (в процессе)
+| # | Направление | Примечание |
+|---|-------------|------------|
+| 0 | Baseline / GitHub / documentation | Живые docs |
+| 1 | **Security Foundation** | **Обязательно до широкого mobile rollout.** Private storage файлов детей; field-level ACL; scoped teacher access; access/view audit; матрица API-авторизации; mobile token security; **2FA для админ-персонала**; consent/privacy records. **Не реализовано.** |
+| 2 | Core Data Model | `customers` vs `students`; **HIGH PRIORITY:** unique «одна группа на студента» vs несколько групп; identity |
+| 3 | API Foundation | Маршруты, версии, token auth (Sanctum = кандидат), `/me`, resources, ошибки, rate limits, тесты |
+| 4 | Flutter Foundation | Оболочка app, env, HTTPS-клиент, auth к API — модель дистрибуции OPEN |
+| 5 | User Identity / доступ Student / Parent / Teacher | Identity ≠ admin RBAC. Teacher↔User нет |
+| 6 | Student + Parent mobile MVP | Зависит от 3–5 |
+| 7 | Teacher App / Teacher Workplace | Flutter check-in + web workplace; `teachers.user_id` |
+| 8 | **Student Attendance** | Присутствие ребёнка на **конкретном занятии / репетиции / session**. **Не** geofence преподавателя |
+| 9 | **Teacher Check-in / Staff Presence** | Физическое присутствие в академии. PRELIMINARY: кнопка «Пришёл» + разовый GPS + geofence. QR только fallback |
+| 10 | Academic Progress / оценки / табель | Крупный модуль; система оценок OPEN (discovery с академией) |
+| 11 | Secretariat / Enrollment Workflow | Статусы, переводы, история |
+| 12 | Documents | Отдельный модуль; убрать с public disk |
+| 13 | Communications + Push | Сейчас заглушка |
+| 14 | Payments / Accounting | Фискальные правила OPEN |
+| 15 | Schedule evolution | Единый календарь; Variant A vs B OPEN; `scheduled_lessons` не менять, пока нет выбора |
+| 16 | **Productions / Shows / Rehearsal Scheduling** | **Не** «опциональный event placeholder». RehearsalGroup ≠ CourseGroup. Репетиции в календаре ребёнка + конфликты. Приоритет: **PM после discovery** (можно поднять). Costume Service может остаться отдельным |
+| 17 | Dashboard / Reporting | Dashboard сейчас заглушка; логи ≠ отчёты |
+| 18 | Consent / Privacy | Сущностей нет; юридических текстов нет |
+| 19 | Infrastructure / Backup / Monitoring | OPEN |
+| 20 | CI/CD / Staging / Deployment | Production не git-репо |
+| 21 | App Store / Google Play | После privacy + API + выбора дистрибуции |
+| 22+ | Costume Service / Archive / доп. сервисы | Костюмы могут стыковаться с постановками; всё же отдельный сервис |
 
-- [x] Студенты — **частично:** расширенный `customers`
-- [x] Родители — **частично:** встроенные отец/мать
-- [x] Справочник преподавателей
-- [x] Курсы / `course_groups`
-- [x] Каталог уроков (Настройки → Академия)
-- [~] Зачисления — только pivot
-- [ ] `teachers.user_id`
-- [ ] Отдельные таблицы `students` / `parents` (отдельное решение)
+Старые номера «фаза 0–6» — **исторические**. Не считать «фаза 6 = спектакли» продуктовой моделью.
 
-## Фаза 3 — Операции
+## Разделение доменов (не смешивать)
 
-- [x] Недельное расписание + гибридный ИИ
-- [~] Upload файлов в профиле студента (public disk)
-- [ ] Посещаемость
-- [ ] Модуль документов (`/documents` — заглушка)
-- [ ] Коммуникации (`/communication` — заглушка)
-- [ ] События / архив / костюмы (заглушки)
+| Домен | Смысл |
+|-------|-------|
+| Student Attendance | Ребёнок на session |
+| Teacher Presence | Сотрудник физически в академии |
+| CourseGroup | Обычная учебная группа |
+| RehearsalGroup | Группа постановки (PRELIMINARY: не CourseGroup) |
 
-## Фаза 4 — Бухгалтерия
-
-- [ ] Платежи, счета, долги, отчёты
-
-## API Foundation (следующий технический этап, параллельно)
-
-Не замена продуктовой фазы 5; это **контракт**, без которого фаза 5 не живёт.
-
-- [ ] Маршруты API + версионирование
-- [ ] Token auth (Sanctum = кандидат)
-- [ ] `/me`, login, revoke
-- [ ] Resources / ошибки / rate limits / тесты
-- [ ] Flutter login против этого API
-
-Репозиторий Flutter `Owiiiii1/AUB_app` уже есть (`aub`, `com.owlsolutions.aub`).
-
-## Фаза 5 — Каналы доступа (мобильные функции)
-
-Зависит от API Foundation.
-
-- [x] Репозиторий Flutter создан
-- [ ] Режимы студент / родитель / преподаватель с реальными данными
-- [ ] Push
-- [ ] Mobile consent / privacy flow
-
-Клиент — native Flutter (не PWA). Механизм токенов **не** зафиксирован.
-
-## Фаза 6 — Опциональные сервисы
-
-Костюмы, шоу, билеты, аренда — не ядро MVP.
-
-## Диаграмма
+## Параллельность
 
 ```
-Фаза 0 ✅
-    │
-    ▼
-Фаза 1 ✅
-    │
-    ▼
-Фаза 2 (записи) ← В ПРОЦЕССЕ
-    │
-    ├──────────────┐
-    ▼              ▼
-Фаза 3           Фаза 4
-(операции)       (учёт)
-    │              │
-    └──────┬───────┘
-           ▼
-    API Foundation  ← СЛЕДУЮЩИЙ ТЕХНИЧЕСКИЙ ЭТАП (параллельно можно)
-           │
-           ▼
-    Фаза 5 (функции Flutter)
-           │
-           ▼
-    Фаза 6 (опционально)
+AUB_admin  ── API-контракт ──  AUB_app
+   │                              │
+   web workplaces / admin         student / parent / teacher
+                                  (дистрибуция OPEN)
 ```

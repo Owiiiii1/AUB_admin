@@ -20,6 +20,7 @@ Source of truth for implemented behaviour: **code + migrations + routes** in Git
 | Data model draft | [DATA_MODEL_DRAFT.md](en/DATA_MODEL_DRAFT.md) | [DATA_MODEL_DRAFT.md](ru/DATA_MODEL_DRAFT.md) |
 | User roles and access | [USER_ROLES_AND_ACCESS.md](en/USER_ROLES_AND_ACCESS.md) | [USER_ROLES_AND_ACCESS.md](ru/USER_ROLES_AND_ACCESS.md) |
 | Module roadmap | [MODULE_ROADMAP.md](en/MODULE_ROADMAP.md) | [MODULE_ROADMAP.md](ru/MODULE_ROADMAP.md) |
+| Open questions | [OPEN_QUESTIONS.md](en/OPEN_QUESTIONS.md) | [OPEN_QUESTIONS.md](ru/OPEN_QUESTIONS.md) |
 | Development rules | [DEVELOPMENT_RULES.md](en/DEVELOPMENT_RULES.md) | [DEVELOPMENT_RULES.md](ru/DEVELOPMENT_RULES.md) |
 | Server deployment | [SERVER_DEPLOYMENT.md](en/SERVER_DEPLOYMENT.md) | [SERVER_DEPLOYMENT.md](ru/SERVER_DEPLOYMENT.md) |
 | Privacy and data protection | [PRIVACY_AND_DATA_PROTECTION.md](en/PRIVACY_AND_DATA_PROTECTION.md) | [PRIVACY_AND_DATA_PROTECTION.md](ru/PRIVACY_AND_DATA_PROTECTION.md) |

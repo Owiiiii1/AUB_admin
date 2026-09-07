@@ -29,6 +29,7 @@ DPA still recommended; not a system feature.
 | Students | Names, birth data, addresses on `customers` | **Children’s data** |
 | Parents | Embedded father/mother fields | Personal |
 | Health-adjacent | Medical certificate expiry, document scans | May be **special category** |
+| Location (future) | Teacher check-in lat/lng/accuracy/timestamp | Personal; not collected today |
 | AI keys | `ai_provider_settings.api_key` | Secrets (encrypted at rest in Laravel) |
 | Logs | IP, user agent on `activity_logs` | Limited personal |
 
@@ -64,16 +65,20 @@ Student files are stored on the Laravel **public** disk (`students/{id}/document
 - `can_write` / `can_delete`
 - CRUD activity logging (`ActivityLogger`) — not a full access/view audit
 
-### Requires follow-up (not implemented)
+### Security Foundation (required before wide mobile rollout — not implemented)
+
+Raise these from “later improvements” to **mandatory foundation**:
 
 - Private storage for children’s documents
-- Field-level access
-- Teacher → only assigned students
-- Access/view audit for sensitive records
-- Consent / privacy-policy entities
-- Mobile token security
+- Field-level ACL
+- Scoped teacher access (assigned children/groups only)
+- Access/view audit of sensitive data
 - API authorization matrix
-- Subject access export / erasure workflows
+- Mobile token security
+- **2FA for administrative staff**
+- Consent / privacy records
+
+Plus (still required, listed separately): subject access export / erasure workflows.
 
 Do not list RBAC or “access logging” as planned if the reader might think nothing exists — RBAC and CRUD logs **exist**; they are incomplete.
 
@@ -96,4 +101,6 @@ Undefined with the academy. Typical ranges (guidance only): enrollment + legal p
 | This technical note | Current as of 2026-09-07 |
 | Public Privacy Policy / ToS / DPA / cookie policy | Not created |
 
-Update this file when modules collect new personal data, roles change, Flutter ships, or AI starts sending personal fields.
+Update this file when modules collect new personal data (including future teacher geolocation check-in), roles change, Flutter ships, or AI starts sending personal fields.
+
+See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) for privacy/consent product questions.

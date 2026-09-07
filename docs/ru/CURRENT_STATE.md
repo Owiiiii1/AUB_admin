@@ -104,10 +104,10 @@ AUB: роли, seed меню, activity_logs, поля профиля студе�
 | `customers` | **Студенты** (interim-таблица kit) |
 | `teachers` | Преподаватели; **не** связаны с `users` |
 | `courses`, `course_groups` | Курсы/группы; учебное окно курса |
-| `course_group_customer` | Зачисление; unique `customer_id` (одна группа на студента) |
+| `course_group_customer` | Зачисление; unique `customer_id` (**одна CourseGroup на студента в БД** — **HIGH PRIORITY OPEN**, является ли это правилом академии) |
 | `lessons` | Каталог (`duration_minutes`) |
 | `lesson_teacher`, `lesson_course`, `course_group_lesson` | Связи уроков; несколько преподавателей |
-| `academy_buildings`, `academy_rooms` | Локации |
+| `academy_buildings`, `academy_rooms` | Локации (колонок geofence lat/lng/radius нет) |
 | `schedule_weeks`, `scheduled_lessons` | Недельное расписание |
 | `schedule_ai_runs` | Журнал ИИ |
 | `activity_logs` | CRUD (+ login/logout) |
@@ -182,7 +182,7 @@ Layouts: `AdminLayout.jsx`, `AuthLayout.jsx`.
 |-----|-------|--------|
 | coursesAndGroups | `courses-groups.index` | Реализовано |
 | scheduleService | `weekly-schedule.index` | Реализовано |
-| documents, communication, events, costumeService, archive | `placeholder.*` | Заглушки |
+| documents, communication, events, costumeService, archive | `placeholder.*` | UI-заглушки. Продукт: Productions — **доменная подсистема**, не «опциональная фаза 6». Costume Service может остаться отдельным сервисом. |
 
 Отдельного пункта `lessons` в боковом extra-меню **нет**. Каталог — Настройки → Академия.
 
@@ -214,27 +214,32 @@ Field-level ограничений нет: роль с доступом к `cust
 | 2 | Каталог уроков | Готово (Настройки → Академия) |
 | 3 | Недельное расписание | Готово + гибридный ИИ (2026-07-20) |
 | 3 | Загрузка файлов студента | Частично — public disk, нет модуля документов |
-| 3 | Посещаемость | Не начато |
+| 3 | **Student Attendance** | Не начато (ребёнок на session) |
+| 3 | **Teacher Check-in** | Не начато (**PRELIMINARY** GPS snapshot + geofence) |
 | 3 | Документы / коммуникации в меню | Заглушки |
 | 4+ | Платежи | Не начато |
-| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть |
+| future | Academic Progress / Productions | Крупные модули в docs; не начато; приоритет Productions = PM после discovery |
+| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть; упаковка Store **OPEN** |
 
 ## Что НЕ реализовано
 
 - Отдельные таблицы `students` / `parents`
-- Полный workflow зачислений (статусы, переводы, история)
-- Посещаемость
+- Полный workflow зачислений (статусы, переводы, история). Unique `customer_id` vs несколько групп — **OPEN**
+- **Student Attendance** (уровень session) и **Teacher Check-in** (присутствие)
+- Academic Progress / оценки / табель
+- Productions / RehearsalGroup / репетиции / спектакли (web `/events` — только заглушка)
 - Платежи / счета
 - Отдельные модули документов и коммуникаций
-- События, архив, костюмы (заглушки меню)
+- Архив, костюмы (заглушки меню; костюмы могут остаться отдельным сервисом)
 - **`routes/api.php`, API resources, Sanctum/Passport/JWT`**
-- Функции Flutter сверх шаблона
+- Функции Flutter сверх шаблона; одно приложение vs flavors **OPEN**
 - PDF-экспорт расписания (кнопка-заглушка)
 - Исполняемые рекомендации ИИ (только re-prompt)
 - Field-level visibility; ограничение преподавателя своими студентами
 - Сущности согласий / privacy policy
 - Access/view audit чувствительных записей
 - Private storage документов детей
+- 2FA администраторов
 - Git-deploy с GitHub в `/var/www/aub`
 
 ## Кастомизации хоста (сохранять)

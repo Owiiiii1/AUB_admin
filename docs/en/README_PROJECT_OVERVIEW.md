@@ -21,9 +21,7 @@ Create one digital platform that:
 |---------|----------|------|---------------------|
 | Admin / superadmin web | Administrators | `AUB_admin` Inertia | Implemented; dashboard is a placeholder |
 | Staff web workplaces | Secretariat, teachers, other staff | `AUB_admin` | Phase 1 RBAC implemented; teacher record not linked to login |
-| Flutter — students | Students | `AUB_app` | Repository exists; default template; no API |
-| Flutter — parents | Parents / guardians | `AUB_app` (mode) | Planned on the same app; no API |
-| Flutter — teachers | Teachers | `AUB_app` (mode) | Planned on the same app; no API |
+| Flutter — students / parents / teachers | Students, parents, teachers | `AUB_app` | Repository exists; default template; **no API**. One Store app with modes vs several apps/flavors is **OPEN** |
 
 ## Repositories
 
@@ -80,11 +78,11 @@ Kit `staff.role` is free text, **not** access control.
 
 **Partial:** students on `customers`; parents as embedded fields; enrollments without statuses; document uploads in profile only.
 
-**Missing:** attendance; payments; standalone documents/communication modules; mobile API; token auth; field-level ACL.
+**Missing:** student attendance; teacher check-in; academic progress; payments; standalone documents/communication modules; mobile API; token auth; field-level ACL; Security Foundation items.
 
-**Next major technical stage:** [API Foundation](NEXT_STEPS.md) — Flutter may be developed in parallel, but features need an API contract.
+**Next major technical stage:** [API Foundation](NEXT_STEPS.md) — Flutter may be developed in parallel, but features need an API contract. Product directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Open questions: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
-Costume/show/ticket modules stay optional (Phase 6).
+Productions / shows / rehearsals are a **domain subsystem** (RehearsalGroup ≠ CourseGroup, **PRELIMINARY**), not “optional Phase 6”. PM sets priority after discovery. Costume Service may stay a separate integrated service. Web `/events` and `/costume-service` remain UI placeholders only.
 
 ## Server
 

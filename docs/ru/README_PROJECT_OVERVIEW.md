@@ -21,9 +21,7 @@
 |-------|-----------|-----|---------------------|
 | Admin / superadmin web | Администраторы | `AUB_admin` Inertia | Реализовано; dashboard — заглушка |
 | Web-workplaces персонала | Секретариат, преподаватели, другой персонал | `AUB_admin` | RBAC фазы 1 есть; запись преподавателя не связана с логином |
-| Flutter — студенты | Студенты | `AUB_app` | Репозиторий есть; шаблон; API нет |
-| Flutter — родители | Родители / опекуны | `AUB_app` (режим) | Планируется в том же app; API нет |
-| Flutter — преподаватели | Преподаватели | `AUB_app` (режим) | Планируется в том же app; API нет |
+| Flutter — студенты / родители / преподаватели | Студенты, родители, преподаватели | `AUB_app` | Репозиторий есть; шаблон; **API нет**. Одно Store-приложение с режимами vs несколько apps/flavors — **OPEN** |
 
 ## Репозитории
 
@@ -80,11 +78,11 @@ Production `route:list`: **84** web-маршрута. **Ноль** API-endpoint�
 
 **Частично:** студенты на `customers`; родители как встроенные поля; зачисления без статусов; документы только upload в профиле.
 
-**Нет:** посещаемость; платежи; отдельные модули документов/коммуникаций; mobile API; token auth; field-level ACL.
+**Нет:** student attendance; teacher check-in; academic progress; платежи; отдельные модули документов/коммуникаций; mobile API; token auth; field-level ACL; пункты Security Foundation.
 
-**Следующий крупный технический этап:** [API Foundation](NEXT_STEPS.md) — Flutter можно развивать параллельно, но функции требуют API-контракта.
+**Следующий крупный технический этап:** [API Foundation](NEXT_STEPS.md) — Flutter можно развивать параллельно, но функции требуют API-контракта. Направления продукта: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Открытые вопросы: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
-Костюмы/шоу/билеты остаются опциональной фазой 6.
+Productions / шоу / репетиции — **доменная подсистема** (RehearsalGroup ≠ CourseGroup, **PRELIMINARY**), не «опциональная фаза 6». Приоритет задаёт PM после discovery. Costume Service может остаться отдельным интегрированным сервисом. Web `/events` и `/costume-service` — только UI-заглушки.
 
 ## Сервер
 

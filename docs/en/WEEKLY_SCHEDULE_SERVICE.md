@@ -156,3 +156,9 @@ Write routes require `can.write`.
 ## Implementation status
 
 **Implemented (2026-07-20):** DB tables, buildings/rooms, CRUD board, conflicts, publish/copy/clear, work hours, AI hybrid planner, AI run log, course study windows, multi-teacher group lessons, General/Group views, activity logging.
+
+## Future calendar (not implemented)
+
+This board schedules **regular `scheduled_lessons` only**. Product requirement (**PRELIMINARY**): rehearsals (and later performances / possible exams / academy events) must appear on the child’s **unified calendar** and participate in **conflict detection** with regular lessons.
+
+Tech Lead has **not** chosen unified-session vs aggregating-layer architecture. Do not change `scheduled_lessons` in this documentation task. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) and [ARCHITECTURE.md](ARCHITECTURE.md).

@@ -10,9 +10,7 @@ The CRM/backend is the **core**. Interfaces attach to that core:
 |-----------|----------|---------------------|
 | Admin / superadmin web | Administrators | Implemented (Inertia web) |
 | Staff web workplaces | Secretariat, teachers, other staff | Phase 1 implemented; teacher login not linked to `teachers` |
-| Flutter — students | Students | Repository exists; no API yet |
-| Flutter — parents | Parents / guardians | Same app / mode planned; no API yet |
-| Flutter — teachers | Teachers | Same app / mode planned; no API yet |
+| Flutter — students / parents / teachers | Non-admin actors | Repository exists; **no API**. One Store app vs flavors is **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)) |
 
 Do not design the product around a single admin panel.
 
@@ -60,7 +58,7 @@ Flutter work may proceed in parallel with backend. Mobile **functionality** depe
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  Flutter AUB_app                                         │
-│  students / parents / teachers (modes)                   │
+│  student / parent / teacher (distribution OPEN)          │
 │  GitHub: Owiiiii1/AUB_app                                │
 └────────────────────────────┬─────────────────────────────┘
                              │ HTTPS API  (not built yet)
@@ -142,6 +140,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 - Students: interim extended `customers` table (no `students` table)
 - Parents: embedded columns on `customers` (no `parents` table)
 - Teachers: `teachers` **not** linked to `users`
+- Enrollments: `course_group_customer` unique `customer_id` ⇒ **one CourseGroup per student in DB**. Whether that matches the academy is **HIGH PRIORITY OPEN**
 - Legacy kit tables (`orders`, `services`, `staff`, `order_staff`) exist; routes removed
 - Spatie-style permission tables were dropped when AUB `roles` were created (2026-07-06). Whether empty leftover tables still exist in MySQL was not re-verified
 
@@ -157,7 +156,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 
 **Implemented:** RBAC, `can_write`, `can_delete`, CRUD activity logging, session auth, encrypted AI keys.
 
-**Not implemented (do not describe as done):** field-level ACL; teacher-only-assigned-students; view/access audit of sensitive records; consent entities; API authorization matrix; private disk for children’s documents (uploads use the **public** disk).
+**Not implemented (do not describe as done):** field-level ACL; teacher-only-assigned-students; view/access audit of sensitive records; consent entities; API authorization matrix; private disk for children’s documents (uploads use the **public** disk); admin **2FA**. These are **Security Foundation** before wide mobile rollout.
 
 `config/aub-menu.php` `always_allowed_route_patterns` grants every authenticated user **with a role** access to `courses-groups.*`, `lessons.*`, `weekly-schedule.*`, placeholders, profile, workplace — wider than `role_menu_items`.
 
@@ -196,8 +195,39 @@ Planned contents, **not implemented**:
 
 Until that contract exists, the Flutter repository cannot implement real academy features against the backend.
 
+## Identity vs administrative RBAC (DECIDED principle)
+
+`User` today is **web session identity**. `Teacher` is a directory row, not a login. Parent/Student are not entities.
+
+**DECIDED:** Parent and Student must **not** be added as admin-panel RBAC roles only because they need to log in. Authentication identity and administrative role are different concepts.
+
+The User → Teacher / Parent / Student profile graph is **OPEN**. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+
+## Student Attendance vs Teacher Presence
+
+Two domains:
+
+- **Student Attendance** — child marked on a specific lesson / rehearsal / session.
+- **Teacher Check-in / Staff Presence** — teacher physically at the academy.
+
+**PRELIMINARY check-in:** Flutter button «Пришёл», one-shot geolocation (not background tracking), backend geofence (lat/lng/radius per site). Statuses sketched: `on_time`, `late`, `manual`, `rejected`. QR is fallback only. Whether check-in binds to a **shift/day** or a **session** is **OPEN**.
+
+## Unified calendar (OPEN)
+
+Implemented: `scheduled_lessons` only. Do not replace it until Tech Lead chooses:
+
+- **A** — one `ScheduledSession` with types, or
+- **B** — separate entities + aggregating calendar layer.
+
+**PRELIMINARY:** rehearsals must appear on the child’s unified calendar and in conflict detection with regular lessons.
+
+## Productions (PRELIMINARY domain)
+
+Not an “optional Phase 6 event”. `RehearsalGroup` ≠ `CourseGroup`. Full workflow is discovery. Costume Service may stay a separate integrated service. Priority is for the **PM** after discovery.
+
 ## Key rules
 
 1. **Never put AUB-specific business logic into `custom-admin-kit`.**
 2. **Never call the database or secrets from Flutter.** Only HTTPS API.
 3. **Do not treat production `/var/www/aub` as a git remote** until a deploy workflow is explicitly designed.
+4. **Do not invent answers** to items in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).

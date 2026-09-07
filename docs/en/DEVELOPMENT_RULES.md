@@ -30,7 +30,8 @@ Flutter must **never** contain Bitrix/webhooks, DB credentials, or `APP_KEY`. On
 
 ## Before adding a module
 
-- [ ] Read [CURRENT_STATE.md](CURRENT_STATE.md) and [MVP_SCOPE.md](MVP_SCOPE.md)
+- [ ] Read [CURRENT_STATE.md](CURRENT_STATE.md), [MVP_SCOPE.md](MVP_SCOPE.md), and [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)
+- [ ] Do **not** invent answers to OPEN / PRELIMINARY items
 - [ ] `php artisan route:list` (or equivalent in `AUB_app`)
 - [ ] Inspect existing models/controllers/pages
 - [ ] Update **en + ru** docs in the same task
@@ -85,6 +86,7 @@ Production deploy is currently **file copy**, not `git pull`.
 - Always update `docs/en/` and `docs/ru/` together
 - Russian = full translation
 - After each Cursor task, overwrite `docs/Development/Cursor_Work_Report.md`
+- Status vocabulary: **DECIDED** / **PRELIMINARY** / **OPEN**. Do not present assumptions as decisions. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
 ## Cursor workflow (mandatory)
 

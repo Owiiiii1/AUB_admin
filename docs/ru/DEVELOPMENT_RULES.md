@@ -30,7 +30,8 @@ Production `/var/www/aub` **не** git-репозиторий (2026-09-07). Не
 
 ## Перед добавлением модуля
 
-- [ ] Прочитать [CURRENT_STATE.md](CURRENT_STATE.md) и [MVP_SCOPE.md](MVP_SCOPE.md)
+- [ ] Прочитать [CURRENT_STATE.md](CURRENT_STATE.md), [MVP_SCOPE.md](MVP_SCOPE.md) и [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)
+- [ ] **Не** выдумывать ответы на пункты OPEN / PRELIMINARY
 - [ ] `php artisan route:list` (или аналог в `AUB_app`)
 - [ ] Просмотреть models/controllers/pages
 - [ ] Обновить docs **en + ru** в той же задаче
@@ -85,6 +86,7 @@ php artisan storage:link     # upload студентов/преподавате�
 - Всегда обновлять `docs/en/` и `docs/ru/` вместе
 - Русская версия — полный перевод
 - После каждой задачи Cursor перезаписывать `docs/Development/Cursor_Work_Report.md`
+- Словарь статусов: **DECIDED** / **PRELIMINARY** / **OPEN**. Не выдавать предположения за решения. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
 ## Рабочий процесс Cursor (обязательно)
 

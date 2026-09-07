@@ -78,7 +78,9 @@ hasMany `RoleMenuItem`, hasMany `User`.
 `course_groups`: `course_id`, `name`, `color`, `sort_order`.  
 `course_group_customer`: `course_group_id`, `customer_id`, `discipline` (колонка осталась).
 
-**Правило зачисления сейчас:** unique `customer_id` — **одна группа на студента**. Unique `(customer_id, discipline)` заменён миграцией `2026_07_08_170000`.
+**Ограничение зачисления в коде:** unique `customer_id` — **не больше одной CourseGroup на студента в БД**. Это **не** подтверждённое правило академии. Если ребёнок может ходить на несколько дисциплин сразу, unique — **HIGH PRIORITY конфликт** продукта и схемы. Миграцию не менять, пока нет ответа PM/академии. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+
+Ранее unique `(customer_id, discipline)` заменён миграцией `2026_07_08_170000`.
 
 ### lessons + pivots
 
@@ -88,7 +90,7 @@ hasMany `RoleMenuItem`, hasMany `User`.
 
 ### Недельное расписание (2026-07-20)
 
-`academy_buildings`, `academy_rooms` (`capacity`, `room_type`).  
+`academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **Колонок lat/lng/radius сейчас нет.** Поля geofence — **концептуальное** требование Teacher Check-in, не реализовано.  
 `schedule_weeks`: понедельник `week_start_date`, пятница `week_end_date`, `work_starts_at` / `work_ends_at`, `draft`/`published`/`locked`.  
 `scheduled_lessons`: неделя, здание, зал, группа, преподаватель, урок, дата/время, цвет, статус.  
 `schedule_ai_runs`: промпт, preferences JSON, метрики, отчёт, предупреждения.
@@ -98,18 +100,23 @@ UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCH
 
 ---
 
-## D. Planned (отдельных сущностей пока нет)
+## D. Planned / концепт (нет финальной схемы, нет миграций)
 
-| Сущность | Примечание |
-|----------|------------|
-| Student | Сейчас: `customers`. Отдельная таблица — опционально |
-| Parent / `student_parent` | Сейчас: колонки отца/матери |
-| Workflow зачислений | Статусы, даты, история — сейчас только pivot |
-| AttendanceRecord | Не начато |
-| Payment / Invoice | Не начато |
-| Document (таблица) | Сейчас: path-колонки + public files |
-| ConsentRecord / PrivacyPolicyVersion | Не начато |
-| Teacher.user_id | Нужен для login преподавателя / режима Flutter |
+Не считать список утверждённой БД.
+
+| Тема | Примечание | Status |
+|------|------------|--------|
+| Таблицы Student / Parent | Сейчас: `customers` + встроенные родители | OPEN |
+| Workflow зачислений | Статусы, история | OPEN |
+| **Student Attendance** | Присутствие на **session** (урок/репетиция/…). Не GPS преподавателя | OPEN |
+| **Teacher Check-in** | Разовый GPS + geofence (**PRELIMINARY**). Привязка к дню vs session **OPEN**. Возможные поля: lat, lng, accuracy, timestamp, статус `on_time`/`late`/`manual`/`rejected` | PRELIMINARY / OPEN |
+| Academic Progress | Оценки, периоды, табель, история — система оценок **OPEN** | OPEN |
+| Единый календарь | Variant A `ScheduledSession` vs Variant B разные сущности. Tech Lead не решил. **`scheduled_lessons` сейчас не менять** | OPEN |
+| Production / RehearsalGroup / Rehearsal / Performance / Cast | RehearsalGroup **≠** CourseGroup (**PRELIMINARY**). Репетиции в календаре ребёнка + конфликты (**PRELIMINARY**). ProductionStaff не утверждён | PRELIMINARY / OPEN |
+| Сущность Document + **private** storage | Сейчас: пути на public disk | OPEN (нужно до широкого mobile) |
+| ConsentRecord / PrivacyPolicyVersion | Не начато | OPEN |
+| Teacher.user_id + профили User | Модель identity OPEN | OPEN |
+| Payment / Invoice | Не начато | OPEN |
 
 Не использовать kit `orders` как зачисления или счета.
 
