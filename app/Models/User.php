@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['name', 'email', 'password', 'role_id', 'can_delete', 'can_write', 'account_type', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
@@ -35,7 +36,7 @@ class User extends Authenticatable
     ];
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * @var array<string, mixed>
@@ -60,6 +61,44 @@ class User extends Authenticatable
                 ]);
             }
         });
+
+        static::updated(function (User $user): void {
+            if ($user->wasChanged('is_active') && ! $user->is_active) {
+                $user->tokens()->delete();
+            }
+        });
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function mobileAccountTypes(): array
+    {
+        return [
+            self::TYPE_STUDENT,
+            self::TYPE_PARENT,
+            self::TYPE_TEACHER,
+        ];
+    }
+
+    public function isMobileActor(): bool
+    {
+        return in_array($this->account_type, self::mobileAccountTypes(), true);
+    }
+
+    public function matchingActorProfile(): Student|AcademyParent|Teacher|null
+    {
+        return match ($this->account_type) {
+            self::TYPE_STUDENT => Student::query()->where('user_id', $this->id)->first(),
+            self::TYPE_PARENT => AcademyParent::query()->where('user_id', $this->id)->first(),
+            self::TYPE_TEACHER => Teacher::query()->where('user_id', $this->id)->first(),
+            default => null,
+        };
+    }
+
+    public function canAccessMobileApi(): bool
+    {
+        return $this->is_active && $this->isMobileActor() && $this->matchingActorProfile() !== null;
     }
 
     public function role(): BelongsTo

@@ -30,7 +30,7 @@
 | **AUB_admin** | [`Owiiiii1/AUB_admin`](https://github.com/Owiiiii1/AUB_admin) | CRM, БД, бизнес-логика, web admin/workplaces, будущий API |
 | **AUB_app** | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) | Flutter app `aub`, bundle id `com.owlsolutions.aub` |
 
-Flutter обязан использовать **только HTTPS API**. Файла `routes/api.php` нет. Sanctum / Passport / JWT не установлены.
+Flutter обязан использовать **только HTTPS API** (`/api/v1`, Sanctum Bearer). Контракт: [API.md](API.md). Passport / JWT нет.
 
 Production ядра: `/var/www/aub`, `https://aub.owlsolutions.net`. Папка **не** git-репозиторий. Для Tech Lead источник истины — GitHub.
 
@@ -80,7 +80,7 @@ Production `route:list`: **84** web-маршрута. **Ноль** API-endpoint�
 
 **Нет:** student attendance; teacher check-in (семантика daily DECIDED); final assessment / табели; платежи; отдельные модули документов/коммуникаций; mobile API; token auth; field-level ACL; пункты Security Foundation.
 
-**Следующий крупный технический этап:** [Security Foundation](NEXT_STEPS.md) → Core Data Model refactor → Identity → API Foundation → Flutter Foundation. Стабильный API **после** Core Data Model. Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Открытые вопросы: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**Следующий крупный технический этап:** Flutter Authentication Foundation (после API Foundation). Security Foundation по-прежнему обязателен до широкого mobile rollout. Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Открытые вопросы: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
 Productions / шоу — **поздний future** / discovery-needed (activity groups ≠ `Class`). Workflow не детализировать сейчас. Costume Service может остаться отдельным интегрированным сервисом. Web `/events` и `/costume-service` — только UI-заглушки.
 

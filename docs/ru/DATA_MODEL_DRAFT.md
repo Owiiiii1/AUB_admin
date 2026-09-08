@@ -7,7 +7,7 @@
 - **Planned** — не построено
 - **Unverified leftover** — исторически упоминалось; Spatie-подобные таблицы дропались в `2026_07_06_120000`; leftover в MySQL **не** перепроверялись 2026-09-07
 
-Миграции: **39 файлов**, включая Identity Layer `2026_09_08_220000_add_account_identity_layer`.
+Миграции: **40 файлов**, включая Identity Layer `2026_09_08_220000_add_account_identity_layer` и Sanctum `personal_access_tokens`.
 
 Чувствительность: Normal / Personal data / Children’s data / Special category / Secret.
 
@@ -41,7 +41,7 @@ Privacy: Children’s data / Personal data.
 
 ### Системные Laravel
 
-`cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `sessions`, `password_reset_tokens`, `migrations`.
+`cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `sessions`, `password_reset_tokens`, `migrations`, `personal_access_tokens` (Sanctum hashed PAT; `name` = device_name, `abilities` includes `mobile`, `expires_at`). Privacy: Secret (token hash).
 
 ### activity_logs (implemented)
 
@@ -119,7 +119,7 @@ UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCH
 
 ## D. Planned / концепт (нет финальной схемы, нет миграций)
 
-Не считать список утверждённой БД для ещё не построенных модулей. Core Data Model refactor и Identity Layer **сделаны**. Следующий этап до стабильного mobile API — **API Foundation**.
+Не считать список утверждённой БД для ещё не построенных модулей. Core Data Model, Identity Layer и API Foundation **сделаны**. Следующий клиентский этап — Flutter Authentication Foundation.
 
 ### Student / Parent (**implemented**)
 

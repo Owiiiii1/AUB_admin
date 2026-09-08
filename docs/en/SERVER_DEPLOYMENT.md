@@ -86,8 +86,8 @@ sudo chmod -R ug+rwx /var/www/aub/storage /var/www/aub/bootstrap/cache
 ```bash
 php artisan --version
 composer show owlsolutions/custom-admin-kit
-php artisan route:list          # expect 84 web routes; no /api Flutter routes
-php artisan migrate:status      # 37 files, all Ran, batches 1–29
+php artisan route:list --path=api   # 5 routes: health, login, logout, logout-all, me
+php artisan migrate:status      # 40 files, personal_access_tokens Ran
 php artisan owl-admin:smoke --preset=admin
 php artisan owl-admin:doctor --preset=admin
 tail -80 storage/logs/laravel.log
@@ -116,7 +116,7 @@ sudo systemctl reload nginx
 
 `/var/www/aub/.env` is not in git.
 
-Required keys (values never documented): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`.
+Required keys (values never documented): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`, `AUB_API_TOKEN_EXPIRATION_MINUTES` (default 43200).
 
 **Never expose secret values.** Never upload `.env` or `.env.testing`.
 

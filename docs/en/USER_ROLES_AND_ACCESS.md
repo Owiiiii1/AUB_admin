@@ -11,7 +11,7 @@ Access control is a **privacy requirement**. This document splits **implemented*
 | **Admin / superadmin interface** | Full web CRM for `is_admin` |
 | **Access channel** | How a person reaches the core: web workplace, admin UI, or Flutter |
 
-Parent and Student are **domain entities** and Flutter channels. They are **not** admin RBAC roles. Identity Layer is **implemented**: `account_type` + profile `user_id`; there is still no mobile API.
+Parent and Student are **domain entities** and Flutter channels. They are **not** admin RBAC roles. Identity Layer is **implemented**. Mobile API `/api/v1` is **implemented** (Sanctum); the Flutter client is not wired yet.
 
 **DECIDED:** Parent/Student must not become administrative web RBAC roles only because they need login. Authentication account type ≠ administrative web RBAC. Administrative staff continues to use the existing web RBAC.
 
@@ -85,7 +85,7 @@ Non-admin staff
   → Extra AdminLayout items still shown (courses, schedule, placeholders)
 
 Parent / Student / Teacher (mobile)
-  → AUB_app via HTTPS API  [API not built]
+  → AUB_app via HTTPS API `/api/v1`  [client not wired yet; contract: API.md]
 ```
 
 ## Preliminary access matrix (intent, not code)
@@ -119,6 +119,6 @@ Kit `staff.role` is free text. AUB RBAC is `roles` + `users.role_id`. Teachers a
 - View/access audit of sensitive records
 - Consent entities (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`)
 - 2FA for administrative staff
-- Identity Layer **implemented**: User ↔ Student / Parent / Teacher; Parent/Student without `role_id` cannot use web CRM. Invitation/API remain OPEN. **Not** multi-profile on one User
+- Identity Layer **implemented**: User ↔ Student / Parent / Teacher; Parent/Student without `role_id` cannot use web CRM. Invitation remains OPEN. Mobile API Foundation **implemented**. **Not** multi-profile on one User
 
 See [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md), [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md), [CURRENT_STATE.md](CURRENT_STATE.md).

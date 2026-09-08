@@ -67,13 +67,22 @@ class AccountIdentityService
 
     public function unlink(Student|AcademyParent|Teacher $profile): void
     {
+        $userId = $profile->user_id;
         $profile->forceFill(['user_id' => null])->save();
+
+        if ($userId !== null) {
+            User::query()->find($userId)?->tokens()->delete();
+        }
     }
 
     public function setActive(User $user, bool $active): void
     {
         $user->is_active = $active;
         $user->save();
+
+        if (! $active) {
+            $user->tokens()->delete();
+        }
     }
 
     /**

@@ -86,8 +86,8 @@ sudo chmod -R ug+rwx /var/www/aub/storage /var/www/aub/bootstrap/cache
 ```bash
 php artisan --version
 composer show owlsolutions/custom-admin-kit
-php artisan route:list          # ожидается 84 web-маршрута; нет /api для Flutter
-php artisan migrate:status      # 37 файлов, все Ran, batch 1–29
+php artisan route:list --path=api   # 5 routes: health, login, logout, logout-all, me
+php artisan migrate:status      # 40 файлов, personal_access_tokens Ran
 php artisan owl-admin:smoke --preset=admin
 php artisan owl-admin:doctor --preset=admin
 tail -80 storage/logs/laravel.log
@@ -116,7 +116,7 @@ sudo systemctl reload nginx
 
 `/var/www/aub/.env` не в git.
 
-Обязательные ключи (значения не документируются): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`.
+Обязательные ключи (значения не документируются): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`, `AUB_API_TOKEN_EXPIRATION_MINUTES` (default 43200).
 
 **Никогда не раскрывать секреты.** Не заливать `.env` и `.env.testing`.
 

@@ -88,7 +88,7 @@ Schedule AI sends **preferences / operational schedule data** to the configured 
 
 ## App Store / Flutter
 
-Repository `Owiiiii1/AUB_app` exists. Publication still needs a Privacy Policy URL, accurate data disclosures, and parental consent for minors where law/policy require it (age threshold — after legal review). Token design is part of API Foundation (Sanctum is a candidate only).
+Repository `Owiiiii1/AUB_app` exists. Publication still needs a Privacy Policy URL, accurate data disclosures, and parental consent for minors where law/policy require it (age threshold — after legal review). Token design: Sanctum PAT, contract [API.md](API.md). Refresh/re-auth UX remains OPEN.
 
 ## Retention
 

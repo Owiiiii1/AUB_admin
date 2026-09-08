@@ -96,7 +96,7 @@ Companion: [MODULE_ROADMAP.md](MODULE_ROADMAP.md), [ARCHITECTURE.md](ARCHITECTUR
 | Older student with their own account — who creates it, from when | Onboarding | OPEN |
 | Invitation / activation workflow | Email invite, first-time password | OPEN (admin sets a temporary password now) |
 | Separate login identifier / alias / username besides unique `users.email` | One person, two accounts currently needs two emails | OPEN (do not change uniqueness now) |
-| Mobile API / token auth | Flutter login | OPEN — next stage: API Foundation |
+| Mobile API / token auth | Flutter login | **DECIDED/implemented** — Sanctum `/api/v1`; next stage: Flutter Authentication Foundation |
 | How teacher web workplace vs mobile Teacher account should look long-term | Check-in and workplace | OPEN (direction: Teacher is an actor type; web RBAC stays separate) |
 
 ---

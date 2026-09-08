@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-08** (Identity Layer + изолированная MySQL test DB). Текст от 2026-07-20 / 2026-09-07 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-08** (Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -11,6 +11,7 @@
 | Laravel | 13.18.1 |
 | PHP | 8.3.6 (production) |
 | Node.js | 20.20.0 (production) |
+| `laravel/sanctum` | v4.3.3 |
 | `owlsolutions/custom-admin-kit` | v0.4.0 |
 | `inertiajs/inertia-laravel` | 3.1.1 |
 | `@inertiajs/react` | 2.3.27 |
@@ -23,7 +24,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 
 На production есть `storage:link`.
 
-В хост-приложении нет `laravel/sanctum`, Passport, JWT.
+В хост-приложении установлен `laravel/sanctum` **v4.3.3**. Passport / JWT нет. Контракт: [API.md](API.md).
 
 ## Автотесты
 
@@ -33,13 +34,25 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
-| Последний suite на production-хосте | **29 passed**, 0 failed, 0 errors (88 assertions) |
+| Последний suite на production-хосте | **44 passed**, 0 failed, 0 errors (252 assertions) |
 
 `php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 
-## Маршруты (web CRM + identity; API нет)
+## Маршруты (web CRM + `/api/v1`)
 
-`php artisan route:list` после Identity: **Showing [96] routes**. Файла `routes/api.php` **нет**, API для Flutter **нет**.
+`php artisan route:list --path=api`: **5** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
+
+### Mobile API
+
+| Method | URI | Name |
+|--------|-----|------|
+| GET | `/api/v1/health` | `api.v1.health` |
+| POST | `/api/v1/auth/login` | `api.v1.auth.login` |
+| POST | `/api/v1/auth/logout` | `api.v1.auth.logout` |
+| POST | `/api/v1/auth/logout-all` | `api.v1.auth.logout-all` |
+| GET | `/api/v1/me` | `api.v1.me` |
+
+Только `student` / `parent` / `teacher`. `staff` через этот login не допускается. Подробности: [API.md](API.md).
 
 ### Auth
 
@@ -91,11 +104,11 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` |
 | `/storage/{path}` через symlink | Файлы public disk (нужен `storage:link`) |
 
-Разница со старым числом «84» — 12 POST маршрутов actor-account (student / parent / teacher). **Измерено: 96.** API нет.
+Разница со старым числом «84» — 12 POST маршрутов actor-account (student / parent / teacher). Плюс 5 `/api/v1`. API Foundation **сделан**.
 
 ## Миграции
 
-**39 файлов** в `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`.
+**40 файлов** в `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`. Sanctum: `2026_09_08_230000_create_personal_access_tokens_table`.
 
 Ядро Laravel: users (включая sessions / password_reset_tokens), cache, jobs.
 
@@ -240,11 +253,11 @@ Field-level ограничений нет: роль с доступом к `cust
 | 4+ | Платежи | Не начато |
 | future | Final Assessment / Report Cards | Отдельный модуль; текущих оценок нет; не начато |
 | late future | Productions / Shows | Discovery-needed; activity groups ≠ `Class`; web `/events` — заглушка |
-| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть; упаковка Store **OPEN**. Стабильный API **после** Identity (сделан) |
+| API / Flutter | API Foundation `/api/v1` | **Сделан** (Sanctum PAT). Flutter-клиент **не** подключён; Store **OPEN** |
 
 ## Что НЕ реализовано
 
-- **API Foundation** (login `/api`, Sanctum/JWT, `/me`) — следующий этап
+- **Flutter Authentication Foundation** — следующий этап (клиент ещё шаблон)
 - Invitation / activation workflow
 - Отдельный login identifier помимо unique email
 - Полноценный UI AcademicYear
@@ -255,7 +268,7 @@ Field-level ограничений нет: роль с доступом к `cust
 - Платежи / счета
 - Отдельные модули документов и коммуникаций
 - Архив, костюмы (заглушки меню; костюмы могут остаться отдельным сервисом)
-- **`routes/api.php`, API resources, Sanctum/Passport/JWT`**
+- Feature API: schedule, attendance, check-in, documents, messages, payments
 - Функции Flutter сверх шаблона; одно приложение vs flavors **OPEN**
 - PDF-экспорт расписания (кнопка-заглушка)
 - Исполняемые рекомендации ИИ (только re-prompt)

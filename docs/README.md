@@ -24,6 +24,7 @@ Source of truth for implemented behaviour: **code + migrations + routes** in Git
 | Development rules | [DEVELOPMENT_RULES.md](en/DEVELOPMENT_RULES.md) | [DEVELOPMENT_RULES.md](ru/DEVELOPMENT_RULES.md) |
 | Server deployment | [SERVER_DEPLOYMENT.md](en/SERVER_DEPLOYMENT.md) | [SERVER_DEPLOYMENT.md](ru/SERVER_DEPLOYMENT.md) |
 | Privacy and data protection | [PRIVACY_AND_DATA_PROTECTION.md](en/PRIVACY_AND_DATA_PROTECTION.md) | [PRIVACY_AND_DATA_PROTECTION.md](ru/PRIVACY_AND_DATA_PROTECTION.md) |
+| API | [API.md](en/API.md) | [API.md](ru/API.md) |
 | Next steps | [NEXT_STEPS.md](en/NEXT_STEPS.md) | [NEXT_STEPS.md](ru/NEXT_STEPS.md) |
 | Weekly schedule service | [WEEKLY_SCHEDULE_SERVICE.md](en/WEEKLY_SCHEDULE_SERVICE.md) | [WEEKLY_SCHEDULE_SERVICE.md](ru/WEEKLY_SCHEDULE_SERVICE.md) |
 
@@ -40,7 +41,7 @@ Every documentation change must update **both** `docs/en/` and `docs/ru/` in the
 | **AUB_admin** | [`Owiiiii1/AUB_admin`](https://github.com/Owiiiii1/AUB_admin) | Central CRM / backend / API / web workplaces |
 | **AUB_app** | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) | Flutter mobile application |
 
-Flutter talks to the core **only** through HTTPS API. The API does not exist yet.
+Flutter talks to the core **only** through HTTPS API (`/api/v1`, Sanctum Bearer tokens). Flutter Foundation is the next client stage.
 
 ## Project quick facts
 
@@ -51,6 +52,6 @@ Flutter talks to the core **only** through HTTPS API. The API does not exist yet
 - **Flutter package:** `aub` — bundle / application id `com.owlsolutions.aub`
 - **Phase 1 (roles):** Complete (2026-07-06)
 - **Web modules:** Phase 2–3 in use (students partial; weekly schedule + hybrid AI)
-- **Next major technical stage:** Security Foundation → Core Data Model refactor → Identity → API Foundation → Flutter Foundation
+- **Next major technical stage:** Flutter Authentication Foundation (do not mix with schedule/attendance)
 
 Last updated: 2026-09-08

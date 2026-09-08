@@ -40,4 +40,19 @@ class Teacher extends Model
         return $this->belongsToMany(Lesson::class, 'lesson_teacher')
             ->withTimestamps();
     }
+
+    public function displayName(): string
+    {
+        $name = trim((string) $this->name);
+        if ($name !== '') {
+            return $name;
+        }
+
+        $fullName = trim(implode(' ', array_filter([
+            $this->first_name,
+            $this->last_name,
+        ])));
+
+        return $fullName !== '' ? $fullName : ('Teacher #'.$this->id);
+    }
 }

@@ -2,7 +2,7 @@
 
 What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Status (2026-09-08):** Web core in use. Flutter repo exists. **No HTTPS API.** Core Data Model is **done**. Identity Layer is **done**. PHPUnit uses isolated MySQL `aub_test` (**done**). Next stage is **API Foundation**.
+**Status (2026-09-08):** Web core in use. **API Foundation `/api/v1` is done** (Sanctum). Flutter repo exists; client not wired. Core Data Model is **done**. Identity Layer is **done**. PHPUnit on `aub_test` is **green**. Next stage is **Flutter Authentication Foundation**.
 
 **DECIDED:** `AUB_admin` core; `AUB_app` Flutter; HTTPS API only; separate GitHub repos; parallel backend/Flutter; one active `Class`; one User = one actor type; `customers` is a kit leftover.
 
@@ -13,8 +13,8 @@ What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_Q
 3. **Core Data Model refactor** — **done** (`students` / `parents` / `AcademyClass` / `ClassLesson`).
 4. **Identity model implementation** — **done** (`account_type`, profile `user_id`, `AccountIdentityService`, admin UI).
 5. **Test infrastructure** — **done** (MySQL `aub_test`, hard guard against production `aub`; no SQLite).
-6. **API Foundation** (Sanctum = candidate, not locked) — **next stage**. Do not start in this task.
-7. **Flutter Foundation** once a contract exists (Store distribution **OPEN**: one app vs flavors).
+6. **API Foundation** — **done** (`/api/v1`, Sanctum v4.3.3, login/logout/me/health). Contract: [API.md](API.md).
+7. **Flutter Authentication Foundation** — **next stage**. Do not start in this task.
 
 Flutter **may** be developed in parallel (shell, navigation). Real academy features wait on the API. Do not publish a stable contract before Identity.
 
@@ -54,8 +54,8 @@ Actionable AI, PDF, 5-min UI snap, room capacity vs study windows.
 - Do not delete kit legacy tables
 - Do not edit `vendor/`
 - Do not expose secrets
-- Do not lock Sanctum
-- Do not implement API / Flutter login in this task (Identity is already done)
-- Do not publish a stable mobile API before Identity
+- Do not lock refresh-token / JWT
+- Do not implement Flutter login in this task (API Foundation is already done)
+- Do not publish feature API (schedule/attendance) until dedicated tasks
 - Do not implement check-in, report cards, or productions here
 - Do not hardcode a consent age threshold

@@ -7,7 +7,7 @@ Status legend:
 - **Planned** — not built
 - **Unverified leftover** — mentioned historically; Spatie-style tables were dropped in `2026_07_06_120000`; MySQL leftovers were **not** re-checked on 2026-09-07
 
-Migrations: **39 files**, including Identity Layer `2026_09_08_220000_add_account_identity_layer`.
+Migrations: **40 files**, including Identity Layer `2026_09_08_220000_add_account_identity_layer` and Sanctum `personal_access_tokens`.
 
 Privacy tags: Normal / Personal data / Children’s data / Special category / Secret.
 
@@ -41,7 +41,7 @@ Unused in UI/routes. `staff.role` is free text, **not** RBAC.
 
 ### Laravel system
 
-`cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `sessions`, `password_reset_tokens`, `migrations`.
+`cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `sessions`, `password_reset_tokens`, `migrations`, `personal_access_tokens` (Sanctum hashed PAT; `name` = device_name, `abilities` includes `mobile`, `expires_at`). Privacy: Secret (token hash).
 
 ### activity_logs (implemented)
 
@@ -119,7 +119,7 @@ UI: visual 30 min, planning 5 min. See [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHED
 
 ## D. Planned / conceptual (no final schema, no migrations)
 
-Do not treat this list as an approved database for modules that are not built yet. Core Data Model refactor and Identity Layer are **done**. Next stage before a stable mobile API is **API Foundation**.
+Do not treat this list as an approved database for modules that are not built yet. Core Data Model refactor, Identity Layer, and API Foundation are **done**. Next client stage is Flutter Authentication Foundation.
 
 ### Student / Parent (**implemented**)
 

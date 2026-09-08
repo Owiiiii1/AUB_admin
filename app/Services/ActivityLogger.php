@@ -17,6 +17,8 @@ class ActivityLogger
         'current_password',
         'api_key',
         'remember_token',
+        'token',
+        'authorization',
     ];
 
     /**

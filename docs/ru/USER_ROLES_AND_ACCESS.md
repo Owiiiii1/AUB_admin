@@ -11,7 +11,7 @@
 | **Admin / superadmin interface** | Полная web-CRM при `is_admin` |
 | **Канал доступа** | Как человек входит в ядро: web workplace, админка или Flutter |
 
-Parent и Student — **доменные сущности** и каналы Flutter. Они **не** роли админки. Identity Layer **implemented**: `account_type` + profile `user_id`; mobile API ещё нет.
+Parent и Student — **доменные сущности** и каналы Flutter. Они **не** роли админки. Identity Layer **implemented**. Mobile API `/api/v1` **implemented** (Sanctum); Flutter-клиент ещё не подключён.
 
 **DECIDED:** Parent/Student не должны становиться RBAC-ролями админки только потому, что им нужен login. Authentication account type ≠ административный web RBAC. Administrative staff продолжает существующий web RBAC.
 
@@ -85,7 +85,7 @@ Non-admin персонал
   → Extra-пункты AdminLayout всё равно показываются (курсы, расписание, заглушки)
 
 Parent / Student / Teacher (mobile)
-  → AUB_app через HTTPS API  [API не построен]
+  → AUB_app через HTTPS API `/api/v1`  [клиент ещё не подключён; контракт: API.md]
 ```
 
 ## Предварительная матрица (намерение, не код)
@@ -119,6 +119,6 @@ Parent / Student / Teacher (mobile)
 - Access/view audit чувствительных записей
 - Сущности согласий (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`)
 - 2FA для административного персонала
-- Identity Layer **implemented**: User ↔ Student / Parent / Teacher; Parent/Student без `role_id` не входят в web CRM. Invitation/API — OPEN. **Не** multi-profile на одном User
+- Identity Layer **implemented**: User ↔ Student / Parent / Teacher; Parent/Student без `role_id` не входят в web CRM. Invitation **OPEN**. Mobile API Foundation **implemented**. **Не** multi-profile на одном User
 
 См. [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md), [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md), [CURRENT_STATE.md](CURRENT_STATE.md).

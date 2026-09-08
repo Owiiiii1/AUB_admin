@@ -2,7 +2,7 @@
 
 Что построено: [CURRENT_STATE.md](CURRENT_STATE.md). Полный список вопросов: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Статус (2026-09-08):** Web-ядро в работе. Репозиторий Flutter есть. **HTTPS API нет.** Core Data Model **сделан**. Identity Layer **сделан**. PHPUnit на изолированном MySQL `aub_test` (**сделано**). Следующий этап — **API Foundation**.
+**Статус (2026-09-08):** Web-ядро в работе. **API Foundation `/api/v1` сделан** (Sanctum). Репозиторий Flutter есть, клиент не подключён. Core Data Model **сделан**. Identity Layer **сделан**. PHPUnit на `aub_test` **зелёный**. Следующий этап — **Flutter Authentication Foundation**.
 
 **DECIDED:** ядро `AUB_admin`; Flutter `AUB_app`; только HTTPS API; раздельные GitHub-репо; параллельный backend/Flutter; один активный `Class`; один User = один actor type; `customers` — kit leftover.
 
@@ -13,8 +13,8 @@
 3. **Core Data Model refactor** — **сделан** (`students` / `parents` / `AcademyClass` / `ClassLesson`).
 4. **Identity model implementation** — **сделан** (`account_type`, profile `user_id`, `AccountIdentityService`, admin UI).
 5. **Инфраструктура тестов** — **сделана** (MySQL `aub_test`, hard guard против production `aub`; без SQLite).
-6. **API Foundation** (Sanctum = кандидат, не зафиксирован) — **следующий этап**. В этой задаче не начинать.
-7. **Flutter Foundation**, когда появится контракт (дистрибуция в Store **OPEN**: одно приложение vs flavors).
+6. **API Foundation** — **сделан** (`/api/v1`, Sanctum v4.3.3, login/logout/me/health). Контракт: [API.md](API.md).
+7. **Flutter Authentication Foundation** — **следующий этап**. В этой задаче не начинать.
 
 Flutter **можно** развивать параллельно (оболочка, навигация). Реальные функции академии ждут API. Стабильный контракт не публиковать до Identity.
 
@@ -54,8 +54,8 @@ Flutter **можно** развивать параллельно (оболочк
 - Не удалять legacy-таблицы kit
 - Не править `vendor/`
 - Не раскрывать секреты
-- Не фиксировать Sanctum
-- Не реализовывать API / Flutter login в этой задаче (Identity уже сделан)
-- Не публиковать стабильный mobile API до Identity
+- Не фиксировать refresh-token / JWT
+- Не реализовывать Flutter login в этой задаче (API Foundation уже сделан)
+- Не публиковать feature API (schedule/attendance) до отдельных задач
 - Не реализовывать здесь check-in, табели или постановки
 - Не хардкодить возрастной порог consent

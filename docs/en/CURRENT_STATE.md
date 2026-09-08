@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-08** (Identity Layer + isolated MySQL test DB). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-08** (Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -11,6 +11,7 @@ See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 | Laravel | 13.18.1 |
 | PHP | 8.3.6 (production) |
 | Node.js | 20.20.0 (production) |
+| `laravel/sanctum` | v4.3.3 |
 | `owlsolutions/custom-admin-kit` | v0.4.0 |
 | `inertiajs/inertia-laravel` | 3.1.1 |
 | `@inertiajs/react` | 2.3.27 |
@@ -23,7 +24,7 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 
 `storage:link` exists on production.
 
-No `laravel/sanctum`, Passport, or JWT in the host app.
+`laravel/sanctum` **v4.3.3** is installed. No Passport or JWT. Contract: [API.md](API.md).
 
 ## Automated tests
 
@@ -33,13 +34,25 @@ No `laravel/sanctum`, Passport, or JWT in the host app.
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **29 passed**, 0 failed, 0 errors (88 assertions) |
+| Last suite on production host | **44 passed**, 0 failed, 0 errors (252 assertions) |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 
-## Routes (web CRM + identity; no API)
+## Routes (web CRM + `/api/v1`)
 
-`php artisan route:list` after Identity: **Showing [96] routes**. There is **no** `routes/api.php` and **no** Flutter-ready API.
+`php artisan route:list --path=api`: **5** routes. Web CRM unchanged. No Passport/JWT.
+
+### Mobile API
+
+| Method | URI | Name |
+|--------|-----|------|
+| GET | `/api/v1/health` | `api.v1.health` |
+| POST | `/api/v1/auth/login` | `api.v1.auth.login` |
+| POST | `/api/v1/auth/logout` | `api.v1.auth.logout` |
+| POST | `/api/v1/auth/logout-all` | `api.v1.auth.logout-all` |
+| GET | `/api/v1/me` | `api.v1.me` |
+
+Only `student` / `parent` / `teacher`. `staff` cannot use this login. Details: [API.md](API.md).
 
 ### Auth
 
@@ -91,11 +104,11 @@ Controllers and tables remain; **routes and menu items removed**: `/orders`, `/s
 | `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` (Laravel filesystem serve) |
 | `/storage/{path}` via symlink | Public disk files (needs `storage:link`) |
 
-The extra routes versus the old “84” count are 12 actor-account POST routes (student / parent / teacher). **Measured: 96.** No API.
+The extra routes versus the old “84” count are 12 actor-account POST routes (student / parent / teacher). Plus 5 `/api/v1` routes. API Foundation is **done**.
 
 ## Migrations
 
-**39 files** in `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`.
+**40 files** in `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`. Sanctum: `2026_09_08_230000_create_personal_access_tokens_table`.
 
 Laravel core: users (incl. sessions / password_reset_tokens), cache, jobs.
 
@@ -240,11 +253,11 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 | 4+ | Payments | Not started |
 | future | Final Assessment / Report Cards | Separate module; no running grades; not started |
 | late future | Productions / Shows | Discovery-needed; activity groups ≠ `Class`; web `/events` is a placeholder |
-| API / Flutter | API + token auth | **Not started**; Flutter repo exists; Store packaging **OPEN**. Stable API **after** Identity (done) |
+| API / Flutter | API Foundation `/api/v1` | **Done** (Sanctum PAT). Flutter client **not** wired; Store packaging **OPEN** |
 
 ## What is NOT implemented
 
-- **API Foundation** (login `/api`, Sanctum/JWT, `/me`) — next stage
+- **Flutter Authentication Foundation** — next stage (client is still the template)
 - Invitation / activation workflow
 - Separate login identifier besides unique email
 - Full AcademicYear admin UI
@@ -255,7 +268,7 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 - Payments / invoices
 - Standalone documents and communication modules
 - Archive, costume service (menu placeholders; costume may remain a separate service)
-- **`routes/api.php`, API resources, Sanctum/Passport/JWT`**
+- Feature API: schedule, attendance, check-in, documents, messages, payments
 - Flutter features beyond the default template; one-app vs flavors **OPEN**
 - PDF export for schedule (button is a placeholder)
 - Actionable AI recommendations (re-prompt only)

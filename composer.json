@@ -9,6 +9,7 @@
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.1",
         "laravel/framework": "^13.8",
+        "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "owlsolutions/custom-admin-kit": "v0.4.0",
         "tightenco/ziggy": "^2.6"

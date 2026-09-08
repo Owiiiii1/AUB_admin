@@ -53,7 +53,7 @@ MVP AUB — **ядро академии** плюс **интерфейсы** (web
 |-------|--------|
 | Репозиторий Flutter `Owiiiii1/AUB_app` | Есть (`aub`, `com.owlsolutions.aub`) |
 | HTTPS API | **Нет** |
-| Token auth | **Нет** (Sanctum = кандидат) |
+| Token auth | **Sanctum `/api/v1`** (Flutter-клиент ещё не подключён) |
 | Дистрибуция Store | **OPEN** — одно приложение с режимами vs несколько Store-приложений / flavors |
 
 Flutter **можно развивать параллельно**. MVP-функции мобильного клиента блокируются API Foundation, а не требованием «web должен быть завершён на 100%». Backend и Flutter развиваются параллельно; их соединяет API-контракт. Стабильный контракт **после** Core Data Model refactor + Identity.

@@ -13,7 +13,7 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 - Courses / `AcademyClass`; lessons catalog in Settings → Academy
 - `ClassLesson` + teacher assignments; weekly schedule on `academy_class_id`
 - CRUD activity log; settings tabs
-- Flutter repo exists; **no API**
+- Flutter repo exists; **API Foundation `/api/v1` is done**; Flutter client not wired
 
 ---
 
@@ -25,8 +25,8 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 | 1 | **Security Foundation** | **Required before wide mobile rollout.** Private storage for children’s files; field-level ACL; scoped teacher access; access/view audit; API authorization matrix; mobile token security; **2FA for admin staff**; consent/privacy records. **Not implemented.** |
 | 2 | **Core Data Model refactor** | **Done** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
 | 3 | **Identity model implementation** | **Done** 2026-09-08. One User = one actor type (`staff` / `student` / `parent` / `teacher`). Identity ≠ admin web RBAC. |
-| 4 | **API Foundation** | Routing, versioning, token auth (Sanctum = candidate), `/me`, resources, errors, rate limits, tests. Only after 2–3. **Next stage.** |
-| 5 | **Flutter Foundation** | App shell, env, HTTPS client, auth against API — Store distribution model OPEN |
+| 4 | **API Foundation** | **Done** 2026-09-08. `/api/v1`, Sanctum v4.3.3, login/logout/me/health. See [API.md](API.md). |
+| 5 | **Flutter Foundation** | App shell, env, HTTPS client, auth against API — **next stage**. Store distribution model OPEN |
 
 ## Product modules (after foundation)
 

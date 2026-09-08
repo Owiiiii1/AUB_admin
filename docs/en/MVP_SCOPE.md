@@ -53,7 +53,7 @@ Payments / invoices / reports — not started. Kit `orders.total` is not academy
 |------|--------|
 | Flutter repo `Owiiiii1/AUB_app` | Exists (`aub`, `com.owlsolutions.aub`) |
 | HTTPS API | **Absent** |
-| Token auth | **Absent** (Sanctum = candidate) |
+| Token auth | **Sanctum `/api/v1`** (Flutter client not wired yet) |
 | Store distribution | **OPEN** — one app with modes vs several Store apps / flavors |
 
 Flutter **may be developed in parallel**. MVP mobile **features** are blocked on API Foundation, not on “web must be 100% finished”. Backend and Flutter evolve in parallel; the API contract joins them. A stable contract comes **after** Core Data Model refactor + Identity.

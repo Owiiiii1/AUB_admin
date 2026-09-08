@@ -30,7 +30,7 @@ Create one digital platform that:
 | **AUB_admin** | [`Owiiiii1/AUB_admin`](https://github.com/Owiiiii1/AUB_admin) | CRM, database, business logic, web admin/workplaces, future API |
 | **AUB_app** | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) | Flutter app `aub`, bundle id `com.owlsolutions.aub` |
 
-Flutter must use **HTTPS API only**. `routes/api.php` does not exist. Sanctum / Passport / JWT are not installed.
+Flutter must use **HTTPS API only** (`/api/v1`, Sanctum Bearer). Contract: [API.md](API.md). No Passport / JWT.
 
 Production of the core: `/var/www/aub` at `https://aub.owlsolutions.net`. That folder is **not** a git repository. Tech Lead uses GitHub as source of truth.
 
@@ -80,7 +80,7 @@ Kit `staff.role` is free text, **not** access control.
 
 **Missing:** student attendance; teacher check-in (daily semantics DECIDED); final assessment / report cards; payments; standalone documents/communication modules; mobile API; token auth; field-level ACL; Security Foundation items.
 
-**Next major technical stage:** [Security Foundation](NEXT_STEPS.md) → Core Data Model refactor → Identity → API Foundation → Flutter Foundation. Stable API **after** Core Data Model. Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Open questions: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**Next major technical stage:** Flutter Authentication Foundation (after API Foundation). Security Foundation remains required before wide mobile rollout. Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Open questions: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
 Productions / shows are **late future** / discovery-needed (activity groups ≠ `Class`). Do not detail workflow now. Costume Service may stay a separate integrated service. Web `/events` and `/costume-service` remain UI placeholders only.
 

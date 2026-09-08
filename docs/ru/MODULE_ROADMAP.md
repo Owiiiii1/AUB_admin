@@ -13,7 +13,7 @@
 - Курсы / `AcademyClass`; каталог уроков в Настройки → Академия
 - `ClassLesson` + назначения преподавателей; недельное расписание на `academy_class_id`
 - CRUD-журнал; вкладки settings
-- Репозиторий Flutter есть; **API нет**
+- Репозиторий Flutter есть; **API Foundation `/api/v1` сделан**; Flutter-клиент не подключён
 
 ---
 
@@ -25,8 +25,8 @@
 | 1 | **Security Foundation** | **Обязательно до широкого mobile rollout.** Private storage файлов детей; field-level ACL; scoped teacher access; access/view audit; матрица API-авторизации; mobile token security; **2FA для админ-персонала**; consent/privacy records. **Не реализовано.** |
 | 2 | **Core Data Model refactor** | **Сделан** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
 | 3 | **Identity model implementation** | **Сделан** 2026-09-08. Один User = один actor type (`staff` / `student` / `parent` / `teacher`). Identity ≠ admin web RBAC. |
-| 4 | **API Foundation** | Маршруты, версии, token auth (Sanctum = кандидат), `/me`, resources, ошибки, rate limits, тесты. Только после 2–3. **Следующий этап.** |
-| 5 | **Flutter Foundation** | Оболочка app, env, HTTPS-клиент, auth к API — модель дистрибуции Store OPEN |
+| 4 | **API Foundation** | **Сделан** 2026-09-08. `/api/v1`, Sanctum v4.3.3, login/logout/me/health. См. [API.md](API.md). |
+| 5 | **Flutter Foundation** | Оболочка app, env, HTTPS-клиент, auth к API — **следующий этап**. Модель дистрибуции Store OPEN |
 
 ## Продуктовые модули (после foundation)
 

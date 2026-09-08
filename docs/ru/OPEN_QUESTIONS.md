@@ -96,7 +96,7 @@
 | Старший student со своим аккаунтом — кто создаёт, с какого момента | Onboarding | OPEN |
 | Invitation / activation workflow | Email-приглашение, первый пароль | OPEN (сейчас админ задаёт временный пароль) |
 | Отдельный login identifier / alias / username помимо unique `users.email` | Один человек, два аккаунта сейчас требуют два email | OPEN (уникальность email сейчас не менять) |
-| Mobile API / token auth | Flutter login | OPEN — следующий этап: API Foundation |
+| Mobile API / token auth | Flutter login | **DECIDED/implemented** — Sanctum `/api/v1`; следующий этап: Flutter Authentication Foundation |
 | Долгосрочный вид teacher web workplace vs mobile Teacher account | Check-in и workplace | OPEN (направление: Teacher — actor type; web RBAC отдельно) |
 
 ---

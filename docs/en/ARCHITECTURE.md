@@ -10,7 +10,7 @@ The CRM/backend is the **core**. Interfaces attach to that core:
 |-----------|----------|---------------------|
 | Admin / superadmin web | Administrators | Implemented (Inertia web) |
 | Staff web workplaces | Secretariat, teachers, other staff | Phase 1 implemented; teacher login not linked to `teachers` |
-| Flutter — students / parents / teachers | Non-admin actors | Repository exists; **no API**. One Store app vs flavors is **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)) |
+| Flutter — students / parents / teachers | Non-admin actors | Repository exists; **API Foundation `/api/v1` is implemented** (Sanctum). Flutter client not wired yet. One Store app vs flavors is **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)) |
 
 Do not design the product around a single admin panel.
 
@@ -26,7 +26,7 @@ Central academy kernel:
 - administrative web interfaces;
 - staff workplaces;
 - authentication / authorization;
-- API for external clients (**not implemented yet**);
+- API for external clients (`/api/v1`, Sanctum Bearer);
 - audit / security;
 - integrations.
 
@@ -51,9 +51,9 @@ Separate mobile application. It must call `AUB_admin` **only over HTTPS API**.
 | Dart package | `aub` |
 | Bundle / application id | `com.owlsolutions.aub` |
 | Current code | Default Flutter template (`lib/main.dart`); no HTTP client |
-| API | **Does not exist** (`routes/api.php` absent; no Sanctum / Passport / JWT) |
+| API | **`/api/v1`** (Sanctum PAT; Flutter Foundation has not wired the client yet) |
 
-Flutter work may proceed in parallel with backend. Mobile **functionality** depends on a stable API contract. **Core Data Model refactor** and **Identity model** must precede publishing a stable API. Next: **API Foundation**, then **Flutter Foundation**.
+Flutter work may proceed in parallel with backend. Mobile **functionality** depends on a stable API contract. The auth/`/me` contract is published in [API.md](API.md). Next: **Flutter Authentication Foundation**.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -61,7 +61,7 @@ Flutter work may proceed in parallel with backend. Mobile **functionality** depe
 │  student / parent / teacher (distribution OPEN)          │
 │  GitHub: Owiiiii1/AUB_app                                │
 └────────────────────────────┬─────────────────────────────┘
-                             │ HTTPS API  (not built yet)
+                             │ HTTPS API  /api/v1 (Sanctum)
                              ▼
 ┌──────────────────────────────────────────────────────────┐
 │  AUB_admin  (core)                                       │
@@ -82,7 +82,9 @@ Flutter work may proceed in parallel with backend. Mobile **functionality** depe
 AUB_admin / /var/www/aub/
 ├── app/
 │   ├── Http/Controllers/       # Auth, academy CRM, Settings, schedule
-│   ├── Http/Middleware/        # Inertia + role.assigned, role.access, can.write, can.delete, administrator
+│   ├── Http/Controllers/Api/V1/  # Health, Auth, Me
+│   ├── Http/Resources/Api/       # Whitelist JSON
+│   ├── Http/Middleware/        # Inertia + RBAC + EnsureMobileActorIsValid
 │   ├── Models/                 # User, Role, Customer, Teacher, Course, Lesson, Schedule…
 │   ├── Services/               # ActivityLogger, WeeklySchedule/*, Ai/
 │   └── Support/                # RoleAccess, MenuRegistry, AdministratorLockoutGuard
@@ -98,8 +100,8 @@ AUB_admin / /var/www/aub/
 │   ├── web.php                 # Root login + includes
 │   ├── owl-admin-pages.php     # Protected web pages
 │   ├── owl-admin-auth.php      # Logout + /login redirect
-│   └── owl-admin-core.php      # Health (loaded by kit ServiceProvider)
-│   # routes/api.php            # ABSENT
+│   ├── owl-admin-core.php      # Health (loaded by kit ServiceProvider)
+│   └── api.php                 # /api/v1 health, auth, me
 └── public/build/               # Vite assets (gitignored; present on production)
 ```
 
@@ -131,12 +133,12 @@ Generic kit CRM (`orders`, `services`, `staff`, `calendar`) remains as unused co
 | Radix UI | 1.6.1 | UI primitives |
 | lucide-react | 1.23.0 | Icons |
 
-Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed.** Laravel Sanctum is a **recommended candidate** for API Foundation, not an approved decision.
+Web auth: Laravel `web` guard, sessions, CSRF. Mobile API: Laravel Sanctum **v4.3.3**, Bearer PAT, `/api/v1`. No Passport / JWT. Contract: [API.md](API.md).
 
 ## Database approach
 
 - Primary connection: **MySQL** (production database name is configured in `.env`; values are not documented here)
-- **39** migration files, including Identity Layer (`2026_09_08_220000_add_account_identity_layer`)
+- **40** migration files, including Identity Layer and `personal_access_tokens`
 - Students: `students` table (not `customers`). **DECIDED:** `students` / `parents` / `student_parent`; `customers` is a kit leftover
 - Parents: `parents` + `student_parent` (`AcademyParent`)
 - Identity Layer **implemented**: `users.account_type` (`staff` | `student` | `parent` | `teacher`), `users.is_active`; `students.user_id` / `parents.user_id` / `teachers.user_id` nullable unique FK. One User = one actor type. `account_type` ≠ web `role_id`
@@ -161,7 +163,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 
 `config/aub-menu.php` `always_allowed_route_patterns` grants every authenticated user **with a role** access to `courses-groups.*`, `lessons.*`, `weekly-schedule.*`, placeholders, profile, workplace — wider than `role_menu_items`.
 
-## Web routing (no API)
+## Web routing and API
 
 | File | Contents |
 |------|----------|
@@ -169,9 +171,10 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 | `routes/owl-admin-auth.php` | `/login` redirect, `POST /logout` |
 | `routes/owl-admin-pages.php` | All protected Inertia/web CRM routes |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `bootstrap/app.php` | `web` + `commands` + health `/up` — **no `api`** |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me |
+| `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
-Production `php artisan route:list`: **96** routes (12 actor-account POSTs). None are versioned `/api/*` resources for Flutter.
+Production `php artisan route:list --path=api`: **5** routes. Web CRM unchanged. Details: [API.md](API.md).
 
 ## Where to add work
 
@@ -179,22 +182,14 @@ Production `php artisan route:list`: **96** routes (12 actor-account POSTs). Non
 |-------|----------|-------|
 | Reusable admin shell | `vendor/owlsolutions/custom-admin-kit` | Do not edit |
 | Web UI + academy domain | `AUB_admin` app / resources / migrations | Students currently on `customers` |
-| API for Flutter | `AUB_admin` (`routes/api.php` to be created in API Foundation) | Not present |
+| API for Flutter | `AUB_admin` `routes/api.php` (`/api/v1`) | Sanctum Bearer; see [API.md](API.md) |
 | Flutter clients | `Owiiiii1/AUB_app` | HTTPS only; no Bitrix/direct DB |
 
-## API Foundation (after Core Data Model + Identity — not built)
+## API Foundation (implemented 2026-09-08)
 
-Planned contents, **not implemented**:
+Done: `/api/v1` routing, Sanctum PAT, login / logout / logout-all / `/me` / health, JSON envelope, rate limits, `EnsureMobileActorIsValid`, API Resources (whitelist), tests on `aub_test`.
 
-- API routing and versioning
-- Token authentication (Sanctum is a candidate)
-- Flutter login, `/me`, logout/revoke
-- Authorization for API actors
-- API Resources / DTO
-- Error format, rate limiting
-- Basic integration tests
-
-Until that contract exists, the Flutter repository cannot implement real academy features against the backend. Do **not** publish a stable contract before Core Data Model refactor.
+`staff` cannot log in through the mobile API. Schedule, attendance, and other feature endpoints are out of this stage. Contract: [API.md](API.md). Next client stage: **Flutter Authentication Foundation**.
 
 ## Identity vs administrative RBAC (implemented 2026-09-08)
 
@@ -211,7 +206,7 @@ account_type != web RBAC
 - `student` / `parent` — actor accounts; `role_id` is always `null`; web CRM is unavailable.
 - `teacher` — actor type; `role_id` may be `null` (no CRM) or a web role if a workplace is needed. That is one `teacher` identity plus a permission set, not two actor types.
 - Linking is only through `AccountIdentityService`. Staff has no Student/Parent/Teacher profile.
-- One physical person with two functions = **two Users**. Email is unique; they need different login identifiers. No invitation/activation. No API/token auth.
+- One physical person with two functions = **two Users**. Email is unique; they need different login identifiers. No invitation/activation. Mobile API: Sanctum `/api/v1` for student/parent/teacher.
 
 **DECIDED:** Parent and Student must **not** be added as admin-panel RBAC roles only because they need to log in. Authentication account type and administrative web RBAC are different concepts.
 
