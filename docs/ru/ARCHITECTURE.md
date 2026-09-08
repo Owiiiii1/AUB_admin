@@ -53,7 +53,7 @@ CRM/backend — **ядро**. К ядру подключаются интерф�
 | Текущий код | Шаблон Flutter (`lib/main.dart`); HTTP-клиента нет |
 | API | **Не существует** (`routes/api.php` нет; нет Sanctum / Passport / JWT) |
 
-Flutter можно разрабатывать параллельно с backend. Мобильная **функциональность** зависит от стабильного API-контракта (следующий этап: **API Foundation**).
+Flutter можно разрабатывать параллельно с backend. Мобильная **функциональность** зависит от стабильного API-контракта. **Core Data Model refactor** и **Identity model** должны предшествовать публикации стабильного API. Дальше: **API Foundation**, затем **Flutter Foundation**.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -137,10 +137,10 @@ Web-auth: guard Laravel `web`, сессии, CSRF. **Стек API-токенов
 
 - Основное подключение: **MySQL** (имя БД в `.env`; значения здесь не документируются)
 - **37** файлов миграций; на production **все Ran**, batch **1–29**
-- Студенты: interim расширенная таблица `customers` (таблицы `students` нет)
+- Студенты: interim расширенная таблица `customers` (таблицы `students` нет). **DECIDED direction:** `students` / `parents` / `student_parent`; `customers` не долгосрочная модель
 - Родители: встроенные колонки на `customers` (таблицы `parents` нет)
 - Преподаватели: `teachers` **не** связаны с `users`
-- Зачисления: `course_group_customer` unique `customer_id` ⇒ **одна CourseGroup на студента в БД**. Соответствует ли это академии — **HIGH PRIORITY OPEN**
+- Зачисления: `course_group_customer` unique `customer_id` концептуально соответствует **DECIDED** правилу «один активный `Class`». Терминология `course_groups` vs `Class` ещё нормализовать
 - Legacy-таблицы kit (`orders`, `services`, `staff`, `order_staff`) есть; маршруты удалены
 - Spatie-подобные таблицы прав удалялись при создании AUB `roles` (2026-07-06). Текущее наличие пустых leftover-таблиц в MySQL не перепроверялось
 
@@ -181,7 +181,7 @@ Production `php artisan route:list`: **84** маршрута. Версионир
 | API для Flutter | `AUB_admin` (`routes/api.php` появится в API Foundation) | Сейчас нет |
 | Flutter-клиенты | `Owiiiii1/AUB_app` | Только HTTPS; без прямого доступа к БД |
 
-## API Foundation (следующий технический этап — не построен)
+## API Foundation (после Core Data Model + Identity — не построен)
 
 Предполагаемое содержание, **без реализации**:
 
@@ -193,15 +193,21 @@ Production `php artisan route:list`: **84** маршрута. Версионир
 - формат ошибок, rate limiting
 - базовые integration tests
 
-Пока контракта нет, Flutter-репозиторий не может реализовать реальные функции академии против backend.
+Пока контракта нет, Flutter-репозиторий не может реализовать реальные функции академии против backend. Стабильный контракт **не** публиковать до Core Data Model refactor.
 
-## Identity vs административный RBAC (принцип DECIDED)
+## Identity vs административный RBAC (DECIDED)
 
 `User` сегодня — **web session identity**. `Teacher` — строка справочника, не логин. Parent/Student — не сущности.
 
-**DECIDED:** Parent и Student **не** добавлять как RBAC-роли админки только потому, что им нужен вход. Authentication identity и административная роль — разные понятия.
+**DECIDED:** Parent и Student **не** добавлять как RBAC-роли админки только потому, что им нужен вход. Authentication account type и административный web RBAC — разные понятия. Administrative staff продолжает существующий web RBAC.
 
-Граф User → профили Teacher / Parent / Student — **OPEN**. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**DECIDED (MVP identity):** один User имеет ровно один основной actor type: `student` | `parent` | `teacher`. Один User не может быть сразу Student и Parent (и т.п.). Две роли одного человека = два аккаунта. Multi-profile identity в текущую версию не закладывать.
+
+Invitation / activation / `teachers.user_id` — ещё **OPEN**. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+
+## `Class` vs дополнительные группы (DECIDED)
+
+`Class` — постоянный основной учебный класс; максимум один активный на ребёнка. Дополнительные activity groups (production / rehearsal / иное) **не** являются `Class`. Ребёнок может быть в одном `Class` и в нескольких дополнительных группах.
 
 ## Student Attendance vs Teacher Presence
 
@@ -210,7 +216,11 @@ Production `php artisan route:list`: **84** маршрута. Версионир
 - **Student Attendance** — отметка ребёнка на конкретном занятии / репетиции / session.
 - **Teacher Check-in / Staff Presence** — преподаватель физически в академии.
 
-**PRELIMINARY check-in:** кнопка Flutter «Пришёл», разовая геолокация (не background tracking), geofence на backend (lat/lng/radius площадки). Статусы-набросок: `on_time`, `late`, `manual`, `rejected`. QR только fallback. Привязка к **смене/дню** или к **session** — **OPEN**.
+**DECIDED check-in:** относится к **рабочему дню**, не к уроку. Кнопка Flutter «Пришёл» → один GPS snapshot → geofence → daily teacher check-in. Не требовать check-in перед каждым уроком. QR — optional fallback. OPEN: radius, GPS accuracy, окно времени, anti-spoofing.
+
+## Final Assessment (ядро DECIDED)
+
+Текущих оценок и per-lesson gradebook нет. Итог: `StudentFinalResult` (Student + Class + Lesson + AcademicYear). Табель включает все `ClassLesson`. PDF формирует Administrator. Отдельный продуктовый модуль.
 
 ## Единый календарь (OPEN)
 
@@ -219,11 +229,11 @@ Production `php artisan route:list`: **84** маршрута. Версионир
 - **A** — одна `ScheduledSession` с типами, или
 - **B** — разные сущности + агрегирующий слой календаря.
 
-**PRELIMINARY:** репетиции обязаны быть в едином календаре ребёнка и в conflict detection с обычными занятиями.
+**DECIDED для будущего:** расписание дополнительных групп должно попадать в единый календарь ребёнка. Реализация OPEN.
 
-## Productions (домен PRELIMINARY)
+## Productions (поздний future)
 
-Не «опциональный event фазы 6». `RehearsalGroup` ≠ `CourseGroup`. Workflow — discovery. Costume Service может остаться отдельным сервисом. Приоритет задаёт **PM** после discovery.
+Поздний discovery-needed этап. Activity groups ≠ `Class`. Workflow не детализировать сейчас. Costume Service может остаться отдельным сервисом.
 
 ## Ключевые правила
 

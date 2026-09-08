@@ -21,7 +21,7 @@ Auth. Дополнительно: `role_id` → `roles`, `can_write`, `can_delet
 Связи: `belongsTo Role`.  
 Privacy: Personal data.
 
-### customers (implemented — **студенты, interim**)
+### customers (implemented — **студенты, interim / не долгосрочная модель**)
 
 Колонки kit: `name`, `email`, `phone`, `address`, `notes`, `status`.
 
@@ -78,7 +78,7 @@ hasMany `RoleMenuItem`, hasMany `User`.
 `course_groups`: `course_id`, `name`, `color`, `sort_order`.  
 `course_group_customer`: `course_group_id`, `customer_id`, `discipline` (колонка осталась).
 
-**Ограничение зачисления в коде:** unique `customer_id` — **не больше одной CourseGroup на студента в БД**. Это **не** подтверждённое правило академии. Если ребёнок может ходить на несколько дисциплин сразу, unique — **HIGH PRIORITY конфликт** продукта и схемы. Миграцию не менять, пока нет ответа PM/академии. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**Ограничение зачисления в коде:** unique `customer_id` — не больше одной CourseGroup на студента в БД. **DECIDED:** это концептуально соответствует правилу «один основной `Class`». Целевая терминология: `Class` = постоянный основной учебный класс; не смешивать с дополнительными activity groups. Имена таблиц (`course_groups` vs `Class`) ещё нормализовать. Миграции в этой задаче не менять. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
 Ранее unique `(customer_id, discipline)` заменён миграцией `2026_07_08_170000`.
 
@@ -102,20 +102,58 @@ UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCH
 
 ## D. Planned / концепт (нет финальной схемы, нет миграций)
 
-Не считать список утверждённой БД.
+Не считать список утверждённой БД. Миграции **не** создавать в docs-only задаче. Core Data Model refactor — **до** стабильного mobile API.
+
+### Student / Parent (направление DECIDED)
+
+`customers` — interim / legacy, **не** долгосрочная модель Student. В production ценных пользовательских данных нет (тест). Целевые сущности: `students`, `parents`, `student_parent`. Реализацию миграций не начинать сейчас.
+
+### `Class` vs дополнительные группы (DECIDED)
+
+- `Class` — постоянный основной учебный класс; максимум один активный на ребёнка.
+- Дополнительные группы (события, постановки, репетиции) **не** являются `Class`. Ребёнок может быть в одном `Class` и в нескольких activity groups.
+- Предварительные будущие типы (не схема): `ProductionGroup`, `RehearsalGroup`, возможно другие. Финальную схему не создавать сейчас.
+
+### Identity (DECIDED)
+
+Один User — ровно один основной actor type: `student` | `parent` | `teacher`. Multi-profile не закладывать. Web RBAC персонала остаётся отдельно. `teachers.user_id` в коде нет.
+
+### Teacher Check-in (семантика DECIDED)
+
+Daily presence, не per lesson. Концептуальные поля: teacher; date; checked_in_at; latitude; longitude; accuracy; academy_location; status; manual correction metadata; audit. Geofence radius / accuracy / окно / anti-spoofing — OPEN. QR = optional fallback. `academy_buildings` / `academy_rooms` сейчас **без** lat/lng/radius.
+
+### Final Assessment (ядро DECIDED, детали OPEN)
+
+Концепт:
+
+```
+AcademicYear → Class → ClassLesson → TeacherAssignment
+Student + Class + Lesson + AcademicYear → StudentFinalResult
+Student + Class + AcademicYear → ReportCard
+```
+
+`StudentFinalResult` (пример полей): student_id; class_id; lesson_id; academic_year_id; result; teacher_comment; finalized_at; updated_at; audit metadata.
+
+`ReportCard` (предварительно): student_id; class_id; academic_year_id; status (`draft` / `finalized` / `printed`); finalized_at; generated_at; generated_by.
+
+Текущих оценок / per-lesson gradebook **нет**. PDF собирает Administrator из доменных сущностей; PDF не источник данных. Шкала, шаблон PDF, кто закрывает табель — OPEN.
+
+### Consent (направление, порог возраста не фиксировать)
+
+Целевые сущности: `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Возможные types: privacy; data processing; photo/video; marketing; special activity. Для несовершеннолетнего — связь с parent/guardian там, где требует политика/закон. Возрастной порог не хардкодить до legal review.
 
 | Тема | Примечание | Status |
 |------|------------|--------|
-| Таблицы Student / Parent | Сейчас: `customers` + встроенные родители | OPEN |
-| Workflow зачислений | Статусы, история | OPEN |
-| **Student Attendance** | Присутствие на **session** (урок/репетиция/…). Не GPS преподавателя | OPEN |
-| **Teacher Check-in** | Разовый GPS + geofence (**PRELIMINARY**). Привязка к дню vs session **OPEN**. Возможные поля: lat, lng, accuracy, timestamp, статус `on_time`/`late`/`manual`/`rejected` | PRELIMINARY / OPEN |
-| Academic Progress | Оценки, периоды, табель, история — система оценок **OPEN** | OPEN |
-| Единый календарь | Variant A `ScheduledSession` vs Variant B разные сущности. Tech Lead не решил. **`scheduled_lessons` сейчас не менять** | OPEN |
-| Production / RehearsalGroup / Rehearsal / Performance / Cast | RehearsalGroup **≠** CourseGroup (**PRELIMINARY**). Репетиции в календаре ребёнка + конфликты (**PRELIMINARY**). ProductionStaff не утверждён | PRELIMINARY / OPEN |
+| Таблицы `students` / `parents` / `student_parent` | Направление DECIDED; сейчас `customers` | DECIDED direction / не реализовано |
+| Workflow зачислений в `Class` | Статусы, история, переводы | OPEN |
+| **Student Attendance** | Присутствие на **session**. Не GPS преподавателя | OPEN |
+| **Teacher Check-in** | Daily geofence check-in. Детали radius/accuracy OPEN | DECIDED semantics / не реализовано |
+| Final Assessment | `StudentFinalResult` / `ReportCard`. Шкала OPEN | DECIDED core / детали OPEN |
+| Единый календарь | Variant A vs B. Tech Lead не решил. **`scheduled_lessons` сейчас не менять** | OPEN |
+| Additional groups / Productions | ≠ `Class`; поздний future; схему не финализировать | DECIDED split / workflow OPEN |
 | Сущность Document + **private** storage | Сейчас: пути на public disk | OPEN (нужно до широкого mobile) |
-| ConsentRecord / PrivacyPolicyVersion | Не начато | OPEN |
-| Teacher.user_id + профили User | Модель identity OPEN | OPEN |
+| ConsentType / ConsentDocumentVersion / ConsentRecord | Возраст не хардкодить | DECIDED direction / не реализовано |
+| Teacher.user_id + mobile Teacher account | Один actor type на User | DECIDED identity / не реализовано |
 | Payment / Invoice | Не начато | OPEN |
 
 Не использовать kit `orders` как зачисления или счета.
@@ -124,9 +162,10 @@ UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCH
 
 ## Kit vs имена AUB
 
-| Kit | AUB сейчас | Действие |
-|-----|------------|----------|
-| customers | Студенты (interim) | Держать, пока нет задачи миграции |
+| Kit | AUB сейчас | Целевое направление |
+|-----|------------|---------------------|
+| customers | Студенты (interim) | `students` / `parents` / `student_parent` — отдельная задача refactor, не сейчас |
+| course_groups | Учебные группы в коде | Продуктовый `Class` (нормализация терминологии OPEN) |
 | services | courses | Отдельная таблица есть |
 | staff | teachers + roles | Не путать |
 | orders | enrollments / invoices | Новый домен, не kit |

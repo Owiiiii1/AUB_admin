@@ -64,7 +64,7 @@ Production `route:list`: **84** web routes. **Zero** Flutter API endpoints.
 
 | Generic kit | AUB meaning | Status |
 |-------------|-------------|--------|
-| `customers` | Students (interim) | Partial |
+| `customers` | Students (interim; target `students` / `parents`) | Partial |
 | `services` | Not courses — separate `courses` | Courses implemented |
 | `staff` directory | Not RBAC — separate `teachers` + `roles` | Teachers + RBAC implemented |
 | `orders` | Not enrollments — pivot `course_group_customer` | Partial |
@@ -78,11 +78,11 @@ Kit `staff.role` is free text, **not** access control.
 
 **Partial:** students on `customers`; parents as embedded fields; enrollments without statuses; document uploads in profile only.
 
-**Missing:** student attendance; teacher check-in; academic progress; payments; standalone documents/communication modules; mobile API; token auth; field-level ACL; Security Foundation items.
+**Missing:** student attendance; teacher check-in (daily semantics DECIDED); final assessment / report cards; payments; standalone documents/communication modules; mobile API; token auth; field-level ACL; Security Foundation items.
 
-**Next major technical stage:** [API Foundation](NEXT_STEPS.md) — Flutter may be developed in parallel, but features need an API contract. Product directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Open questions: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**Next major technical stage:** [Security Foundation](NEXT_STEPS.md) → Core Data Model refactor → Identity → API Foundation → Flutter Foundation. Stable API **after** Core Data Model. Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Open questions: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
-Productions / shows / rehearsals are a **domain subsystem** (RehearsalGroup ≠ CourseGroup, **PRELIMINARY**), not “optional Phase 6”. PM sets priority after discovery. Costume Service may stay a separate integrated service. Web `/events` and `/costume-service` remain UI placeholders only.
+Productions / shows are **late future** / discovery-needed (activity groups ≠ `Class`). Do not detail workflow now. Costume Service may stay a separate integrated service. Web `/events` and `/costume-service` remain UI placeholders only.
 
 ## Server
 

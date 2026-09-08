@@ -18,12 +18,12 @@ MVP AUB — **ядро академии** плюс **интерфейсы** (web
 
 | Модуль | Статус | Примечание |
 |--------|--------|------------|
-| Студенты | Частично | Сущность `Customer` / таблица `customers` |
+| Студенты | Частично | Сущность `Customer` / таблица `customers` (interim; целевое `students`) |
 | Родители | Частично | Встроенные колонки; модели Parent нет |
 | Преподаватели | Справочник готов | Нет `user_id` |
 | Курсы / группы | Готово | `/courses-groups` |
 | Каталог уроков | Готово | Настройки → Академия; нет `Lessons/Index.jsx` |
-| Зачисления | Частично | `course_group_customer`; unique `customer_id` в **коде**. Может ли студент быть в нескольких CourseGroup — **HIGH PRIORITY OPEN**. Unique index не считать бизнес-правилом |
+| Зачисления | Частично | `course_group_customer`; unique `customer_id` концептуально = **DECIDED** «один активный `Class`». Терминология `course_groups` vs `Class` ещё нормализовать. Workflow статусов — OPEN |
 
 ## Операции (фаза 3)
 
@@ -31,7 +31,7 @@ MVP AUB — **ядро академии** плюс **интерфейсы** (web
 |--------|--------|
 | Недельное расписание | Реализовано (`/schedule-service`) — только обычные `scheduled_lessons` |
 | **Student Attendance** | Не начато — ребёнок на **session**; отдельно от присутствия преподавателя |
-| **Teacher Check-in / Staff Presence** | Не начато — **PRELIMINARY**: кнопка «Пришёл» + разовый GPS + geofence на backend |
+| **Teacher Check-in / Staff Presence** | Не начато — **DECIDED**: daily presence (кнопка «Пришёл» + разовый GPS + geofence); не per lesson |
 | Документы | Upload в профиле на диске **public**; `/documents` — заглушка |
 | Заметки / коммуникации | Заглушка |
 
@@ -43,9 +43,9 @@ MVP AUB — **ядро академии** плюс **интерфейсы** (web
 
 | Модуль | Примечание |
 |--------|------------|
-| Academic Progress / оценки / табель | Крупный будущий модуль. Система оценок **OPEN**. Финальной БД нет. |
-| Productions / Shows / Rehearsals | Доменная подсистема, связанная с core schedule — **не** «опциональный event фазы 6». RehearsalGroup ≠ CourseGroup (**PRELIMINARY**). Репетиции обязаны попадать в единый календарь ребёнка и в conflict detection (**PRELIMINARY**). Приоритет задаёт PM после product discovery. Costume Service может остаться отдельным интегрированным сервисом. |
-| Единый календарь | Будущее: уроки + репетиции + спектакли (+ возможно экзамены/события). Архитектура Variant A vs B **OPEN**. `scheduled_lessons` сейчас не менять. |
+| Final Assessment / Report Cards | **Отдельный продуктовый модуль.** Текущих оценок нет; нет per-lesson gradebook. Итог: `StudentFinalResult` (Student + Class + Lesson + AcademicYear). Табель = все `ClassLesson`. PDF формирует Administrator. Шкала / шаблон PDF — OPEN. |
+| Productions / Shows | **Поздний future** / discovery-needed. Activity groups ≠ `Class`. Расписание будущих групп — в единый календарь. Workflow не детализировать сейчас. Costume Service может остаться отдельным сервисом. |
+| Единый календарь | Будущее: уроки + activity groups (+ возможно экзамены/события). Архитектура Variant A vs B **OPEN**. `scheduled_lessons` сейчас не менять. |
 
 ## API и Flutter
 
@@ -56,20 +56,25 @@ MVP AUB — **ядро академии** плюс **интерфейсы** (web
 | Token auth | **Нет** (Sanctum = кандидат) |
 | Дистрибуция Store | **OPEN** — одно приложение с режимами vs несколько Store-приложений / flavors |
 
-Flutter **можно развивать параллельно**. MVP-функции мобильного клиента блокируются API Foundation, а не требованием «web должен быть завершён на 100%». Backend и Flutter развиваются параллельно; их соединяет API-контракт.
+Flutter **можно развивать параллельно**. MVP-функции мобильного клиента блокируются API Foundation, а не требованием «web должен быть завершён на 100%». Backend и Flutter развиваются параллельно; их соединяет API-контракт. Стабильный контракт **после** Core Data Model refactor + Identity.
 
 ## Граф зависимостей (исторический web + следующий технический)
 
 ```
 Фаза 0 kit ✅
     → Фаза 1 роли ✅
-    → Фаза 2 записи (частично)
+    → Фаза 2 записи (частично; customers = interim)
     → Фаза 3 расписание ✅ / student attendance ❌ / teacher check-in ❌
     → Фаза 4 учёт ❌
     → Security Foundation (до широкого mobile)
-    → API Foundation (следующий технический)
-    → Flutter (параллельно; дистрибуция OPEN)
-    → Identity / Student+Parent MVP / workplace преподавателя
-    → Academic Progress, workflow секретариата, документы, коммуникации, платежи
-    → Эволюция расписания + Productions (приоритет: PM после discovery)
+    → Core Data Model refactor (до стабильного API)
+    → Identity model (один User = один actor type)
+    → API Foundation
+    → Flutter Foundation (параллельно; дистрибуция OPEN)
+    → Student+Parent MVP / Teacher workplace
+    → Teacher Check-in (после Teacher identity/app)
+    → Final Assessment / Report Cards (отдельный модуль)
+    → Workflow секретариата, документы, коммуникации, платежи
+    → Эволюция расписания
+    → Productions / Shows (поздний future)
 ```

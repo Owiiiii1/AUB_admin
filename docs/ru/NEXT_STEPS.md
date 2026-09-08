@@ -2,42 +2,47 @@
 
 Что построено: [CURRENT_STATE.md](CURRENT_STATE.md). Полный список вопросов: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Статус (2026-09-07):** Web-ядро в работе. Репозиторий Flutter есть. **HTTPS API нет.** Номера направлений — **не** замороженный приоритет PM.
+**Статус (2026-09-08):** Web-ядро в работе. Репозиторий Flutter есть. **HTTPS API нет.** Core Data Model refactor должен предшествовать стабильному API-контракту.
 
-**DECIDED:** ядро `AUB_admin`; Flutter `AUB_app`; только HTTPS API; раздельные GitHub-репо; параллельный backend/Flutter.
+**DECIDED:** ядро `AUB_admin`; Flutter `AUB_app`; только HTTPS API; раздельные GitHub-репо; параллельный backend/Flutter; один активный `Class`; один User = один actor type; `customers` — interim.
 
 ## Ближайший технический трек
 
 1. Честные docs (этот поток).
 2. **Security Foundation** до широкого mobile (private storage, field-level ACL, scoped teachers, view audit, матрица API-авторизации, token security, **2FA админов**, consent records) — отдельные задачи.
-3. **API Foundation** (Sanctum = кандидат, не зафиксирован).
-4. **Flutter Foundation**, когда появится контракт (дистрибуция в Store **OPEN**: одно приложение vs flavors).
+3. **Core Data Model refactor** (`students` / `parents` / `student_parent`; один `Class`) — **до** стабильного API. Миграции не в этой задаче.
+4. **Identity model implementation** (один User = один actor type; identity ≠ web RBAC).
+5. **API Foundation** (Sanctum = кандидат, не зафиксирован) — только после п. 3–4.
+6. **Flutter Foundation**, когда появится контракт (дистрибуция в Store **OPEN**: одно приложение vs flavors).
 
-Flutter **можно** развивать параллельно (оболочка, навигация). Реальные функции академии ждут API.
+Flutter **можно** развивать параллельно (оболочка, навигация). Реальные функции академии ждут API. Стабильный контракт не публиковать поверх `customers`.
 
-## HIGH PRIORITY продуктовый вопрос
+## Зафиксированные продуктовые правила (не OPEN)
 
-**Может ли ребёнок быть сразу в нескольких CourseGroup?** Код: unique `customer_id` на `course_group_customer` ⇒ **одна группа всего**. Если академия допускает несколько дисциплин, ограничение неверное. **Не мигрировать, пока нет ответа.**
+- Ребёнок: максимум один активный основной `Class`; плюс отдельно дополнительные группы ≠ `Class`.
+- Unique `customer_id` на `course_group_customer` концептуально соответствует «один основной класс»; терминологию ещё нормализовать.
+- Teacher Check-in = **daily presence**, не per lesson.
+- Текущих оценок нет. Итог: `StudentFinalResult` (Student + Class + Lesson + AcademicYear). PDF табеля формирует Administrator.
 
 ## Не смешивать
 
 | Student Attendance | Teacher Check-in |
 |--------------------|------------------|
 | Ребёнок на **session** (урок/репетиция/…) | Сотрудник **физически в академии** |
-| Не построено | PRELIMINARY: кнопка «Пришёл» + разовый GPS + geofence; QR только fallback |
-| | OPEN: день/смена vs конкретная session; радиус; accuracy; anti-spoofing |
+| Не построено | DECIDED: кнопка «Пришёл» + разовый GPS + geofence → daily check-in; QR optional fallback |
+| | OPEN: radius; accuracy; окно времени; anti-spoofing |
 
 ## Другие крупные модули (не «сделать следующим» без PM)
 
-- **Academic Progress** — оценки, периоды, табель; система оценивания **OPEN** (спросить академию).
-- **Productions / репетиции** — RehearsalGroup ≠ CourseGroup (**PRELIMINARY**). Репетиции **обязаны** попадать в единый календарь ребёнка и в conflict detection. **Не** опциональный placeholder фазы 6. Приоритет задаёт PM после discovery.
-- **Архитектура единого календаря** — Variant A (`ScheduledSession` + типы) vs Variant B (разные сущности + агрегатор). Tech Lead **не** решил. `scheduled_lessons` пока не менять.
-- Identity (User vs профили Teacher/Parent/Student) — **OPEN**.
-- Workflow зачислений, документы, коммуникации, платежи.
+- **Final Assessment / Report Cards** — отдельный продуктовый модуль после foundation. Шкала / шаблон PDF / кто закрывает табель — **OPEN**.
+- **Teacher Check-in** — отдельный модуль после Teacher identity/app foundation.
+- **Productions / Shows** — поздний future / discovery-needed. Activity groups ≠ `Class`. Расписание будущих групп — в единый календарь. Workflow не детализировать сейчас.
+- **Архитектура единого календаря** — Variant A vs B. Tech Lead **не** решил. `scheduled_lessons` пока не менять.
+- Workflow зачислений в `Class`, документы, коммуникации, платежи.
 
 ## Уже сделано (web)
 
-Студенты на `customers`, справочник преподавателей, курсы/группы, уроки в Settings, недельное расписание + гибридный ИИ, CRUD-логи, шаблон Flutter на GitHub.
+Студенты на `customers` (interim), справочник преподавателей, курсы/группы, уроки в Settings, недельное расписание + гибридный ИИ, CRUD-логи, шаблон Flutter на GitHub.
 
 ### Опциональная полировка web-расписания
 
@@ -49,5 +54,7 @@ Flutter **можно** развивать параллельно (оболочк
 - Не править `vendor/`
 - Не раскрывать секреты
 - Не фиксировать Sanctum
-- Не «чинить» unique зачисления без ответа академии
-- Не реализовывать здесь check-in, оценки или постановки
+- Не реализовывать миграции `students` / `parents`
+- Не публиковать стабильный mobile API до Core Data Model refactor
+- Не реализовывать здесь check-in, табели или постановки
+- Не хардкодить возрастной порог consent

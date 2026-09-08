@@ -159,6 +159,6 @@
 
 ## Будущий календарь (не реализовано)
 
-Эта доска планирует **только обычные `scheduled_lessons`**. Продуктовое требование (**PRELIMINARY**): репетиции (и позже спектакли / возможные экзамены / события академии) должны попадать в **единый календарь** ребёнка и участвовать в **conflict detection** с обычными занятиями.
+Эта доска планирует **только обычные `scheduled_lessons`**. **DECIDED для будущего:** расписание дополнительных групп (production / rehearsal / иное; **не** `Class`) должно попадать в **единый календарь** ребёнка. Productions — поздний future. Реализация календаря и conflict detection — OPEN.
 
-Tech Lead **не** выбрал архитектуру единой session vs агрегирующего слоя. `scheduled_lessons` в этой документации не менять. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) и [ARCHITECTURE.md](ARCHITECTURE.md).
+Tech Lead **не** выбрал архитектуру единой session vs агрегирующего слоя (Variant A vs B). `scheduled_lessons` в этой документации не менять. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) и [ARCHITECTURE.md](ARCHITECTURE.md).

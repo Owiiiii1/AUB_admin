@@ -26,7 +26,7 @@ Flutter must **never** contain Bitrix/webhooks, DB credentials, or `APP_KEY`. On
 3. AUB modules live in `AUB_admin` (or `AUB_app` for Flutter UI), never in `vendor/`.
 4. Do not duplicate installed generic CRM/admin behaviour; extend it.
 5. AUB is a **core + interfaces** system, not “the admin panel”.
-6. Mobile work may proceed in parallel; **features** need an API contract.
+6. Mobile work may proceed in parallel; **features** need an API contract. A stable API comes **after** Core Data Model refactor + Identity.
 
 ## Before adding a module
 
@@ -110,7 +110,7 @@ Do not change PHP/JS/migrations/routes/config/`.env`/`vendor` in a docs-only tas
 - Kit CRM routes removed
 - Settings consolidation including lessons catalog
 - Default locale `it`
-- Students on extended `customers` until an explicit migration task
+- Students on extended `customers` until an explicit Core Data Model refactor task (direction `students` / `parents` is DECIDED)
 
 ## Privacy development
 

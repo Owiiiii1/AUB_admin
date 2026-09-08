@@ -33,11 +33,11 @@ DPA still recommended; not a system feature.
 | AI keys | `ai_provider_settings.api_key` | Secrets (encrypted at rest in Laravel) |
 | Logs | IP, user agent on `activity_logs` | Limited personal |
 
-Consent records and privacy-policy versions are **planned entities only**.
+Consent records are **planned**: target `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Possible types: privacy; data processing; photo/video; marketing; special activity. Not implemented.
 
 ## Children’s data
 
-Italy: under 14, online consent generally needs a parent/guardian. Digital channels (web + future Flutter) must record consent. **Not implemented.**
+Digital channels (web + future Flutter) must record consent where academy policy and applicable law require it. For a minor, consent is linked to a parent/guardian **where required**. Do **not** hardcode a specific age threshold in the domain model until a legal / compliance review. **Not implemented.**
 
 Student files are stored on the Laravel **public** disk (`students/{id}/documents`). Treat as a **privacy gap** (URLs may be guessable/public if the symlink is live). Do not describe this as private storage.
 
@@ -76,7 +76,7 @@ Raise these from “later improvements” to **mandatory foundation**:
 - API authorization matrix
 - Mobile token security
 - **2FA for administrative staff**
-- Consent / privacy records
+- Consent / privacy records (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`; do not hardcode an age threshold)
 
 Plus (still required, listed separately): subject access export / erasure workflows.
 
@@ -88,7 +88,7 @@ Schedule AI sends **preferences / operational schedule data** to the configured 
 
 ## App Store / Flutter
 
-Repository `Owiiiii1/AUB_app` exists. Publication still needs a Privacy Policy URL, accurate data disclosures, and parental consent for minors. Token design is part of API Foundation (Sanctum is a candidate only).
+Repository `Owiiiii1/AUB_app` exists. Publication still needs a Privacy Policy URL, accurate data disclosures, and parental consent for minors where law/policy require it (age threshold — after legal review). Token design is part of API Foundation (Sanctum is a candidate only).
 
 ## Retention
 
@@ -98,7 +98,7 @@ Undefined with the academy. Typical ranges (guidance only): enrollment + legal p
 
 | Document | Status |
 |----------|--------|
-| This technical note | Current as of 2026-09-07 |
+| This technical note | Current as of 2026-09-08 |
 | Public Privacy Policy / ToS / DPA / cookie policy | Not created |
 
 Update this file when modules collect new personal data (including future teacher geolocation check-in), roles change, Flutter ships, or AI starts sending personal fields.

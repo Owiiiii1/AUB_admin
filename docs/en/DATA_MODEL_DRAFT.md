@@ -21,7 +21,7 @@ Auth. Extra columns: `role_id` → `roles`, `can_write`, `can_delete`.
 Relations: `belongsTo Role`.  
 Privacy: Personal data.
 
-### customers (implemented — **students, interim**)
+### customers (implemented — **students, interim / not the long-term model**)
 
 Kit columns: `name`, `email`, `phone`, `address`, `notes`, `status`.
 
@@ -78,7 +78,7 @@ Photos: public disk `teachers/{id}/photos`.
 `course_groups`: `course_id`, `name`, `color`, `sort_order`.  
 `course_group_customer`: `course_group_id`, `customer_id`, `discipline` (column remains).  
 
-**Enrollment constraint in code:** unique `customer_id` — **at most one CourseGroup per student in the database**. This is **not** a confirmed academy business rule. If a child may attend several disciplines at once, the unique index is a **HIGH PRIORITY product/architecture conflict**. Do not change the migration until PM/academy answers. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**Enrollment constraint in code:** unique `customer_id` — at most one CourseGroup per student in the database. **DECIDED:** this conceptually matches the “one primary `Class`” rule. Target terminology: `Class` = permanent primary academic class; do not mix with additional activity groups. Table names (`course_groups` vs `Class`) still need normalization. Do not change migrations in this task. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
 The earlier unique `(customer_id, discipline)` was replaced by `2026_07_08_170000`.
 
@@ -102,20 +102,58 @@ UI: visual 30 min, planning 5 min. See [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHED
 
 ## D. Planned / conceptual (no final schema, no migrations)
 
-Do not treat this list as an approved database.
+Do not treat this list as an approved database. Do **not** create migrations in a docs-only task. Core Data Model refactor comes **before** a stable mobile API.
+
+### Student / Parent (DECIDED direction)
+
+`customers` is interim / legacy, **not** the long-term Student domain model. Production has no valuable user data (test only). Target entities: `students`, `parents`, `student_parent`. Do not start migrations now.
+
+### `Class` vs additional groups (DECIDED)
+
+- `Class` is the permanent primary academic class; at most one active per child.
+- Additional groups (events, productions, rehearsals) are **not** a `Class`. A child may belong to one `Class` and several activity groups.
+- Preliminary future types (not a schema): `ProductionGroup`, `RehearsalGroup`, possibly others. Do not finalize a schema now.
+
+### Identity (DECIDED)
+
+One User has exactly one primary actor type: `student` | `parent` | `teacher`. Do not design multi-profile identity. Staff web RBAC stays separate. `teachers.user_id` does not exist in code.
+
+### Teacher Check-in (semantics DECIDED)
+
+Daily presence, not per lesson. Conceptual fields: teacher; date; checked_in_at; latitude; longitude; accuracy; academy_location; status; manual correction metadata; audit. Geofence radius / accuracy / window / anti-spoofing remain OPEN. QR = optional fallback. `academy_buildings` / `academy_rooms` currently have **no** lat/lng/radius.
+
+### Final Assessment (core DECIDED, details OPEN)
+
+Concept:
+
+```
+AcademicYear → Class → ClassLesson → TeacherAssignment
+Student + Class + Lesson + AcademicYear → StudentFinalResult
+Student + Class + AcademicYear → ReportCard
+```
+
+`StudentFinalResult` (example fields): student_id; class_id; lesson_id; academic_year_id; result; teacher_comment; finalized_at; updated_at; audit metadata.
+
+`ReportCard` (preliminary): student_id; class_id; academic_year_id; status (`draft` / `finalized` / `printed`); finalized_at; generated_at; generated_by.
+
+No running grades / per-lesson gradebook. An Administrator assembles the PDF from domain entities; the PDF is not a data source. Scale, PDF template, and who closes the card remain OPEN.
+
+### Consent (direction; do not fix an age threshold)
+
+Target entities: `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Possible types: privacy; data processing; photo/video; marketing; special activity. For a minor, link to parent/guardian where policy/law requires it. Do not hardcode an age threshold before legal review.
 
 | Topic | Notes | Status |
 |-------|--------|--------|
-| Student / Parent tables | Today: `customers` + embedded parents | OPEN |
-| Enrollment workflow | Statuses, history | OPEN |
-| **Student Attendance** | Presence on a **session** (lesson/rehearsal/…). Not teacher GPS | OPEN |
-| **Teacher Check-in** | One-shot GPS + geofence (**PRELIMINARY** mechanism). Bind to day vs session **OPEN**. Possible fields: lat, lng, accuracy, timestamp, status `on_time`/`late`/`manual`/`rejected` | PRELIMINARY / OPEN |
-| Academic Progress | Grades, periods, report cards, history — grading system **OPEN** | OPEN |
-| Unified calendar | Variant A `ScheduledSession` vs Variant B separate entities. Tech Lead not decided. **Do not change `scheduled_lessons` now** | OPEN |
-| Production / RehearsalGroup / Rehearsal / Performance / Cast | RehearsalGroup **≠** CourseGroup (**PRELIMINARY**). Rehearsals on child calendar + conflicts (**PRELIMINARY**). ProductionStaff unapproved | PRELIMINARY / OPEN |
+| `students` / `parents` / `student_parent` tables | Direction DECIDED; today `customers` | DECIDED direction / not implemented |
+| Enrollment workflow around `Class` | Statuses, history, transfers | OPEN |
+| **Student Attendance** | Presence on a **session**. Not teacher GPS | OPEN |
+| **Teacher Check-in** | Daily geofence check-in. Radius/accuracy details OPEN | DECIDED semantics / not implemented |
+| Final Assessment | `StudentFinalResult` / `ReportCard`. Scale OPEN | DECIDED core / details OPEN |
+| Unified calendar | Variant A vs B. Tech Lead not decided. **Do not change `scheduled_lessons` now** | OPEN |
+| Additional groups / Productions | ≠ `Class`; late future; do not finalize schema | DECIDED split / workflow OPEN |
 | Document entity + **private** storage | Today: public disk paths | OPEN (required before wide mobile) |
-| ConsentRecord / PrivacyPolicyVersion | Not started | OPEN |
-| Teacher.user_id + User actor profiles | Identity model OPEN | OPEN |
+| ConsentType / ConsentDocumentVersion / ConsentRecord | Do not hardcode age | DECIDED direction / not implemented |
+| Teacher.user_id + mobile Teacher account | One actor type per User | DECIDED identity / not implemented |
 | Payment / Invoice | Not started | OPEN |
 
 Do not reuse kit `orders` as enrollments or invoices.
@@ -124,9 +162,10 @@ Do not reuse kit `orders` as enrollments or invoices.
 
 ## Kit vs AUB names
 
-| Kit | AUB now | Action |
-|-----|---------|--------|
-| customers | Students (interim) | Keep until a migration task |
+| Kit | AUB now | Target direction |
+|-----|---------|------------------|
+| customers | Students (interim) | `students` / `parents` / `student_parent` — separate refactor task, not now |
+| course_groups | Study groups in code | Product `Class` (terminology normalization OPEN) |
 | services | courses | Separate table exists |
 | staff | teachers + roles | Do not confuse |
 | orders | enrollments / invoices | New domain, not kit |

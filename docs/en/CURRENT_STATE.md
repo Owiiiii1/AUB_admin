@@ -104,7 +104,7 @@ Do not confuse “29 batches” with “29 files”.
 | `customers` | **Students** (interim kit table) |
 | `teachers` | Academy teachers; **not** linked to `users` |
 | `courses`, `course_groups` | Courses/groups; course study window |
-| `course_group_customer` | Enrollment pivot; unique `customer_id` (**one CourseGroup per student in DB** — **HIGH PRIORITY OPEN** whether this is the academy rule) |
+| `course_group_customer` | Enrollment pivot; unique `customer_id` (conceptually = **DECIDED** one active `Class`; terminology vs `course_groups` still needs normalization) |
 | `lessons` | Catalog (`duration_minutes`) |
 | `lesson_teacher`, `lesson_course`, `course_group_lesson` | Lesson relations; several teachers per group+lesson |
 | `academy_buildings`, `academy_rooms` | Locations (no geofence lat/lng/radius columns) |
@@ -182,7 +182,7 @@ Dynamic items from `role_menu_items` (`adminMenu` prop): `dashboard`, `students`
 |-----|-------|--------|
 | coursesAndGroups | `courses-groups.index` | Implemented |
 | scheduleService | `weekly-schedule.index` | Implemented |
-| documents, communication, events, costumeService, archive | `placeholder.*` | UI placeholders. Product: Productions is a **domain subsystem**, not “optional Phase 6”. Costume Service may stay a separate service. |
+| documents, communication, events, costumeService, archive | `placeholder.*` | UI placeholders. Productions is **late future**; `/events` stays a placeholder. Costume Service may stay a separate service. |
 
 There is **no** extra sidebar item `lessons`. Catalog is under Settings → Academy.
 
@@ -196,7 +196,7 @@ UI locales: **it** (default), en, ru, uk. Validation files exist for those local
 
 ## Students (interim)
 
-Implemented on **`customers`**. Files: `storage/app/public/students/{id}/documents` (public disk) — **not** `customers/`. Teacher photos: `teachers/{id}/photos`.
+Implemented on **`customers`**. **DECIDED direction:** target `students` / `parents` / `student_parent`; `customers` is not the long-term model. No migrations in this task. Files: `storage/app/public/students/{id}/documents` (public disk) — **not** `customers/`. Teacher photos: `teachers/{id}/photos`.
 
 No field-level restriction: a role that can open `customers.*` sees parent contacts and medical-certificate expiry.
 
@@ -215,19 +215,20 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 | 3 | Weekly schedule | Complete + hybrid AI (2026-07-20) |
 | 3 | Student file uploads | Partial — public disk, no documents module |
 | 3 | **Student Attendance** | Not started (child on a session) |
-| 3 | **Teacher Check-in** | Not started (**PRELIMINARY** GPS snapshot + geofence) |
+| 3 | **Teacher Check-in** | Not started (**DECIDED**: daily GPS snapshot + geofence; not per lesson) |
 | 3 | Documents / communication menus | Placeholders |
 | 4+ | Payments | Not started |
-| future | Academic Progress / Productions | Documented as large modules; not started; Productions priority = PM after discovery |
-| API / Flutter | API + token auth | **Not started**; Flutter repo exists; Store packaging **OPEN** |
+| future | Final Assessment / Report Cards | Separate module; no running grades; not started |
+| late future | Productions / Shows | Discovery-needed; activity groups ≠ `Class`; web `/events` is a placeholder |
+| API / Flutter | API + token auth | **Not started**; Flutter repo exists; Store packaging **OPEN**. Stable API **after** Core Data Model + Identity |
 
 ## What is NOT implemented
 
-- Separate `students` / `parents` tables
-- Full enrollment workflow (statuses, transfers, history). Unique `customer_id` vs multi-group **OPEN**
-- **Student Attendance** (session-level) and **Teacher Check-in** (presence)
-- Academic Progress / grades / report cards
-- Productions / RehearsalGroup / rehearsals / performances (web `/events` is only a placeholder)
+- Separate `students` / `parents` / `student_parent` tables (direction DECIDED; code still uses `customers`)
+- Full enrollment workflow (statuses, transfers, history). The “one active `Class`” rule is DECIDED
+- **Student Attendance** (session-level) and **Teacher Check-in** (daily presence — semantics DECIDED, no code)
+- Final Assessment / `StudentFinalResult` / `ReportCard` (core DECIDED; not implemented; no running grades)
+- Productions / activity groups / rehearsals / performances (late future; web `/events` is only a placeholder)
 - Payments / invoices
 - Standalone documents and communication modules
 - Archive, costume service (menu placeholders; costume may remain a separate service)
@@ -236,7 +237,7 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 - PDF export for schedule (button is a placeholder)
 - Actionable AI recommendations (re-prompt only)
 - Field-level visibility; teacher scoped to assigned students
-- Consent / privacy-policy entities
+- Consent entities (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`)
 - View/access audit of sensitive records
 - Private storage for children’s documents
 - Admin 2FA

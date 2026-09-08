@@ -13,7 +13,9 @@
 
 Parent и Student — **не** роли админки. Это планируемые **каналы Flutter (и возможно web)** к API `AUB_admin`. API ещё нет.
 
-**DECIDED:** Parent/Student не должны становиться RBAC-ролями админки только потому, что им нужен login. Authentication identity ≠ административный RBAC. Модель User → профили Teacher/Parent/Student — **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)).
+**DECIDED:** Parent/Student не должны становиться RBAC-ролями админки только потому, что им нужен login. Authentication account type ≠ административный web RBAC. Administrative staff продолжает существующий web RBAC.
+
+**DECIDED (MVP identity):** один User = один основной actor type (`student` / `parent` / `teacher`). Две роли одного человека = два аккаунта. Multi-profile identity в текущую версию не закладывать. Invitation / activation — OPEN ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)).
 
 Управление костюмами — будущий **сервис**, не роль. Упаковка Flutter Store (одно приложение с режимами vs несколько apps/flavors) — **OPEN**.
 
@@ -96,8 +98,8 @@ Parent / Student / Teacher (mobile)
 | Платежи | ✓ | ✓ (намерение) | — | R свои F | — |
 | Медицина / sensitive | ✓ | R (намерение) | — | — | — |
 | Student Attendance (ребёнок на session) | ✓ | ✓ | W свои (намерение) | R свой ребёнок F (OPEN) | — |
-| Teacher Check-in / присутствие | ✓ / ручная правка | ✓ (намерение) | W своё F | — | — |
-| Оценки / табель | ✓ | ? OPEN | W разрешённые предметы/группы F | R F OPEN | R F OPEN |
+| Teacher Check-in / присутствие | ✓ / ручная правка | ✓ (намерение) | W своё daily F | — | — |
+| Итоговые результаты / табель | ✓ + PDF в admin panel | ? OPEN (кто закрывает табель) | W `StudentFinalResult` только по назначенным `ClassLesson`; одна общая запись; PDF не генерирует | R F OPEN | R F OPEN |
 | Правка расписания | ✓ | ✓ (намерение) | R (намерение) | R F | R F |
 | Users / roles / AI | ✓ | — | — | — | — |
 
@@ -114,8 +116,8 @@ Parent / Student / Teacher (mobile)
 - Матрица API-авторизации
 - Безопасность мобильных токенов
 - Access/view audit чувствительных записей
-- Сущности согласий
+- Сущности согласий (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`)
 - 2FA для административного персонала
-- Модель identity: User ↔ Teacher; профили Parent/Student; несколько профилей у одного User
+- Identity: User ↔ Teacher как mobile actor; Parent/Student аккаунты. **Не** multi-profile на одном User
 
 См. [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md), [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md), [CURRENT_STATE.md](CURRENT_STATE.md).

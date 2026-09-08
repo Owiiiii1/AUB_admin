@@ -18,54 +18,80 @@
 | GitHub-репозитории раздельные (`Owiiiii1/AUB_admin`, `Owiiiii1/AUB_app`) | DECIDED |
 | Flutter и backend могут развиваться параллельно; их соединяет API-контракт | DECIDED |
 | Parent / Student **не** становятся ролями административного web-RBAC только потому, что им нужен login | DECIDED (identity ≠ RBAC) |
+| Ребёнок одновременно имеет максимум один активный основной `Class` | DECIDED |
+| Дополнительные activity groups (production / rehearsal / иное) **не** являются `Class` | DECIDED |
+| Один User имеет ровно один основной actor / account type (`student` / `parent` / `teacher`) | DECIDED |
+| Если одному физическому человеку нужны две роли — два отдельных аккаунта; multi-profile identity в текущую версию не закладывать | DECIDED |
+| `customers` — interim / legacy; целевое направление `students` + `parents` + `student_parent` | DECIDED (направление; миграции не сейчас) |
+| Core Data Model refactor должен произойти **до** публикации стабильного mobile API | DECIDED |
+| Teacher Check-in относится к **рабочему дню**, не к конкретному lesson/session | DECIDED |
+| Текущих оценок в течение периода нет; электронный gradebook за каждый урок не нужен | DECIDED |
+| Итоговая оценка принадлежит связке Student + Class + Lesson + AcademicYear (`StudentFinalResult`) | DECIDED |
+| Заполнять итоговый результат могут только преподаватели, назначенные на этот урок класса; одна общая запись на предмет | DECIDED |
+| Табель включает **все** дисциплины `ClassLesson` класса на AcademicYear | DECIDED |
+| PDF табеля формирует Administrator в admin panel; преподаватель PDF не генерирует | DECIDED |
+| Productions / Shows — поздний future / discovery-needed этап | DECIDED (приоритет) |
 
 ---
 
 ## Core Data Model
 
-### Unique enrollment: одна CourseGroup на студента
+### Основной класс ученика (`Class`)
 
-- **Question:** Ребёнок может одновременно состоять в нескольких курсах / дисциплинах / CourseGroup или только в одной?
-- **Why it matters:** В `course_group_customer` стоит **unique `customer_id`**. Сейчас в БД студент может быть **только в одной CourseGroup вообще**. Если академия допускает несколько групп сразу, ограничение не соответствует бизнесу.
-- **Current assumption:** Продуктового правила нет. Unique — **технический факт кода**, не подтверждённое правило академии.
-- **Status:** OPEN — **HIGH PRIORITY**. Миграцию не менять, пока нет ответа PM / академии.
+- **DECIDED:** ребёнок может состоять только в одном основном учебном классе одновременно. Это обязательное бизнес-правило текущей версии.
+- **Терминология (целевая):** `Class` — постоянный основной учебный класс ребёнка. Не смешивать `Class` с временными дополнительными группами.
+- **Код сейчас:** unique `customer_id` на `course_group_customer` концептуально соответствует правилу «один основной класс». Имена таблиц (`course_groups` vs `Class`) требуют дальнейшей нормализации.
+- **Status:** правило — DECIDED; нормализация терминологии схема/API — OPEN.
 
-### Отдельные таблицы `students` / `parents` vs `customers`
+### Студенты / родители vs `customers`
 
-- **Question:** Когда (и нужно ли) уходить с interim `customers`?
-- **Why it matters:** Flutter-идентичности, зачисления, оценки, постановки завязаны на «студента».
-- **Current assumption:** `customers` остаётся, пока нет явной задачи миграции.
-- **Status:** OPEN
+- **DECIDED direction:** `customers` не долгосрочная доменная модель Student. Целевые сущности: `students`, `parents`, `student_parent`.
+- **Факт production:** ценных пользовательских данных нет (тестовые данные). Миграцию можно проектировать без требования сохранять текущую тестовую структуру любой ценой.
+- **Сейчас не делать:** миграции, смену таблиц, API-контракт поверх `customers` как стабильной модели.
+- **Status:** направление DECIDED. Реализация — отдельная задача Core Data Model refactor.
+
+### Unique vs дополнительные группы
+
+- **DECIDED:** один активный `Class` + одновременно одна или несколько дополнительных групп (события, постановки, репетиции и т.п.).
+- Дополнительные группы **не** хранятся как второй `Class`.
+- **Status:** продуктовое правило DECIDED. Схема дополнительных групп — не финализировать сейчас.
 
 ---
 
 ## Enrollment
 
-- **Question:** Статусы зачисления, правила перевода, история, даты начала/конца?
+- **Question:** Статусы зачисления в `Class`, правила перевода между классами, история, даты начала/конца?
 - **Why it matters:** Сейчас только pivot без workflow.
-- **Current assumption:** Нет.
+- **Current assumption:** Нет. Правило «один активный Class» уже DECIDED; workflow вокруг него — нет.
 - **Status:** OPEN
 
 ---
 
 ## Identity & Accounts
 
-- **Question:** Модель identity. Пример (не выбран): `User` → профиль Teacher / Parent / Student — или другая схема.
-- **Why it matters:** `User` есть для **web**-auth; `Teacher` не связан; сущностей Parent/Student нет; Flutter API нет. Authentication identity ≠ административная RBAC-роль.
-- **Подвопросы:**
-  - Может ли один User иметь несколько actor-профилей?
-  - Родитель с несколькими детьми?
-  - Преподаватель, который одновременно родитель?
-  - Старший student со своим аккаунтом?
-  - Кто создаёт аккаунт? Invitation / activation?
-- **Current assumption:** Граф identity не выбран. «Режимы» Flutter в старых docs — набросок, не решение.
-- **Status:** OPEN
+**DECIDED для текущей версии:**
+
+- Один User имеет ровно один основной тип аккаунта.
+- Основные mobile actor types: `student`, `parent`, `teacher`.
+- Один User **не** может одновременно быть Student и Parent, Teacher и Parent и т.д.
+- Если одному физическому человеку нужны две роли, создаются два отдельных аккаунта.
+- Multi-profile identity в текущую версию **не** закладывать. Это осознанное упрощение MVP.
+- Authentication account type и административный web RBAC — **разные** понятия. Administrative staff продолжает использовать существующий web RBAC.
+
+**Ещё не решено:**
+
+| Question | Why it matters | Status |
+|----------|----------------|--------|
+| Родитель с несколькими детьми — правила связи через `student_parent` | Кардинальность, UX, consent | OPEN (целевая таблица есть; правила нет) |
+| Старший student со своим аккаунтом — кто создаёт, с какого момента | Onboarding | OPEN |
+| Кто создаёт аккаунт? Invitation / activation? | API + Flutter | OPEN |
+| Связь `teachers.user_id` с mobile Teacher-аккаунтом vs web-логин персонала | Check-in и workplace | OPEN (направление: Teacher — mobile actor type; web RBAC отдельно) |
 
 ---
 
 ## Roles & Access
 
-- **Question:** Итоговая field-level матрица и scoped access преподавателя (только свои группы/дети).
+- **Question:** Итоговая field-level матрица и scoped access преподавателя (только свои классы/дети).
 - **Why it matters:** Сейчас роль с `customers.*` видит все поля. `always_allowed_route_patterns` шире меню роли.
 - **Current assumption:** Матрица-намерение в [USER_ROLES_AND_ACCESS.md](USER_ROLES_AND_ACCESS.md) — **не** код.
 - **Status:** OPEN
@@ -87,59 +113,88 @@
 
 **Домен:** подтверждение, что преподаватель **физически в академии**. Отдельно от Student Attendance.
 
-### Механизм (PRELIMINARY)
+**DECIDED semantics:** check-in относится к **рабочему дню**, а **не** к конкретному lesson/session. Не требовать check-in перед каждым уроком.
 
-1. Преподаватель открывает Flutter.
-2. Нажимает **Пришёл** (сознательное действие).
-3. Приложение **один раз** запрашивает геолокацию (не background tracking).
-4. Backend получает latitude, longitude, accuracy, timestamp.
-5. Backend проверяет **geofence** академии.
-6. При успехе создаётся check-in.
+**DECIDED workflow:**
 
-Площадки концептуально: latitude, longitude, allowed radius. Несколько зданий.
+1. Teacher открывает Flutter app.
+2. Нажимает **Пришёл**.
+3. Приложение получает **один** snapshot геолокации (не background tracking).
+4. Backend проверяет geofence academy location.
+5. Создаётся **daily** teacher check-in.
 
-Предварительные статусы: `on_time`, `late`, `manual`, `rejected`.
+**Концептуальные данные (не финальная схема):** teacher; date; checked_in_at; latitude; longitude; accuracy; academy_location; status; manual correction metadata; audit.
 
-Позже спроектировать: audit; ручное подтверждение/исправление администратором; обработка GPS accuracy; несколько площадок.
+QR — **optional fallback**, не основной механизм.
 
-QR — **возможный fallback/альтернатива**, **не** основной кандидат.
-
-### Открыто (не решено)
-
-| Question | Why it matters | Assumption | Status |
-|----------|----------------|------------|--------|
-| Check-in к **рабочему дню/смене** или к **конкретному scheduled lesson/session**? | Модель данных, UX, смысл late/on_time | Нет | OPEN |
-| Временное окно check-in | Шум слишком ранних/поздних отметок | Нет | OPEN |
-| Допустимый geofence radius | Ложные отказы vs читерство | Нет | OPEN |
-| Допустимая GPS accuracy | В помещении GPS слабый | Нет | OPEN |
-| Anti-spoofing | Поддельная геолокация | Нет | OPEN |
-| Доп. сигналы (Wi-Fi / QR / device attestation)? | Безопасность vs трение | QR только fallback (PRELIMINARY) | OPEN, кроме «QR не основной» |
-
----
-
-## Grades / Report Cards (Academic Progress)
-
-Крупный модуль, **без финальной БД**. Предварительный scope: оценки; комментарии преподавателя; по предметам/дисциплинам; по учебным периодам; промежуточные и итоговые; табель; история изменений; кто выставил/изменил и когда; просмотр студентом и родителем; преподаватель только в разрешённых предметах/группах.
+### Осталось OPEN
 
 | Question | Why it matters | Status |
 |----------|----------------|--------|
-| Система оценивания (числа / буквы / уровни / текст) и диапазон | Схема и UI | OPEN — discovery с академией |
-| Есть ли экзамены? | Календарь + оценки | OPEN |
-| Периоды: семестр / триместр / квадриместр / иное? | Табель | OPEN |
-| Разные системы у разных курсов? | Гибкость vs сложность | OPEN |
-| Кто может править выставленную оценку? | Audit | OPEN |
-| Workflow утверждения итогов? | Официальные записи | OPEN |
-| Официальный PDF / report card / подпись? | Юридика/операции | OPEN |
+| Точный geofence radius | Ложные отказы vs читерство | OPEN |
+| Minimum acceptable GPS accuracy | В помещении GPS слабый | OPEN |
+| Допустимое окно времени check-in | Шум слишком ранних/поздних отметок | OPEN |
+| Anti-spoofing | Поддельная геолокация | OPEN |
+| Дополнительные сигналы безопасности (Wi-Fi / device attestation / иное) | Безопасность vs трение | OPEN |
+
+Модуль реализуется **после** Teacher identity / app foundation. См. [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
+
+---
+
+## Final Assessment / Report Cards
+
+AUB **не** использует обычную школьную модель постоянных оценок.
+
+**DECIDED:**
+
+- в течение учебного периода текущие оценки не выставляются;
+- электронный gradebook с оценками за каждый урок **не нужен**;
+- используются только итоговые результаты;
+- итоговый табель формируется по окончании учебного периода / учебного года.
+
+**DECIDED структура (концепт, не финальная схема / не миграции):**
+
+```
+AcademicYear → Class → ClassLesson → TeacherAssignment
+Student + Class + Lesson + AcademicYear → StudentFinalResult
+Student + Class + AcademicYear → ReportCard
+```
+
+- Набор `ClassLesson` определяет дисциплины табеля. Список дисциплин **не** формируется вручную.
+- Итоговая оценка **не** принадлежит преподавателю. Одна общая `StudentFinalResult` на предмет, даже если назначено несколько преподавателей.
+- Заполнять / редактировать итог могут **только** преподаватели, назначенные на соответствующий `ClassLesson`.
+- Табель включает **все** дисциплины класса на AcademicYear. Если хотя бы по одной обязательной дисциплине результата нет — администратор получает предупреждение перед финализацией / генерацией PDF.
+- PDF **обязателен**. PDF формирует **Administrator** через admin panel. Преподаватель PDF не формирует. PDF **не** самостоятельный источник данных.
+
+Предварительная `ReportCard`: student_id; class_id; academic_year_id; status (`draft` / `finalized` / `printed`); finalized_at; generated_at; generated_by. Точный lifecycle может быть уточнён позже.
+
+Это **отдельный продуктовый модуль**, не часть API Foundation.
+
+### Осталось OPEN
+
+| Question | Why it matters | Status |
+|----------|----------------|--------|
+| Шкала итоговой оценки | Схема и UI | OPEN |
+| Формат результата | Числа / буквы / уровни / текст | OPEN |
+| Обязательность `teacher_comment` | UX + PDF | OPEN |
+| Кто имеет право финально закрыть табель | Workflow | OPEN |
+| Можно ли редактировать результат после `finalized` | Audit + ops | OPEN |
+| Нужен ли отдельный approval workflow | Официальные записи | OPEN |
+| Нужен ли цифровой signature | Юридика/операции | OPEN |
+| Формат PDF и официальный шаблон | Печать | OPEN |
+| Хранить ли snapshot PDF после печати | Архив | OPEN |
+| Правила повторной генерации / версии табеля | Ops | OPEN |
 | Что видит student vs parent | Privacy + Flutter | OPEN |
-| История за несколько лет? | Хранение + UX | OPEN |
+| Есть ли экзамены как отдельный тип session | Календарь; **не** текущие оценки | OPEN |
+| Периоды: семестр / триместр / год / иное | Когда формируется табель | OPEN |
 
 ---
 
 ## Scheduling
 
-Сейчас реализовано: `scheduled_lessons` (обычные уроки, доска пн–пт). **Таблицу в этой задаче не менять.**
+Сейчас реализовано: `scheduled_lessons` (обычные уроки, доска пн–пт). **Таблицу в docs-only задаче не менять.**
 
-Будущий календарь должен показывать как минимум: обычные уроки; репетиции; спектакли; возможно экзамены; возможно события академии.
+Будущий календарь должен показывать как минимум: обычные уроки; в будущем — репетиции / activity groups; возможно экзамены; возможно события академии.
 
 **Архитектура (Tech Lead не выбрал):**
 
@@ -149,29 +204,26 @@ QR — **возможный fallback/альтернатива**, **не** осн
 | Question | Status |
 |----------|--------|
 | Variant A vs B | OPEN |
-| Как репетиции попадают в **единый календарь ребёнка** и в **conflict detection** с обычными занятиями | Требование PRELIMINARY (обязательно); реализация OPEN |
+| Как расписание дополнительных групп попадёт в **единый календарь ребёнка** | Требование DECIDED для будущего; реализация OPEN |
 
 ---
 
-## Productions / Shows
+## Productions / Shows / дополнительные группы
 
-Это **не** «опциональный placeholder фазы 6». Постановка — **доменная подсистема**, тесно связанная с ядром расписания. **Приоритет после product discovery задаёт PM** — направление можно поднять в roadmap.
+**DECIDED:**
 
-Предварительная модель (не финальная схема):
+- Productions / Shows — **поздний** этап roadmap (future / discovery-needed). Не поднимать приоритет без отдельного решения PM.
+- Production / rehearsal / activity groups **≠** `Class`.
+- Ребёнок может состоять в одном основном `Class` **и** в одной или нескольких дополнительных группах.
+- Расписание этих групп в будущем должно попадать в единый календарь ребёнка.
 
-`Production / Show` → свои участники → роли/cast → **rehearsal groups** → репетиции → спектакли.
+**Не делать сейчас:** финальную схему; детальный Production workflow.
 
-**PRELIMINARY:** Rehearsal Group **не** является CourseGroup. В неё могут входить дети разных возрастов, курсов и обычных учебных групп. Ребёнок может быть в обычных CourseGroup **и** в одной или нескольких rehearsal groups **и** в нескольких productions.
-
-**PRELIMINARY:** у репетиций своё расписание; они **обязаны** попадать в единый календарь ребёнка и в проверку конфликтов с обычными занятиями.
-
-Возможные будущие сущности (не утверждены как финал): Production, ProductionParticipant, CastRole / ProductionRole, RehearsalGroup, Rehearsal, Performance. ProductionStaff — возможна, **не** утверждена.
+Предварительные **будущие** типы (не финальная схема): `ProductionGroup`; `RehearsalGroup`; возможно другие activity groups.
 
 Costume Service может остаться **отдельным интегрированным сервисом**. Планирование постановок ≠ аренда костюмов.
 
-Нужен discovery: workflow создания; casting; несколько ролей у ребёнка; кто собирает rehearsal groups; обязательность репетиций; attendance **на репетициях** (домен Student Attendance); преподаватели/хореографы/режиссёры; площадки; отмена/перенос; даты спектаклей; костюмы; взносы; билеты; согласие родителей; уведомления; связь costume↔production.
-
-**Status:** PRELIMINARY (разделение домена + правило календаря); большая часть workflow — OPEN.
+**Status:** приоритет и правило «≠ Class» — DECIDED; workflow / casting / билеты / взносы — OPEN / discovery-needed.
 
 ---
 
@@ -199,8 +251,26 @@ Costume Service может остаться **отдельным интегри�
 
 ## Privacy / Consent
 
-- **Question:** Типы согласий, workflow до 14 лет, версии политики, согласие на фото.
-- **Status:** OPEN (сущностей нет). Обязательно до App Store / широкого mobile.
+**Не фиксировать** конкретный возрастной порог в domain model. Неподтверждённые формулировки вроде «до 14 лет» **не использовать** как правило продукта.
+
+**Целевое направление (не реализовано):**
+
+- `ConsentType`
+- `ConsentDocumentVersion`
+- `ConsentRecord`
+
+Возможные consent types: privacy; data processing; photo/video; marketing; special activity.
+
+Для несовершеннолетнего согласие связывается с parent/guardian **там, где это требуется** политикой академии и применимым законодательством. Конкретные возрастные юридические правила **не хардкодить** до legal / compliance review.
+
+| Question | Status |
+|----------|--------|
+| Какие типы согласий обязательны | OPEN |
+| UX / workflow сбора | OPEN |
+| Legal / compliance review возрастных правил | OPEN (до review не кодировать порог) |
+| Сущности в БД | OPEN (модель-направление есть; реализации нет) |
+
+Обязательно до App Store / широкого mobile.
 
 ---
 
@@ -209,9 +279,9 @@ Costume Service может остаться **отдельным интегри�
 - **Variant A:** одно Store-приложение с **режимами** student / parent / teacher.
 - **Variant B:** несколько Store-приложений на общей Flutter codebase / flavors.
 
-Не решено. Старый текст архитектуры про «одно приложение / режимы» — набросок, **не** DECIDED.
+Не путать с identity: один User = один actor type — **DECIDED**. Упаковка Store (одно приложение vs flavors) — **OPEN**.
 
-- **Status:** OPEN
+- **Status:** OPEN (только дистрибуция)
 
 ---
 

@@ -51,6 +51,6 @@ Flutter talks to the core **only** through HTTPS API. The API does not exist yet
 - **Flutter package:** `aub` — bundle / application id `com.owlsolutions.aub`
 - **Phase 1 (roles):** Complete (2026-07-06)
 - **Web modules:** Phase 2–3 in use (students partial; weekly schedule + hybrid AI)
-- **Next major technical stage:** API Foundation
+- **Next major technical stage:** Security Foundation → Core Data Model refactor → Identity → API Foundation → Flutter Foundation
 
-Last updated: 2026-09-07
+Last updated: 2026-09-08

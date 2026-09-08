@@ -18,12 +18,12 @@ Gaps: no field-level ACL; extra routes always allowed for any role. **Security F
 
 | Module | Status | Notes |
 |--------|--------|-------|
-| Students | Partial | Entity is `Customer` / table `customers` |
+| Students | Partial | Entity is `Customer` / table `customers` (interim; target `students`) |
 | Parents | Partial | Embedded columns; no Parent model |
 | Teachers | Directory done | No `user_id` |
 | Courses / groups | Done | `/courses-groups` |
 | Lessons catalog | Done | Settings → Academy; no `Lessons/Index.jsx` |
-| Enrollments | Partial | `course_group_customer`; unique `customer_id` in **code**. Whether one student may join several CourseGroups is **HIGH PRIORITY OPEN** — do not treat the unique index as a business rule |
+| Enrollments | Partial | `course_group_customer`; unique `customer_id` conceptually = **DECIDED** “one active `Class`”. Terminology `course_groups` vs `Class` still needs normalization. Status workflow is OPEN |
 
 ## Operations (Phase 3)
 
@@ -31,7 +31,7 @@ Gaps: no field-level ACL; extra routes always allowed for any role. **Security F
 |--------|--------|
 | Weekly schedule | Implemented (`/schedule-service`) — regular `scheduled_lessons` only |
 | **Student Attendance** | Not started — child on a **session**; distinct from teacher presence |
-| **Teacher Check-in / Staff Presence** | Not started — **PRELIMINARY** mechanism: button «Пришёл» + one-shot GPS + backend geofence |
+| **Teacher Check-in / Staff Presence** | Not started — **DECIDED**: daily presence (button «Пришёл» + one-shot GPS + geofence); not per lesson |
 | Documents | Profile uploads on **public** disk; `/documents` placeholder |
 | Internal notes / communication | Placeholder |
 
@@ -43,9 +43,9 @@ Payments / invoices / reports — not started. Kit `orders.total` is not academy
 
 | Module | Notes |
 |--------|-------|
-| Academic Progress / grades / report cards | Large future module. Grading system **OPEN**. No final DB. |
-| Productions / Shows / Rehearsals | Domain subsystem tied to core schedule — **not** “optional Phase 6 event placeholder”. RehearsalGroup ≠ CourseGroup (**PRELIMINARY**). Rehearsals must join the child’s unified calendar and conflict detection (**PRELIMINARY**). PM sets priority after product discovery. Costume Service may stay a separate integrated service. |
-| Unified calendar | Future: lessons + rehearsals + performances (+ possibly exams/events). Architecture Variant A vs B **OPEN**. Do not change `scheduled_lessons` now. |
+| Final Assessment / Report Cards | **Separate product module.** No running grades; no per-lesson gradebook. Final result: `StudentFinalResult` (Student + Class + Lesson + AcademicYear). Report card = all `ClassLesson`s. Administrator generates the PDF. Scale / PDF template remain OPEN. |
+| Productions / Shows | **Late future** / discovery-needed. Activity groups ≠ `Class`. Future group schedules join the unified calendar. Do not detail workflow now. Costume Service may stay a separate integrated service. |
+| Unified calendar | Future: lessons + activity groups (+ possibly exams/events). Architecture Variant A vs B **OPEN**. Do not change `scheduled_lessons` now. |
 
 ## API and Flutter
 
@@ -56,20 +56,25 @@ Payments / invoices / reports — not started. Kit `orders.total` is not academy
 | Token auth | **Absent** (Sanctum = candidate) |
 | Store distribution | **OPEN** — one app with modes vs several Store apps / flavors |
 
-Flutter **may be developed in parallel**. MVP mobile **features** are blocked on API Foundation, not on “web must be 100% finished”. Backend and Flutter evolve in parallel; the API contract joins them.
+Flutter **may be developed in parallel**. MVP mobile **features** are blocked on API Foundation, not on “web must be 100% finished”. Backend and Flutter evolve in parallel; the API contract joins them. A stable contract comes **after** Core Data Model refactor + Identity.
 
 ## Dependency graph (historical web + next technical)
 
 ```
 Phase 0 kit ✅
     → Phase 1 roles ✅
-    → Phase 2 records (partial)
+    → Phase 2 records (partial; customers = interim)
     → Phase 3 schedule ✅ / student attendance ❌ / teacher check-in ❌
     → Phase 4 accounting ❌
     → Security Foundation (before wide mobile)
-    → API Foundation (next technical)
-    → Flutter (parallel; distribution OPEN)
-    → Identity / Student+Parent MVP / Teacher workplace
-    → Academic Progress, Secretariat workflow, Documents, Communications, Payments
-    → Schedule evolution + Productions (priority: PM after discovery)
+    → Core Data Model refactor (before stable API)
+    → Identity model (one User = one actor type)
+    → API Foundation
+    → Flutter Foundation (parallel; distribution OPEN)
+    → Student+Parent MVP / Teacher workplace
+    → Teacher Check-in (after Teacher identity/app)
+    → Final Assessment / Report Cards (separate module)
+    → Secretariat workflow, Documents, Communications, Payments
+    → Schedule evolution
+    → Productions / Shows (late future)
 ```

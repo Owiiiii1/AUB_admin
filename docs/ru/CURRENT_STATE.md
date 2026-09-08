@@ -104,7 +104,7 @@ AUB: роли, seed меню, activity_logs, поля профиля студе�
 | `customers` | **Студенты** (interim-таблица kit) |
 | `teachers` | Преподаватели; **не** связаны с `users` |
 | `courses`, `course_groups` | Курсы/группы; учебное окно курса |
-| `course_group_customer` | Зачисление; unique `customer_id` (**одна CourseGroup на студента в БД** — **HIGH PRIORITY OPEN**, является ли это правилом академии) |
+| `course_group_customer` | Зачисление; unique `customer_id` (концептуально = **DECIDED** один активный `Class`; терминология vs `course_groups` ещё нормализовать) |
 | `lessons` | Каталог (`duration_minutes`) |
 | `lesson_teacher`, `lesson_course`, `course_group_lesson` | Связи уроков; несколько преподавателей |
 | `academy_buildings`, `academy_rooms` | Локации (колонок geofence lat/lng/radius нет) |
@@ -182,7 +182,7 @@ Layouts: `AdminLayout.jsx`, `AuthLayout.jsx`.
 |-----|-------|--------|
 | coursesAndGroups | `courses-groups.index` | Реализовано |
 | scheduleService | `weekly-schedule.index` | Реализовано |
-| documents, communication, events, costumeService, archive | `placeholder.*` | UI-заглушки. Продукт: Productions — **доменная подсистема**, не «опциональная фаза 6». Costume Service может остаться отдельным сервисом. |
+| documents, communication, events, costumeService, archive | `placeholder.*` | UI-заглушки. Productions — **поздний future**; `/events` остаётся заглушкой. Costume Service может остаться отдельным сервисом. |
 
 Отдельного пункта `lessons` в боковом extra-меню **нет**. Каталог — Настройки → Академия.
 
@@ -196,7 +196,7 @@ Layouts: `AdminLayout.jsx`, `AuthLayout.jsx`.
 
 ## Студенты (interim)
 
-Реализовано на **`customers`**. Файлы: `storage/app/public/students/{id}/documents` (диск public) — **не** `customers/`. Фото преподавателей: `teachers/{id}/photos`.
+Реализовано на **`customers`**. **DECIDED direction:** целевые `students` / `parents` / `student_parent`; `customers` не долгосрочная модель. Миграции не в этой задаче. Файлы: `storage/app/public/students/{id}/documents` (диск public) — **не** `customers/`. Фото преподавателей: `teachers/{id}/photos`.
 
 Field-level ограничений нет: роль с доступом к `customers.*` видит контакты родителей и срок медсправки.
 
@@ -215,19 +215,20 @@ Field-level ограничений нет: роль с доступом к `cust
 | 3 | Недельное расписание | Готово + гибридный ИИ (2026-07-20) |
 | 3 | Загрузка файлов студента | Частично — public disk, нет модуля документов |
 | 3 | **Student Attendance** | Не начато (ребёнок на session) |
-| 3 | **Teacher Check-in** | Не начато (**PRELIMINARY** GPS snapshot + geofence) |
+| 3 | **Teacher Check-in** | Не начато (**DECIDED**: daily GPS snapshot + geofence; не per lesson) |
 | 3 | Документы / коммуникации в меню | Заглушки |
 | 4+ | Платежи | Не начато |
-| future | Academic Progress / Productions | Крупные модули в docs; не начато; приоритет Productions = PM после discovery |
-| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть; упаковка Store **OPEN** |
+| future | Final Assessment / Report Cards | Отдельный модуль; текущих оценок нет; не начато |
+| late future | Productions / Shows | Discovery-needed; activity groups ≠ `Class`; web `/events` — заглушка |
+| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть; упаковка Store **OPEN**. Стабильный API **после** Core Data Model + Identity |
 
 ## Что НЕ реализовано
 
-- Отдельные таблицы `students` / `parents`
-- Полный workflow зачислений (статусы, переводы, история). Unique `customer_id` vs несколько групп — **OPEN**
-- **Student Attendance** (уровень session) и **Teacher Check-in** (присутствие)
-- Academic Progress / оценки / табель
-- Productions / RehearsalGroup / репетиции / спектакли (web `/events` — только заглушка)
+- Отдельные таблицы `students` / `parents` / `student_parent` (направление DECIDED; код всё ещё `customers`)
+- Полный workflow зачислений (статусы, переводы, история). Правило «один активный `Class`» — DECIDED
+- **Student Attendance** (уровень session) и **Teacher Check-in** (daily presence — семантика DECIDED, код нет)
+- Final Assessment / `StudentFinalResult` / `ReportCard` (ядро DECIDED; не реализовано; текущих оценок нет)
+- Productions / activity groups / репетиции / спектакли (поздний future; web `/events` — только заглушка)
 - Платежи / счета
 - Отдельные модули документов и коммуникаций
 - Архив, костюмы (заглушки меню; костюмы могут остаться отдельным сервисом)
@@ -236,7 +237,7 @@ Field-level ограничений нет: роль с доступом к `cust
 - PDF-экспорт расписания (кнопка-заглушка)
 - Исполняемые рекомендации ИИ (только re-prompt)
 - Field-level visibility; ограничение преподавателя своими студентами
-- Сущности согласий / privacy policy
+- Сущности согласий (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`)
 - Access/view audit чувствительных записей
 - Private storage документов детей
 - 2FA администраторов

@@ -159,6 +159,6 @@ Write routes require `can.write`.
 
 ## Future calendar (not implemented)
 
-This board schedules **regular `scheduled_lessons` only**. Product requirement (**PRELIMINARY**): rehearsals (and later performances / possible exams / academy events) must appear on the child’s **unified calendar** and participate in **conflict detection** with regular lessons.
+This board schedules **regular `scheduled_lessons` only**. **DECIDED for the future:** additional-group schedules (production / rehearsal / other; **not** a `Class`) must appear on the child’s **unified calendar**. Productions are late future. Calendar implementation and conflict detection remain OPEN.
 
-Tech Lead has **not** chosen unified-session vs aggregating-layer architecture. Do not change `scheduled_lessons` in this documentation task. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
+Tech Lead has **not** chosen unified-session vs aggregating-layer architecture (Variant A vs B). Do not change `scheduled_lessons` in this documentation task. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) and [ARCHITECTURE.md](ARCHITECTURE.md).

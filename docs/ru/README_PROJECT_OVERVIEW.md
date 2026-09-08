@@ -64,7 +64,7 @@ Production `route:list`: **84** web-маршрута. **Ноль** API-endpoint�
 
 | Generic kit | Смысл в AUB | Статус |
 |-------------|-------------|--------|
-| `customers` | Студенты (interim) | Частично |
+| `customers` | Студенты (interim; целевое `students` / `parents`) | Частично |
 | `services` | Не курсы — отдельная `courses` | Курсы реализованы |
 | справочник `staff` | Не RBAC — отдельные `teachers` + `roles` | Teachers + RBAC реализованы |
 | `orders` | Не зачисления — pivot `course_group_customer` | Частично |
@@ -78,11 +78,11 @@ Production `route:list`: **84** web-маршрута. **Ноль** API-endpoint�
 
 **Частично:** студенты на `customers`; родители как встроенные поля; зачисления без статусов; документы только upload в профиле.
 
-**Нет:** student attendance; teacher check-in; academic progress; платежи; отдельные модули документов/коммуникаций; mobile API; token auth; field-level ACL; пункты Security Foundation.
+**Нет:** student attendance; teacher check-in (семантика daily DECIDED); final assessment / табели; платежи; отдельные модули документов/коммуникаций; mobile API; token auth; field-level ACL; пункты Security Foundation.
 
-**Следующий крупный технический этап:** [API Foundation](NEXT_STEPS.md) — Flutter можно развивать параллельно, но функции требуют API-контракта. Направления продукта: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Открытые вопросы: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**Следующий крупный технический этап:** [Security Foundation](NEXT_STEPS.md) → Core Data Model refactor → Identity → API Foundation → Flutter Foundation. Стабильный API **после** Core Data Model. Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md). Открытые вопросы: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
 
-Productions / шоу / репетиции — **доменная подсистема** (RehearsalGroup ≠ CourseGroup, **PRELIMINARY**), не «опциональная фаза 6». Приоритет задаёт PM после discovery. Costume Service может остаться отдельным интегрированным сервисом. Web `/events` и `/costume-service` — только UI-заглушки.
+Productions / шоу — **поздний future** / discovery-needed (activity groups ≠ `Class`). Workflow не детализировать сейчас. Costume Service может остаться отдельным интегрированным сервисом. Web `/events` и `/costume-service` — только UI-заглушки.
 
 ## Сервер
 
