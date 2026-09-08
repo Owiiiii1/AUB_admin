@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-08** (code + Core Data Model migrations). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-08** (code + Identity Layer migrations). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -25,9 +25,9 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 
 No `laravel/sanctum`, Passport, or JWT in the host app.
 
-## Routes (84 registered on production)
+## Routes (web CRM + identity; no API)
 
-`php artisan route:list` on 2026-09-07: **Showing [84] routes**. There is **no** `routes/api.php` and **no** Flutter-ready API.
+`php artisan route:list` after Identity: **Showing [96] routes**. There is **no** `routes/api.php` and **no** Flutter-ready API.
 
 ### Auth
 
@@ -46,8 +46,8 @@ Password reset routes (`password.request` etc.) **do not exist**.
 | URI | Name | Notes |
 |-----|------|-------|
 | `/dashboard` | `dashboard` | **Placeholder** home |
-| `/customers`, `/customers/create`, `/customers/{student}` | `customers.*` | Students (`Student`); URL still `/customers` |
-| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | Nullable `teachers.user_id` (identity not implemented) |
+| `/customers`, `/customers/create`, `/customers/{student}` | `customers.*` | Students (`Student`); URL still `/customers`; Account create/link on profile |
+| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | `teachers.user_id` + Account create/link |
 | `/courses-groups` | `courses-groups.*` | Courses + `AcademyClass`; URL still `/courses-groups` |
 | `/lessons` | `lessons.*` | **GET index redirects** to `/settings?tab=academy&academyTab=lessons` |
 | `/schedule-service` | `weekly-schedule.*` | Aliases `/schedules`, `/weekly-schedule` |
@@ -79,17 +79,17 @@ Controllers and tables remain; **routes and menu items removed**: `/orders`, `/s
 | `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` (Laravel filesystem serve) |
 | `/storage/{path}` via symlink | Public disk files (needs `storage:link`) |
 
-The extra routes versus the old “78” count include filesystem serve routes, `/up`, and the full schedule/academy write set. **84 is the measured number.**
+The extra routes versus the old “84” count are 12 actor-account POST routes (student / parent / teacher). **Measured: 96.** No API.
 
 ## Migrations
 
-**38 files** in `database/migrations/`. After `2026_09_08_200000_introduce_core_academy_data_model` the target academy schema is in place.
+**39 files** in `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`.
 
 Laravel core: users (incl. sessions / password_reset_tokens), cache, jobs.
 
 Kit: `customers` (legacy; academy no longer uses it), `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
 
-AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (nullable `user_id`), courses, lessons/pivots, `can_write` / `can_delete`, weekly schedule (`academy_class_id`), AI runs, study windows.
+AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id`), Identity (`users.account_type`, `users.is_active`, `students.user_id`, `parents.user_id`), courses, lessons/pivots, `can_write` / `can_delete`, weekly schedule (`academy_class_id`), AI runs, study windows.
 
 ## Database tables
 
@@ -97,13 +97,13 @@ AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`
 
 | Table | Purpose |
 |-------|---------|
-| `users` | Auth; `role_id`, `can_write`, `can_delete` |
-| `roles`, `role_menu_items` | RBAC |
+| `users` | Auth; `account_type` (`staff` \| `student` \| `parent` \| `teacher`), `is_active`, `role_id`, `can_write`, `can_delete`. Email unique |
+| `roles`, `role_menu_items` | RBAC (web permissions only; not actor type) |
 | `academic_years` | Academic year; one `is_active` current year |
-| `students` | Student profile (not `customers`) |
-| `parents` | Parents/guardians; PHP model `AcademyParent` (`Parent` is reserved) |
+| `students` | Student profile; nullable unique `user_id` |
+| `parents` | Parents/guardians; PHP model `AcademyParent`; nullable unique `user_id` |
 | `student_parent` | M2M + `relation_type` (`father` / `mother` / `guardian` / `other`) |
-| `teachers` | Teachers; nullable unique `user_id` (identity not implemented) |
+| `teachers` | Teachers; nullable unique `user_id` |
 | `courses` | Direction/course; study window |
 | `academy_classes` | Product `Class`; PHP model `AcademyClass` |
 | `academy_class_student` | Enrollment; **unique `student_id`** = at most one active Class |
@@ -126,12 +126,12 @@ AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`
 
 | Model | Status |
 |-------|--------|
-| User | Implemented — role, `can_write`, `can_delete` |
+| User | Implemented — `account_type`, `is_active`, role, `can_write`, `can_delete`; `studentProfile` / `parentProfile` / `teacherProfile` |
 | Role, RoleMenuItem | Implemented (Phase 1) |
 | Customer | Kit legacy — **not** academy Student |
-| Student | Student profile |
-| AcademyParent | Parent (`parents`) |
-| Teacher | Implemented; nullable `user_id` |
+| Student | Student profile; `user()` |
+| AcademyParent | Parent (`parents`); `user()` |
+| Teacher | Implemented; `user()` |
 | Course | Direction |
 | AcademyClass | Product `Class` |
 | AcademicYear | Academic year |
@@ -216,7 +216,7 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 | 1 | Staff roles & workplaces | Complete (2026-07-06) |
 | 2 | Students | Complete — `students` |
 | 2 | Parents | Complete — `parents` / `student_parent` |
-| 2 | Teachers | Directory complete; nullable `user_id`, no login |
+| 2 | Teachers | Directory + Identity: create/link account; web role optional |
 | 2 | Courses / Class | Complete — `Course` + `AcademyClass` |
 | 2 | Enrollments | Partial — unique one Class; status workflow OPEN |
 | 2 | Lessons catalog | Complete (Settings → Academy) |
@@ -228,11 +228,13 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 | 4+ | Payments | Not started |
 | future | Final Assessment / Report Cards | Separate module; no running grades; not started |
 | late future | Productions / Shows | Discovery-needed; activity groups ≠ `Class`; web `/events` is a placeholder |
-| API / Flutter | API + token auth | **Not started**; Flutter repo exists; Store packaging **OPEN**. Stable API **after** Core Data Model + Identity |
+| API / Flutter | API + token auth | **Not started**; Flutter repo exists; Store packaging **OPEN**. Stable API **after** Identity (done) |
 
 ## What is NOT implemented
 
-- Identity (Student/Parent/Teacher login, `actor_type`) — next stage
+- **API Foundation** (login `/api`, Sanctum/JWT, `/me`) — next stage
+- Invitation / activation workflow
+- Separate login identifier besides unique email
 - Full AcademicYear admin UI
 - Full enrollment workflow (statuses, transfers, history). The “one active `Class`” rule is DECIDED
 - **Student Attendance** (session-level) and **Teacher Check-in** (daily presence — semantics DECIDED, no code)

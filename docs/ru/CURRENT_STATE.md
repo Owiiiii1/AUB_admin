@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-08** (код + миграции Core Data Model). Текст от 2026-07-20 / 2026-09-07 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-08** (код + миграции Identity Layer). Текст от 2026-07-20 / 2026-09-07 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -25,9 +25,9 @@ Production-сборка есть **на сервере** (`public/build/manifest
 
 В хост-приложении нет `laravel/sanctum`, Passport, JWT.
 
-## Маршруты (84 на production)
+## Маршруты (web CRM + identity; API нет)
 
-`php artisan route:list` 2026-09-07: **Showing [84] routes**. Файла `routes/api.php` **нет**, API для Flutter **нет**.
+`php artisan route:list` после Identity: **Showing [96] routes**. Файла `routes/api.php` **нет**, API для Flutter **нет**.
 
 ### Auth
 
@@ -46,8 +46,8 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | URI | Name | Примечания |
 |-----|------|------------|
 | `/dashboard` | `dashboard` | **Заглушка** Home |
-| `/customers`, `/customers/create`, `/customers/{student}` | `customers.*` | Студенты (`Student`); URL пока `/customers` |
-| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | Nullable `teachers.user_id` (identity ещё нет) |
+| `/customers`, `/customers/create`, `/customers/{student}` | `customers.*` | Студенты (`Student`); URL пока `/customers`; Account create/link на профиле |
+| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | `teachers.user_id` + Account create/link |
 | `/courses-groups` | `courses-groups.*` | Курсы + `AcademyClass`; URL пока `/courses-groups` |
 | `/lessons` | `lessons.*` | **GET index редиректит** на `/settings?tab=academy&academyTab=lessons` |
 | `/schedule-service` | `weekly-schedule.*` | Алиасы `/schedules`, `/weekly-schedule` |
@@ -79,17 +79,17 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` |
 | `/storage/{path}` через symlink | Файлы public disk (нужен `storage:link`) |
 
-Разница со старым числом «78» — serve-маршруты filesystem, `/up` и полный набор schedule/academy. **Измерено: 84.**
+Разница со старым числом «84» — 12 POST маршрутов actor-account (student / parent / teacher). **Измерено: 96.** API нет.
 
 ## Миграции
 
-**38 файлов** в `database/migrations/`. После `2026_09_08_200000_introduce_core_academy_data_model` — целевая academy-схема.
+**39 файлов** в `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`.
 
 Ядро Laravel: users (включая sessions / password_reset_tokens), cache, jobs.
 
 Kit: `customers` (legacy, academy больше не использует), `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
 
-AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id` nullable), courses, lessons/pivots, `can_write` / `can_delete`, недельное расписание (`academy_class_id`), AI-прогоны, учебные окна.
+AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id`), Identity (`users.account_type`, `users.is_active`, `students.user_id`, `parents.user_id`), courses, lessons/pivots, `can_write` / `can_delete`, недельное расписание (`academy_class_id`), AI-прогоны, учебные окна.
 
 ## Таблицы
 
@@ -97,13 +97,13 @@ AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_p
 
 | Таблица | Назначение |
 |---------|------------|
-| `users` | Auth; `role_id`, `can_write`, `can_delete` |
-| `roles`, `role_menu_items` | RBAC |
+| `users` | Auth; `account_type` (`staff` \| `student` \| `parent` \| `teacher`), `is_active`, `role_id`, `can_write`, `can_delete`. Email unique |
+| `roles`, `role_menu_items` | RBAC (только web permissions; не actor type) |
 | `academic_years` | Учебный год; один `is_active` как текущий |
-| `students` | Профиль ученика (не `customers`) |
-| `parents` | Родители/опекуны; PHP-модель `AcademyParent` (`Parent` зарезервирован) |
+| `students` | Профиль ученика; nullable unique `user_id` |
+| `parents` | Родители/опекуны; PHP-модель `AcademyParent`; nullable unique `user_id` |
 | `student_parent` | M2M + `relation_type` (`father` / `mother` / `guardian` / `other`) |
-| `teachers` | Преподаватели; nullable unique `user_id` (identity ещё не реализован) |
+| `teachers` | Преподаватели; nullable unique `user_id` |
 | `courses` | Направление/курс; учебное окно |
 | `academy_classes` | Продуктовый `Class`; PHP-модель `AcademyClass` |
 | `academy_class_student` | Зачисление; **unique `student_id`** = максимум один активный Class |
@@ -126,12 +126,12 @@ AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_p
 
 | Model | Статус |
 |-------|--------|
-| User | Реализована — role, `can_write`, `can_delete` |
+| User | Реализована — `account_type`, `is_active`, role, `can_write`, `can_delete`; `studentProfile` / `parentProfile` / `teacherProfile` |
 | Role, RoleMenuItem | Реализованы (фаза 1) |
 | Customer | Legacy kit — **не** academy Student |
-| Student | Профиль ученика |
-| AcademyParent | Родитель (`parents`) |
-| Teacher | Реализована; nullable `user_id` |
+| Student | Профиль ученика; `user()` |
+| AcademyParent | Родитель (`parents`); `user()` |
+| Teacher | Реализована; `user()` |
 | Course | Направление |
 | AcademyClass | Продуктовый `Class` |
 | AcademicYear | Учебный год |
@@ -216,7 +216,7 @@ Field-level ограничений нет: роль с доступом к `cust
 | 1 | Роли и workplaces | Завершена (2026-07-06) |
 | 2 | Студенты | Готово — `students` |
 | 2 | Родители | Готово — `parents` / `student_parent` |
-| 2 | Преподаватели | Справочник готов; nullable `user_id`, login нет |
+| 2 | Преподаватели | Справочник + Identity: create/link account; web role опционален |
 | 2 | Курсы / Class | Готово — `Course` + `AcademyClass` |
 | 2 | Зачисления | Частично — unique один Class; workflow статусов OPEN |
 | 2 | Каталог уроков | Готово (Настройки → Академия) |
@@ -228,11 +228,13 @@ Field-level ограничений нет: роль с доступом к `cust
 | 4+ | Платежи | Не начато |
 | future | Final Assessment / Report Cards | Отдельный модуль; текущих оценок нет; не начато |
 | late future | Productions / Shows | Discovery-needed; activity groups ≠ `Class`; web `/events` — заглушка |
-| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть; упаковка Store **OPEN**. Стабильный API **после** Core Data Model + Identity |
+| API / Flutter | API + token auth | **Не начато**; репозиторий Flutter есть; упаковка Store **OPEN**. Стабильный API **после** Identity (сделан) |
 
 ## Что НЕ реализовано
 
-- Identity (login Student/Parent/Teacher, `actor_type`) — следующий этап
+- **API Foundation** (login `/api`, Sanctum/JWT, `/me`) — следующий этап
+- Invitation / activation workflow
+- Отдельный login identifier помимо unique email
 - Полноценный UI AcademicYear
 - Полный workflow зачислений (статусы, переводы, история). Правило «один активный `Class`» — DECIDED
 - **Student Attendance** (уровень session) и **Teacher Check-in** (daily presence — семантика DECIDED, код нет)

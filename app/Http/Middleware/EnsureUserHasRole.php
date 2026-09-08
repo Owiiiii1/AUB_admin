@@ -17,8 +17,12 @@ class EnsureUserHasRole
             return redirect()->route('login');
         }
 
-        if (! $user->hasAssignedRole()) {
-            abort(403, 'Your account has no active role assigned.');
+        if (! $user->is_active) {
+            abort(403, 'This account is disabled.');
+        }
+
+        if (! $user->canAccessWebAdmin()) {
+            abort(403, 'Your account cannot access the web administration panel.');
         }
 
         return $next($request);

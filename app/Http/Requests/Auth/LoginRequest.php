@@ -43,6 +43,24 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+
+        if ($user === null || ! $user->is_active) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'This account is disabled.',
+            ]);
+        }
+
+        if (! $user->canAccessWebAdmin()) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'This account cannot access the web administration panel.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

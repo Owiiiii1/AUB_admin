@@ -21,7 +21,6 @@ class Teacher extends Model
         'tax_code',
         'description',
         'photo_path',
-        'user_id',
     ];
 
     public function user(): BelongsTo

@@ -20,6 +20,7 @@ export default function UsersTab({ t, users = [], roleOptions = [] }) {
         role_id: defaultRoleId,
         can_delete: false,
         can_write: false,
+        is_active: true,
     });
     const editForm = useForm({
         name: '',
@@ -29,6 +30,7 @@ export default function UsersTab({ t, users = [], roleOptions = [] }) {
         role_id: defaultRoleId,
         can_delete: false,
         can_write: false,
+        is_active: true,
     });
     const deleteForm = useForm({ confirm: '' });
 
@@ -49,9 +51,10 @@ export default function UsersTab({ t, users = [], roleOptions = [] }) {
             email: user.email ?? '',
             password: '',
             password_confirmation: '',
-            role_id: user.role_id ?? defaultRoleId,
+            role_id: user.role_id ?? (user.account_type === 'staff' ? defaultRoleId : ''),
             can_delete: user.can_delete === true,
             can_write: user.can_write === true,
+            is_active: user.is_active !== false,
         });
         editForm.clearErrors();
         deleteForm.reset();
@@ -92,15 +95,17 @@ export default function UsersTab({ t, users = [], roleOptions = [] }) {
                             <tr>
                                 <th className="px-4 py-3 text-left font-semibold">{t.colName}</th>
                                 <th className="px-4 py-3 text-left font-semibold">{t.colEmail}</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t.colAccountType}</th>
                                 <th className="px-4 py-3 text-left font-semibold">{t.colRole}</th>
-                                <th className="px-4 py-3 text-left font-semibold">{t.colCreated}</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t.colActive}</th>
+                                <th className="px-4 py-3 text-left font-semibold">{t.colLinkedProfile}</th>
                                 <th className="px-4 py-3 text-left font-semibold">{t.colActions}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-slate-700">
                             {users.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-4 py-6 text-center text-sm text-slate-400">
+                                        <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-400">
                                         {t.empty}
                                     </td>
                                 </tr>
@@ -113,8 +118,10 @@ export default function UsersTab({ t, users = [], roleOptions = [] }) {
                                     >
                                         <td className="px-4 py-3 font-medium text-slate-900">{u.name}</td>
                                         <td className="px-4 py-3">{u.email}</td>
+                                        <td className="px-4 py-3 text-slate-600">{accountTypeLabel(t, u.account_type)}</td>
                                         <td className="px-4 py-3 text-slate-600">{u.role_name ?? '—'}</td>
-                                        <td className="px-4 py-3 text-slate-500">{formatCreated(u.created_at)}</td>
+                                        <td className="px-4 py-3 text-slate-600">{u.is_active === false ? t.inactive : t.active}</td>
+                                        <td className="px-4 py-3 text-slate-600">{linkedProfileLabel(t, u.linked_profile)}</td>
                                         <td className="px-4 py-3">
                                             <button
                                                 type="button"
@@ -163,6 +170,7 @@ export default function UsersTab({ t, users = [], roleOptions = [] }) {
                             <Field form={createForm} field="password_confirmation" label={t.fieldPasswordConfirm} type="password" />
                             <CanDeleteField form={createForm} label={t.fieldCanDelete} />
                             <CanWriteField form={createForm} label={t.fieldCanWrite} />
+                            <ActiveField form={createForm} label={t.fieldIsActive} />
                         </div>
                         <div className="flex justify-end gap-2">
                             <button type="button" onClick={() => setShowCreateModal(false)} className="inline-flex h-10 items-center rounded-lg border border-slate-300 px-4 text-sm font-medium text-slate-700 hover:bg-slate-50">
@@ -193,11 +201,36 @@ export default function UsersTab({ t, users = [], roleOptions = [] }) {
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <Field form={editForm} field="name" label={t.fieldName} />
                             <Field form={editForm} field="email" label={t.fieldEmail} type="email" />
-                            <RoleField form={editForm} roles={roleOptions} label={t.fieldRole} />
+                            <div>
+                                <label className="mb-1 block text-sm font-medium text-slate-600">{t.fieldAccountType}</label>
+                                <p className="flex h-11 items-center text-sm text-slate-700">{accountTypeLabel(t, editingUser.account_type)}</p>
+                            </div>
+                            {editingUser.account_type === 'staff' && (
+                                <RoleField form={editForm} roles={roleOptions} label={t.fieldRole} />
+                            )}
+                            {editingUser.account_type === 'teacher' && (
+                                <RoleField form={editForm} roles={roleOptions} label={t.fieldRole} allowEmpty emptyLabel={t.fieldRoleNone} />
+                            )}
+                            {(editingUser.account_type === 'student' || editingUser.account_type === 'parent') && (
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-600">{t.fieldRole}</label>
+                                    <p className="flex h-11 items-center text-sm text-slate-500">{t.fieldRoleNone}</p>
+                                </div>
+                            )}
                             <Field form={editForm} field="password" label={t.fieldPassword} type="password" />
                             <Field form={editForm} field="password_confirmation" label={t.fieldPasswordConfirm} type="password" />
-                            <CanDeleteField form={editForm} label={t.fieldCanDelete} />
-                            <CanWriteField form={editForm} label={t.fieldCanWrite} />
+                            {editingUser.account_type !== 'student' && editingUser.account_type !== 'parent' && (
+                                <>
+                                    <CanDeleteField form={editForm} label={t.fieldCanDelete} />
+                                    <CanWriteField form={editForm} label={t.fieldCanWrite} />
+                                </>
+                            )}
+                            <ActiveField form={editForm} label={t.fieldIsActive} />
+                            {editingUser.linked_profile && (
+                                <div className="md:col-span-2 text-sm text-slate-600">
+                                    {t.colLinkedProfile}: {linkedProfileLabel(t, editingUser.linked_profile)}
+                                </div>
+                            )}
                         </div>
                         </fieldset>
                         <div className="flex justify-end gap-2">
@@ -290,7 +323,7 @@ function Modal({ title, children, onClose }) {
     );
 }
 
-function RoleField({ form, roles, label }) {
+function RoleField({ form, roles, label, allowEmpty = false, emptyLabel = '—' }) {
     return (
         <div>
             <label className="mb-1 block text-sm font-medium text-slate-600">{label}</label>
@@ -299,6 +332,7 @@ function RoleField({ form, roles, label }) {
                 onChange={(e) => form.setData('role_id', e.target.value)}
                 className="block h-11 w-full rounded-lg border border-slate-300 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
             >
+                {allowEmpty && <option value="">{emptyLabel}</option>}
                 {roles.map((role) => (
                     <option key={role.id} value={role.id}>{role.name}</option>
                 ))}
@@ -355,6 +389,35 @@ function CanWriteField({ form, label }) {
             <ErrorText message={form.errors.can_write} />
         </div>
     );
+}
+
+function ActiveField({ form, label }) {
+    return (
+        <div className="md:col-span-2">
+            <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <input
+                    type="checkbox"
+                    checked={form.data.is_active === true}
+                    onChange={(e) => form.setData('is_active', e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-[#1A2B44] focus:ring-[#1A2B44]"
+                />
+                {label}
+            </label>
+            <ErrorText message={form.errors.is_active} />
+        </div>
+    );
+}
+
+function accountTypeLabel(t, type) {
+    return t[`accountType_${type}`] ?? type ?? '—';
+}
+
+function linkedProfileLabel(t, profile) {
+    if (!profile) {
+        return t.linkedNone;
+    }
+
+    return `${accountTypeLabel(t, profile.type)}: ${profile.label}`;
 }
 
 function ErrorText({ message }) {

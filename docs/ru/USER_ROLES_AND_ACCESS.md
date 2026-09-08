@@ -11,7 +11,7 @@
 | **Admin / superadmin interface** | Полная web-CRM при `is_admin` |
 | **Канал доступа** | Как человек входит в ядро: web workplace, админка или Flutter |
 
-Parent и Student — **доменные сущности** и планируемые **каналы Flutter**. Они **не** роли админки. Identity/login ещё не реализованы.
+Parent и Student — **доменные сущности** и каналы Flutter. Они **не** роли админки. Identity Layer **implemented**: `account_type` + profile `user_id`; mobile API ещё нет.
 
 **DECIDED:** Parent/Student не должны становиться RBAC-ролями админки только потому, что им нужен login. Authentication account type ≠ административный web RBAC. Administrative staff продолжает существующий web RBAC.
 
@@ -24,6 +24,7 @@ Parent и Student — **доменные сущности** и планируе�
 | Возможность | Статус |
 |-------------|--------|
 | `roles` / `role_menu_items` | Да |
+| `users.account_type` / `users.is_active` | Да — identity; не web-права |
 | `users.role_id` | Да |
 | `users.can_write` / `can_delete` | Да — middleware `can.write` / `can.delete` |
 | UI ролей в Settings | Да |
@@ -32,7 +33,7 @@ Parent и Student — **доменные сущности** и планируе�
 | `role.assigned` / `role.access` / `administrator` | Да |
 | Редирект после входа | Admin → `/dashboard` (заглушка); остальные → первый пункт меню или `/workplace` |
 | Lockout последнего админа | Да (`AdministratorLockoutGuard`) |
-| Session authentication | Да |
+| Session authentication | Да — inactive / parent / student actor accounts не входят в web admin |
 | Activity CRUD logging | Да (create/update/delete + login/logout) |
 
 ### Ключи меню в `role_menu_items`
@@ -103,7 +104,7 @@ Parent / Student / Teacher (mobile)
 | Правка расписания | ✓ | ✓ (намерение) | R (намерение) | R F | R F |
 | Users / roles / AI | ✓ | — | — | — | — |
 
-**В коде сейчас:** кто открывает `customers.*`, видит все поля студента, включая родителей и срок медсправки. У преподавателей нет `user_id`, поэтому «свои группы» к логину не привязать.
+**В коде сейчас:** кто открывает `customers.*`, видит все поля студента, включая родителей и срок медсправки. Teacher account можно связать с User; scoped «свои группы» по login ещё не enforced.
 
 ## Kit `staff` vs роли AUB
 
@@ -118,6 +119,6 @@ Parent / Student / Teacher (mobile)
 - Access/view audit чувствительных записей
 - Сущности согласий (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`)
 - 2FA для административного персонала
-- Identity: User ↔ Teacher как mobile actor; Parent/Student аккаунты. **Не** multi-profile на одном User
+- Identity Layer **implemented**: User ↔ Student / Parent / Teacher; Parent/Student без `role_id` не входят в web CRM. Invitation/API — OPEN. **Не** multi-profile на одном User
 
 См. [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md), [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md), [CURRENT_STATE.md](CURRENT_STATE.md).

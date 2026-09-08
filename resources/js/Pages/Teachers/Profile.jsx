@@ -1,4 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import AccountPanel from '@/Components/AccountPanel';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -31,6 +32,21 @@ const TEXT = {
         photo: 'Foto',
         changePhoto: 'Cambia foto',
         uploadPhoto: 'Carica foto',
+        accountTitle: 'Account',
+        accountNotCreated: 'Account non creato',
+        accountLinked: 'Account collegato',
+        accountActive: 'Attivo',
+        accountInactive: 'Disattivato',
+        createAccount: 'Crea account',
+        linkAccount: 'Collega account esistente',
+        unlinkAccount: 'Scollega',
+        disableAccount: 'Disattiva account',
+        fieldName: 'Nome',
+        fieldEmail: 'Email',
+        fieldPassword: 'Password temporanea',
+        fieldIsActive: 'Account attivo',
+        noLinkableUsers: 'Nessun account compatibile disponibile.',
+        cancel: 'Annulla',
     },
     en: {
         pageTitle: 'Teachers',
@@ -59,6 +75,21 @@ const TEXT = {
         photo: 'Photo',
         changePhoto: 'Change photo',
         uploadPhoto: 'Upload photo',
+        accountTitle: 'Account',
+        accountNotCreated: 'Account not created',
+        accountLinked: 'Linked account',
+        accountActive: 'Active',
+        accountInactive: 'Disabled',
+        createAccount: 'Create account',
+        linkAccount: 'Link existing account',
+        unlinkAccount: 'Unlink',
+        disableAccount: 'Disable account',
+        fieldName: 'Name',
+        fieldEmail: 'Email',
+        fieldPassword: 'Temporary password',
+        fieldIsActive: 'Account active',
+        noLinkableUsers: 'No compatible accounts available.',
+        cancel: 'Cancel',
     },
     ru: {
         pageTitle: 'Преподаватели',
@@ -87,6 +118,21 @@ const TEXT = {
         photo: 'Фото',
         changePhoto: 'Изменить фото',
         uploadPhoto: 'Загрузить фото',
+        accountTitle: 'Аккаунт',
+        accountNotCreated: 'Аккаунт не создан',
+        accountLinked: 'Связанный аккаунт',
+        accountActive: 'Активен',
+        accountInactive: 'Отключён',
+        createAccount: 'Создать аккаунт',
+        linkAccount: 'Привязать существующий',
+        unlinkAccount: 'Отвязать',
+        disableAccount: 'Отключить аккаунт',
+        fieldName: 'Имя',
+        fieldEmail: 'Email',
+        fieldPassword: 'Временный пароль',
+        fieldIsActive: 'Аккаунт активен',
+        noLinkableUsers: 'Нет совместимых аккаунтов.',
+        cancel: 'Отмена',
     },
     uk: {
         pageTitle: 'Викладачі',
@@ -115,6 +161,21 @@ const TEXT = {
         photo: 'Фото',
         changePhoto: 'Змінити фото',
         uploadPhoto: 'Завантажити фото',
+        accountTitle: 'Акаунт',
+        accountNotCreated: 'Акаунт не створено',
+        accountLinked: 'Пов’язаний акаунт',
+        accountActive: 'Активний',
+        accountInactive: 'Вимкнений',
+        createAccount: 'Створити акаунт',
+        linkAccount: 'Прив’язати наявний',
+        unlinkAccount: 'Відв’язати',
+        disableAccount: 'Вимкнути акаунт',
+        fieldName: "Ім'я",
+        fieldEmail: 'Email',
+        fieldPassword: 'Тимчасовий пароль',
+        fieldIsActive: 'Акаунт активний',
+        noLinkableUsers: 'Немає сумісних акаунтів.',
+        cancel: 'Скасувати',
     },
 };
 
@@ -129,7 +190,7 @@ const DEFAULT_FORM = {
     photo: null,
 };
 
-export default function TeacherProfile({ mode = 'create', teacher = null }) {
+export default function TeacherProfile({ mode = 'create', teacher = null, linkableTeacherUsers = [] }) {
     const { locale = 'it', auth } = usePage().props;
     const t = TEXT[locale] ?? TEXT.it;
     const canDelete = auth?.user?.can_delete === true;
@@ -341,6 +402,24 @@ export default function TeacherProfile({ mode = 'create', teacher = null }) {
                     )}
                     </fieldset>
                 </form>
+                {isEdit && (
+                    <div className="mt-6">
+                        <section className="app-widget p-5">
+                            <AccountPanel
+                                t={t}
+                                account={teacher?.account ?? null}
+                                linkableUsers={linkableTeacherUsers}
+                                createUrl={route('teachers.account.store', teacher.id)}
+                                linkUrl={route('teachers.account.link', teacher.id)}
+                                unlinkUrl={route('teachers.account.unlink', teacher.id)}
+                                disableUrl={route('teachers.account.disable', teacher.id)}
+                                canWrite={canWrite}
+                                defaultName={[form.data.first_name, form.data.last_name].filter(Boolean).join(' ') || teacher?.name || ''}
+                                defaultEmail={form.data.email || ''}
+                            />
+                        </section>
+                    </div>
+                )}
             </div>
 
             {deleteStep && (

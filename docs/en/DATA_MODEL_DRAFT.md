@@ -7,7 +7,7 @@ Status legend:
 - **Planned** — not built
 - **Unverified leftover** — mentioned historically; Spatie-style tables were dropped in `2026_07_06_120000`; MySQL leftovers were **not** re-checked on 2026-09-07
 
-Migrations: **38 files**, including `2026_09_08_200000_introduce_core_academy_data_model`.
+Migrations: **39 files**, including Identity Layer `2026_09_08_220000_add_account_identity_layer`.
 
 Privacy tags: Normal / Personal data / Children’s data / Special category / Secret.
 
@@ -17,9 +17,9 @@ Privacy tags: Normal / Personal data / Children’s data / Special category / Se
 
 ### users (implemented)
 
-Auth. Extra columns: `role_id` → `roles`, `can_write`, `can_delete`.  
-Relations: `belongsTo Role`.  
-Privacy: Personal data.
+Auth. Extra columns: `account_type` (`staff` | `student` | `parent` | `teacher`), `is_active` (default true), `role_id` → `roles`, `can_write`, `can_delete`. Email unique.
+Relations: `belongsTo Role`, `hasOne Student` (`studentProfile`), `hasOne AcademyParent` (`parentProfile`), `hasOne Teacher` (`teacherProfile`).
+`account_type` ≠ web RBAC. Privacy: Personal data.
 
 ### customers (generic kit — **legacy, not academy Student**)
 
@@ -70,13 +70,13 @@ hasMany `RoleMenuItem`, hasMany `User`.
 
 ### students
 
-Student profile: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth_date`, `birth_place`, residence fields, `email`, `phone`, course flags, `medical_certificate_expiry`, document/photo paths, `notes`, `status`. **No** father_*/mother_* columns.
+Student profile: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth_date`, `birth_place`, residence fields, `email`, `phone`, course flags, `medical_certificate_expiry`, document/photo paths, `notes`, `status`. **No** father_*/mother_* columns. Nullable unique `user_id` → `users.id` (`nullOnDelete`). `belongsTo User`.
 
 `belongsToMany AcademyParent` (`student_parent`), `belongsToMany AcademyClass` (`academy_class_student`).
 
 ### parents (`AcademyParent`)
 
-`first_name`, `last_name`, `email`, `phone`, `tax_code`, `notes`. Table `parents`. PHP class is not `Parent` (reserved).
+`first_name`, `last_name`, `email`, `phone`, `tax_code`, `notes`, nullable unique `user_id` → `users.id` (`nullOnDelete`). Table `parents`. PHP class is not `Parent` (reserved). `belongsTo User`.
 
 ### student_parent
 
@@ -85,7 +85,7 @@ Student profile: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth
 ### teachers
 
 `type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`, nullable unique `user_id`.  
-`belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). Identity/login not implemented.  
+`belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). `belongsTo User`. Identity Layer implemented (create/link from teacher profile).  
 Photos: public disk `teachers/{id}/photos`.
 
 ### courses / academy_classes / academy_class_student
@@ -119,7 +119,7 @@ UI: visual 30 min, planning 5 min. See [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHED
 
 ## D. Planned / conceptual (no final schema, no migrations)
 
-Do not treat this list as an approved database for modules that are not built yet. Core Data Model refactor (students / Class / ClassLesson) is **done**. Identity is the next stage before a stable mobile API.
+Do not treat this list as an approved database for modules that are not built yet. Core Data Model refactor and Identity Layer are **done**. Next stage before a stable mobile API is **API Foundation**.
 
 ### Student / Parent (**implemented**)
 
@@ -131,9 +131,16 @@ Do not treat this list as an approved database for modules that are not built ye
 - PHP model: `AcademyClass` / table `academy_classes`.
 - Additional groups (events, productions, rehearsals) are **not** a `Class`. A child may belong to one `Class` and several activity groups (additional-group schema is not built now).
 
-### Identity (DECIDED, workflow not implemented)
+### Identity (implemented 2026-09-08)
 
-One User has exactly one primary actor type: `student` | `parent` | `teacher`. Do not design multi-profile identity. Staff web RBAC stays separate. `teachers.user_id` is **nullable unique** as foundation; there is no login/API.
+```
+User.account_type: staff | student | parent | teacher
+one User = one actor type
+Student.user_id / Parent.user_id / Teacher.user_id
+account_type != web RBAC
+```
+
+Linking only through `AccountIdentityService`. One physical person with two functions = two Users (email unique). No invitation/activation. No API.
 
 ### Teacher Check-in (semantics DECIDED)
 
@@ -170,7 +177,7 @@ Target entities: `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Possi
 | Additional groups / Productions | ≠ `Class`; late future; do not finalize schema | DECIDED split / workflow OPEN |
 | Document entity + **private** storage | Today: public disk paths | OPEN (required before wide mobile) |
 | ConsentType / ConsentDocumentVersion / ConsentRecord | Do not hardcode age | DECIDED direction / not implemented |
-| Teacher.user_id + mobile Teacher account | `user_id` column exists; no login | DECIDED identity / not implemented |
+| Teacher.user_id + mobile Teacher account | Link and web create/link exist; no mobile API | Identity implemented / API OPEN |
 | Payment / Invoice | Not started | OPEN |
 
 Do not reuse kit `orders` as enrollments or invoices.

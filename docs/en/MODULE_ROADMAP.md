@@ -8,7 +8,8 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 
 - Laravel 13 + kit v0.4.0, session auth, RBAC Phase 1
 - Students on `students` + parents on `parents` / `student_parent`
-- Teachers directory (nullable `user_id`; no login)
+- Teachers directory (`user_id` + create/link account)
+- Identity Layer: `account_type` staff/student/parent/teacher; one User = one actor type
 - Courses / `AcademyClass`; lessons catalog in Settings → Academy
 - `ClassLesson` + teacher assignments; weekly schedule on `academy_class_id`
 - CRUD activity log; settings tabs
@@ -23,8 +24,8 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 | 0 | Baseline / GitHub / documentation | In progress as living docs |
 | 1 | **Security Foundation** | **Required before wide mobile rollout.** Private storage for children’s files; field-level ACL; scoped teacher access; access/view audit; API authorization matrix; mobile token security; **2FA for admin staff**; consent/privacy records. **Not implemented.** |
 | 2 | **Core Data Model refactor** | **Done** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
-| 3 | **Identity model implementation** | One User = one actor type (`student` / `parent` / `teacher`). Two roles for one person = two accounts. Identity ≠ admin web RBAC. |
-| 4 | **API Foundation** | Routing, versioning, token auth (Sanctum = candidate), `/me`, resources, errors, rate limits, tests. Only after 2–3. |
+| 3 | **Identity model implementation** | **Done** 2026-09-08. One User = one actor type (`staff` / `student` / `parent` / `teacher`). Identity ≠ admin web RBAC. |
+| 4 | **API Foundation** | Routing, versioning, token auth (Sanctum = candidate), `/me`, resources, errors, rate limits, tests. Only after 2–3. **Next stage.** |
 | 5 | **Flutter Foundation** | App shell, env, HTTPS client, auth against API — Store distribution model OPEN |
 
 ## Product modules (after foundation)

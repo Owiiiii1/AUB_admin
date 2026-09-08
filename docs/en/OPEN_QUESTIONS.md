@@ -47,7 +47,7 @@ Companion: [MODULE_ROADMAP.md](MODULE_ROADMAP.md), [ARCHITECTURE.md](ARCHITECTUR
 
 - **DECIDED / implemented:** `customers` is not academy Student. Entities: `students`, `parents`, `student_parent`.
 - **Production fact:** test `customers` / schedule / course_groups data was cleared by the 2026-09-08 migration. Admin users were kept.
-- **Status:** implemented. Identity (User binding) is a separate stage.
+- **Status:** implemented. Identity Layer (User binding) is **implemented** 2026-09-08.
 
 ### Unique vs additional groups
 
@@ -77,14 +77,27 @@ Companion: [MODULE_ROADMAP.md](MODULE_ROADMAP.md), [ARCHITECTURE.md](ARCHITECTUR
 - Do **not** design multi-profile identity into the current version. This is a conscious MVP simplification.
 - Authentication account type and administrative web RBAC are **different** concepts. Administrative staff continues to use the existing web RBAC.
 
-**Still not decided:**
+**Implemented 2026-09-08:**
+
+- `users.account_type`: `staff` | `student` | `parent` | `teacher` (string, not a DB enum).
+- `users.is_active` (default true); inactive users cannot web-login.
+- One User = one actor type. Cross-table links are rejected by `AccountIdentityService`.
+- `staff` has no actor profile. `account_type=staff` grants no web rights; only RBAC does.
+- `student` / `parent`: `role_id` is null; web admin is denied.
+- `teacher`: optional web `role_id` for a workplace.
+- Admin UI: Account on Student / Parent-in-student / Teacher; Settings → Users shows type/status/linked profile.
+- Existing users migrated to `staff`. Teachers were **not** auto-linked by email.
+
+**Still OPEN / technical debt:**
 
 | Question | Why it matters | Status |
 |----------|----------------|--------|
 | Parent with several children — rules via `student_parent` | Cardinality, UX, consent | OPEN (target table exists; rules do not) |
 | Older student with their own account — who creates it, from when | Onboarding | OPEN |
-| Who creates the account? Invitation / activation? | API + Flutter | OPEN |
-| How `teachers.user_id` maps to a mobile Teacher account vs staff web login | Check-in and workplace | OPEN (direction: Teacher is a mobile actor type; web RBAC stays separate) |
+| Invitation / activation workflow | Email invite, first-time password | OPEN (admin sets a temporary password now) |
+| Separate login identifier / alias / username besides unique `users.email` | One person, two accounts currently needs two emails | OPEN (do not change uniqueness now) |
+| Mobile API / token auth | Flutter login | OPEN — next stage: API Foundation |
+| How teacher web workplace vs mobile Teacher account should look long-term | Check-in and workplace | OPEN (direction: Teacher is an actor type; web RBAC stays separate) |
 
 ---
 

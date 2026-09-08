@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Teacher;
+use App\Models\User;
+use App\Services\AccountIdentityService;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +30,8 @@ class TeachersController extends Controller
     ];
 
     public function __construct(
-        private readonly ActivityLogger $activityLogger
+        private readonly ActivityLogger $activityLogger,
+        private readonly AccountIdentityService $identity,
     ) {}
 
     public function index(): Response
@@ -50,6 +53,7 @@ class TeachersController extends Controller
         return Inertia::render('Teachers/Profile', [
             'mode' => 'create',
             'teacher' => null,
+            'linkableTeacherUsers' => [],
         ]);
     }
 
@@ -58,6 +62,7 @@ class TeachersController extends Controller
         return Inertia::render('Teachers/Profile', [
             'mode' => 'edit',
             'teacher' => $this->teacherPayload($teacher),
+            'linkableTeacherUsers' => $this->identity->linkableUsers(User::TYPE_TEACHER),
         ]);
     }
 
@@ -229,6 +234,8 @@ class TeachersController extends Controller
      */
     private function teacherPayload(Teacher $teacher): array
     {
+        $teacher->loadMissing('user.role');
+
         return [
             'id' => $teacher->id,
             'type' => $teacher->type,
@@ -240,6 +247,7 @@ class TeachersController extends Controller
             'tax_code' => $teacher->tax_code,
             'description' => $teacher->description,
             'photo_path' => $teacher->photo_path,
+            'account' => $teacher->user?->accountPayload(),
         ];
     }
 }

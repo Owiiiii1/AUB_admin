@@ -47,7 +47,7 @@
 
 - **DECIDED / implemented:** `customers` не academy Student. Сущности: `students`, `parents`, `student_parent`.
 - **Production fact:** тестовые `customers` / schedule / course_groups очищены миграцией 2026-09-08. Admin users сохранены.
-- **Status:** реализовано. Identity (привязка User) — отдельный этап.
+- **Status:** реализовано. Identity Layer (привязка User) — **implemented** 2026-09-08.
 
 ### Unique vs дополнительные группы
 
@@ -77,14 +77,27 @@
 - Multi-profile identity в текущую версию **не** закладывать. Это осознанное упрощение MVP.
 - Authentication account type и административный web RBAC — **разные** понятия. Administrative staff продолжает использовать существующий web RBAC.
 
-**Ещё не решено:**
+**Реализовано 2026-09-08:**
+
+- `users.account_type`: `staff` | `student` | `parent` | `teacher` (string, не DB enum).
+- `users.is_active` (default true); неактивный User не может войти в web.
+- Один User = один actor type. Cross-table связи отклоняет `AccountIdentityService`.
+- `staff` не имеет actor profile. `account_type=staff` сам по себе прав не даёт; web-права только из RBAC.
+- `student` / `parent`: `role_id` = null; web admin недоступен.
+- `teacher`: опциональный web `role_id` для workplace.
+- Admin UI: секция Account у Student / Parent внутри студента / Teacher; Settings → Users показывает type/status/linked profile.
+- Существующие users получили `staff`. Teachers **не** связывались автоматически по email.
+
+**Остаётся OPEN / technical debt:**
 
 | Question | Why it matters | Status |
 |----------|----------------|--------|
 | Родитель с несколькими детьми — правила связи через `student_parent` | Кардинальность, UX, consent | OPEN (целевая таблица есть; правила нет) |
 | Старший student со своим аккаунтом — кто создаёт, с какого момента | Onboarding | OPEN |
-| Кто создаёт аккаунт? Invitation / activation? | API + Flutter | OPEN |
-| Связь `teachers.user_id` с mobile Teacher-аккаунтом vs web-логин персонала | Check-in и workplace | OPEN (направление: Teacher — mobile actor type; web RBAC отдельно) |
+| Invitation / activation workflow | Email-приглашение, первый пароль | OPEN (сейчас админ задаёт временный пароль) |
+| Отдельный login identifier / alias / username помимо unique `users.email` | Один человек, два аккаунта сейчас требуют два email | OPEN (уникальность email сейчас не менять) |
+| Mobile API / token auth | Flutter login | OPEN — следующий этап: API Foundation |
+| Долгосрочный вид teacher web workplace vs mobile Teacher account | Check-in и workplace | OPEN (направление: Teacher — actor type; web RBAC отдельно) |
 
 ---
 

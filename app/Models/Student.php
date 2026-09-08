@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Student extends Model
@@ -48,6 +49,11 @@ class Student extends Model
             'medical_certificate_expiry' => 'date',
             'is_existing_student' => 'boolean',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function parents(): BelongsToMany

@@ -11,7 +11,7 @@ Access control is a **privacy requirement**. This document splits **implemented*
 | **Admin / superadmin interface** | Full web CRM for `is_admin` |
 | **Access channel** | How a person reaches the core: web workplace, admin UI, or Flutter |
 
-Parent and Student are **domain entities** and planned **Flutter channels**. They are **not** admin RBAC roles. Identity/login is not implemented yet.
+Parent and Student are **domain entities** and Flutter channels. They are **not** admin RBAC roles. Identity Layer is **implemented**: `account_type` + profile `user_id`; there is still no mobile API.
 
 **DECIDED:** Parent/Student must not become administrative web RBAC roles only because they need login. Authentication account type ≠ administrative web RBAC. Administrative staff continues to use the existing web RBAC.
 
@@ -24,6 +24,7 @@ Costume management is a future **service**, not a role. Flutter Store packaging 
 | Feature | Status |
 |---------|--------|
 | `roles` / `role_menu_items` | Yes |
+| `users.account_type` / `users.is_active` | Yes — identity; not web permissions |
 | `users.role_id` | Yes |
 | `users.can_write` / `can_delete` | Yes — middleware `can.write` / `can.delete` |
 | Roles UI in Settings | Yes |
@@ -32,7 +33,7 @@ Costume management is a future **service**, not a role. Flutter Store packaging 
 | `role.assigned` / `role.access` / `administrator` | Yes |
 | Post-login redirect | Admin → `/dashboard` (placeholder); others → first menu route or `/workplace` |
 | Last-admin lockout | Yes (`AdministratorLockoutGuard`) |
-| Session authentication | Yes |
+| Session authentication | Yes — inactive / parent / student actor accounts cannot use web admin |
 | Activity CRUD logging | Yes (create/update/delete + login/logout) |
 
 ### Menu keys stored in `role_menu_items`
@@ -103,7 +104,7 @@ Parent / Student / Teacher (mobile)
 | Schedule edit | ✓ | ✓ (intent) | R (intent) | R F | R F |
 | Users / roles / AI | ✓ | — | — | — | — |
 
-**In code today:** anyone who can open `customers.*` sees all student fields including parents and medical expiry. Teachers have no `user_id`, so “own groups” cannot be applied to a login.
+**In code today:** anyone who can open `customers.*` sees all student fields including parents and medical expiry. A Teacher account can be linked to a User; scoped “own groups” by login is not enforced yet.
 
 ## Kit `staff` vs AUB roles
 
@@ -118,6 +119,6 @@ Kit `staff.role` is free text. AUB RBAC is `roles` + `users.role_id`. Teachers a
 - View/access audit of sensitive records
 - Consent entities (`ConsentType` / `ConsentDocumentVersion` / `ConsentRecord`)
 - 2FA for administrative staff
-- Identity: User ↔ Teacher as a mobile actor; Parent/Student accounts. **Not** multi-profile on one User
+- Identity Layer **implemented**: User ↔ Student / Parent / Teacher; Parent/Student without `role_id` cannot use web CRM. Invitation/API remain OPEN. **Not** multi-profile on one User
 
 See [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md), [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md), [CURRENT_STATE.md](CURRENT_STATE.md).

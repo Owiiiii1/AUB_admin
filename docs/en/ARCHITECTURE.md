@@ -136,10 +136,10 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 ## Database approach
 
 - Primary connection: **MySQL** (production database name is configured in `.env`; values are not documented here)
-- **38** migration files, including Core Data Model (`2026_09_08_200000`)
+- **39** migration files, including Identity Layer (`2026_09_08_220000_add_account_identity_layer`)
 - Students: `students` table (not `customers`). **DECIDED:** `students` / `parents` / `student_parent`; `customers` is a kit leftover
 - Parents: `parents` + `student_parent` (`AcademyParent`)
-- Teachers: nullable unique `teachers.user_id`; login not implemented
+- Identity Layer **implemented**: `users.account_type` (`staff` | `student` | `parent` | `teacher`), `users.is_active`; `students.user_id` / `parents.user_id` / `teachers.user_id` nullable unique FK. One User = one actor type. `account_type` ≠ web `role_id`
 - Enrollments: unique `academy_class_student.student_id` = one active `Class` (`AcademyClass`)
 - Legacy kit tables (`orders`, `services`, `staff`, `order_staff`) exist; routes removed
 - Spatie-style permission tables were dropped when AUB `roles` were created (2026-07-06). Whether empty leftover tables still exist in MySQL was not re-verified
@@ -148,6 +148,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 
 - Session auth; login at **`/`**
 - `/login` GET redirects to `/`
+- Inactive users (`is_active=false`) and Parent/Student actor accounts cannot use the web admin (login rejection or 403)
 - Protected pages: `AdminRouteMiddleware::stack()` → `['web', 'auth']` plus `role.assigned`, `role.access`
 - Write/delete gated by `can.write` / `can.delete`
 - Admin-only role CRUD: `administrator` middleware
@@ -170,7 +171,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
 | `bootstrap/app.php` | `web` + `commands` + health `/up` — **no `api`** |
 
-Production `php artisan route:list`: **84** routes. None are versioned `/api/*` resources for Flutter.
+Production `php artisan route:list`: **96** routes (12 actor-account POSTs). None are versioned `/api/*` resources for Flutter.
 
 ## Where to add work
 
@@ -195,15 +196,24 @@ Planned contents, **not implemented**:
 
 Until that contract exists, the Flutter repository cannot implement real academy features against the backend. Do **not** publish a stable contract before Core Data Model refactor.
 
-## Identity vs administrative RBAC (DECIDED)
+## Identity vs administrative RBAC (implemented 2026-09-08)
 
-`User` today is **web session identity**. `Teacher` is a directory row, not a login. Parent/Student are not entities.
+Identity Layer is **implemented**.
 
-**DECIDED:** Parent and Student must **not** be added as admin-panel RBAC roles only because they need to log in. Authentication account type and administrative web RBAC are different concepts. Administrative staff continues to use the existing web RBAC.
+```
+User.account_type: staff | student | parent | teacher
+one User = one actor type
+Student.user_id / Parent.user_id / Teacher.user_id
+account_type != web RBAC
+```
 
-**DECIDED (MVP identity):** one User has exactly one primary actor type: `student` | `parent` | `teacher`. One User cannot be Student and Parent (etc.) at once. Two roles for one person = two accounts. Do not design multi-profile identity into the current version.
+- `staff` — existing web users (administrator / secretariat / others). `account_type=staff` grants **no** permissions by itself; web rights come only from `role_id` + `can_write` / `can_delete`.
+- `student` / `parent` — actor accounts; `role_id` is always `null`; web CRM is unavailable.
+- `teacher` — actor type; `role_id` may be `null` (no CRM) or a web role if a workplace is needed. That is one `teacher` identity plus a permission set, not two actor types.
+- Linking is only through `AccountIdentityService`. Staff has no Student/Parent/Teacher profile.
+- One physical person with two functions = **two Users**. Email is unique; they need different login identifiers. No invitation/activation. No API/token auth.
 
-Invitation / activation / `teachers.user_id` remain **OPEN**. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**DECIDED:** Parent and Student must **not** be added as admin-panel RBAC roles only because they need to log in. Authentication account type and administrative web RBAC are different concepts.
 
 ## `Class` vs additional groups (DECIDED)
 

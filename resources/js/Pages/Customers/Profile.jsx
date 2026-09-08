@@ -1,4 +1,5 @@
 import AdminLayout from '@/Layouts/AdminLayout';
+import AccountPanel from '@/Components/AccountPanel';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -64,6 +65,21 @@ const TEXT = {
         confirmAction: 'Conferma',
         cancel: 'Annulla',
         deletePasswordStep: 'Inserisci la password corrente per confermare eliminazione.',
+        accountTitle: 'Account',
+        accountNotCreated: 'Account non creato',
+        accountLinked: 'Account collegato',
+        accountActive: 'Attivo',
+        accountInactive: 'Disattivato',
+        createAccount: 'Crea account',
+        linkAccount: 'Collega account esistente',
+        unlinkAccount: 'Scollega',
+        disableAccount: 'Disattiva account',
+        fieldName: 'Nome',
+        fieldEmail: 'Email',
+        fieldPassword: 'Password temporanea',
+        fieldIsActive: 'Account attivo',
+        noLinkableUsers: 'Nessun account compatibile disponibile.',
+        saveParentFirst: 'Salva prima i dati del genitore, poi potrai creare l\'account.',
     },
     ru: {
         listTitle: 'Профиль студента',
@@ -126,6 +142,21 @@ const TEXT = {
         confirmAction: 'Подтвердить',
         cancel: 'Отмена',
         deletePasswordStep: 'Введите текущий пароль для подтверждения удаления.',
+        accountTitle: 'Аккаунт',
+        accountNotCreated: 'Аккаунт не создан',
+        accountLinked: 'Связанный аккаунт',
+        accountActive: 'Активен',
+        accountInactive: 'Отключён',
+        createAccount: 'Создать аккаунт',
+        linkAccount: 'Привязать существующий',
+        unlinkAccount: 'Отвязать',
+        disableAccount: 'Отключить аккаунт',
+        fieldName: 'Имя',
+        fieldEmail: 'Email',
+        fieldPassword: 'Временный пароль',
+        fieldIsActive: 'Аккаунт активен',
+        noLinkableUsers: 'Нет совместимых аккаунтов.',
+        saveParentFirst: 'Сначала сохраните данные родителя, затем можно создать аккаунт.',
     },
     en: {
         listTitle: 'Student Profile',
@@ -188,6 +219,21 @@ const TEXT = {
         confirmAction: 'Confirm',
         cancel: 'Cancel',
         deletePasswordStep: 'Enter current password to confirm deletion.',
+        accountTitle: 'Account',
+        accountNotCreated: 'Account not created',
+        accountLinked: 'Linked account',
+        accountActive: 'Active',
+        accountInactive: 'Disabled',
+        createAccount: 'Create account',
+        linkAccount: 'Link existing account',
+        unlinkAccount: 'Unlink',
+        disableAccount: 'Disable account',
+        fieldName: 'Name',
+        fieldEmail: 'Email',
+        fieldPassword: 'Temporary password',
+        fieldIsActive: 'Account active',
+        noLinkableUsers: 'No compatible accounts available.',
+        saveParentFirst: 'Save the parent details first, then you can create an account.',
     },
     uk: {
         listTitle: 'Профіль студента',
@@ -250,6 +296,21 @@ const TEXT = {
         confirmAction: 'Підтвердити',
         cancel: 'Скасувати',
         deletePasswordStep: 'Введіть поточний пароль для підтвердження видалення.',
+        accountTitle: 'Акаунт',
+        accountNotCreated: 'Акаунт не створено',
+        accountLinked: 'Пов’язаний акаунт',
+        accountActive: 'Активний',
+        accountInactive: 'Вимкнений',
+        createAccount: 'Створити акаунт',
+        linkAccount: 'Прив’язати наявний',
+        unlinkAccount: 'Відв’язати',
+        disableAccount: 'Вимкнути акаунт',
+        fieldName: "Ім'я",
+        fieldEmail: 'Email',
+        fieldPassword: 'Тимчасовий пароль',
+        fieldIsActive: 'Акаунт активний',
+        noLinkableUsers: 'Немає сумісних акаунтів.',
+        saveParentFirst: 'Спочатку збережіть дані батька/матері, потім можна створити акаунт.',
     },
 };
 
@@ -290,7 +351,13 @@ const DEFAULT_FORM = {
     student_notes: '',
 };
 
-export default function CustomerProfile({ mode = 'create', customer = null, returnTo = null }) {
+export default function CustomerProfile({
+    mode = 'create',
+    customer = null,
+    returnTo = null,
+    linkableStudentUsers = [],
+    linkableParentUsers = [],
+}) {
     const { locale = 'it', auth } = usePage().props;
     const t = TEXT[locale] ?? TEXT.it;
     const canDelete = auth?.user?.can_delete === true;
@@ -539,16 +606,50 @@ export default function CustomerProfile({ mode = 'create', customer = null, retu
                     )}
                     </fieldset>
                 </form>
+                {isEdit && (
+                    <div className="mt-6">
+                        <Section title={t.accountTitle}>
+                            <AccountPanel
+                                t={t}
+                                account={customer?.account ?? null}
+                                linkableUsers={linkableStudentUsers}
+                                createUrl={route('customers.account.store', customer.id)}
+                                linkUrl={route('customers.account.link', customer.id)}
+                                unlinkUrl={route('customers.account.unlink', customer.id)}
+                                disableUrl={route('customers.account.disable', customer.id)}
+                                canWrite={canWrite}
+                                defaultName={[form.data.first_name, form.data.last_name].filter(Boolean).join(' ')}
+                                defaultEmail={form.data.student_email || ''}
+                            />
+                        </Section>
+                    </div>
+                )}
             </div>
 
             {parentModal === 'father' && (
                 <ParentModal title={t.fatherTitle} closeText={t.close} onClose={() => setParentModal(null)}>
-                    <ParentFormFields t={t} form={form} prefix="father" />
+                    <ParentFormFields
+                        t={t}
+                        form={form}
+                        prefix="father"
+                        customer={customer}
+                        canWrite={canWrite}
+                        isEdit={isEdit}
+                        linkableParentUsers={linkableParentUsers}
+                    />
                 </ParentModal>
             )}
             {parentModal === 'mother' && (
                 <ParentModal title={t.motherTitle} closeText={t.close} onClose={() => setParentModal(null)}>
-                    <ParentFormFields t={t} form={form} prefix="mother" />
+                    <ParentFormFields
+                        t={t}
+                        form={form}
+                        prefix="mother"
+                        customer={customer}
+                        canWrite={canWrite}
+                        isEdit={isEdit}
+                        linkableParentUsers={linkableParentUsers}
+                    />
                 </ParentModal>
             )}
 
@@ -697,7 +798,10 @@ function ParentModal({ title, closeText, onClose, children }) {
     );
 }
 
-function ParentFormFields({ t, form, prefix }) {
+function ParentFormFields({ t, form, prefix, customer = null, canWrite = false, isEdit = false, linkableParentUsers = [] }) {
+    const parentId = customer?.[`${prefix}_id`] ?? null;
+    const account = customer?.[`${prefix}_account`] ?? null;
+
     return (
         <div className="grid grid-cols-1 gap-3">
             <Field t={t} form={form} name={`${prefix}_first_name`} label={t.firstName} />
@@ -714,6 +818,21 @@ function ParentFormFields({ t, form, prefix }) {
                 />
                 {form.errors[`${prefix}_notes`] && <p className="mt-1 text-xs text-red-600">{form.errors[`${prefix}_notes`]}</p>}
             </div>
+            {isEdit && (
+                <AccountPanel
+                    t={t}
+                    account={account}
+                    linkableUsers={linkableParentUsers}
+                    createUrl={parentId ? route('customers.parents.account.store', [customer.id, parentId]) : null}
+                    linkUrl={parentId ? route('customers.parents.account.link', [customer.id, parentId]) : null}
+                    unlinkUrl={parentId ? route('customers.parents.account.unlink', [customer.id, parentId]) : null}
+                    disableUrl={parentId ? route('customers.parents.account.disable', [customer.id, parentId]) : null}
+                    canWrite={canWrite && Boolean(parentId)}
+                    defaultName={[form.data[`${prefix}_first_name`], form.data[`${prefix}_last_name`]].filter(Boolean).join(' ')}
+                    defaultEmail={form.data[`${prefix}_email`] || ''}
+                    blockedMessage={parentId ? null : t.saveParentFirst}
+                />
+            )}
         </div>
     );
 }

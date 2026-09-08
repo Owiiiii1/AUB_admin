@@ -30,6 +30,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'account_type' => User::TYPE_STAFF,
+            'is_active' => true,
         ];
     }
 
@@ -40,6 +42,43 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    public function student(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'account_type' => User::TYPE_STUDENT,
+            'role_id' => null,
+            'can_write' => false,
+            'can_delete' => false,
+        ]);
+    }
+
+    public function parentAccount(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'account_type' => User::TYPE_PARENT,
+            'role_id' => null,
+            'can_write' => false,
+            'can_delete' => false,
+        ]);
+    }
+
+    public function teacherAccount(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'account_type' => User::TYPE_TEACHER,
+            'role_id' => null,
+            'can_write' => false,
+            'can_delete' => false,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
         ]);
     }
 }

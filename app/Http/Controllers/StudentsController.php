@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademyParent;
 use App\Models\Student;
+use App\Models\User;
+use App\Services\AccountIdentityService;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,7 +46,8 @@ class StudentsController extends Controller
     ];
 
     public function __construct(
-        private readonly ActivityLogger $activityLogger
+        private readonly ActivityLogger $activityLogger,
+        private readonly AccountIdentityService $identity,
     ) {}
 
     public function index(): Response
@@ -65,6 +68,8 @@ class StudentsController extends Controller
         return Inertia::render('Customers/Profile', [
             'mode' => 'create',
             'customer' => null,
+            'linkableStudentUsers' => [],
+            'linkableParentUsers' => [],
         ]);
     }
 
@@ -92,6 +97,8 @@ class StudentsController extends Controller
             'mode' => 'edit',
             'customer' => $this->studentPayload($student),
             'returnTo' => $returnTo,
+            'linkableStudentUsers' => $this->identity->linkableUsers(User::TYPE_STUDENT),
+            'linkableParentUsers' => $this->identity->linkableUsers(User::TYPE_PARENT),
         ]);
     }
 
@@ -380,7 +387,7 @@ class StudentsController extends Controller
      */
     private function studentPayload(Student $student): array
     {
-        $student->loadMissing('parents');
+        $student->loadMissing(['user.role', 'parents.user.role']);
         $father = $student->parentOfType('father');
         $mother = $student->parentOfType('mother');
 
@@ -410,11 +417,13 @@ class StudentsController extends Controller
             'general_regulation_form_path' => $student->general_regulation_form_path,
             'minor_entry_exit_form_path' => $student->minor_entry_exit_form_path,
             'rights_release_form_path' => $student->rights_release_form_path,
+            'father_id' => $father?->id,
             'father_first_name' => $father?->first_name,
             'father_last_name' => $father?->last_name,
             'father_phone' => $father?->phone,
             'father_email' => $father?->email,
             'father_notes' => $father?->notes,
+            'mother_id' => $mother?->id,
             'mother_first_name' => $mother?->first_name,
             'mother_last_name' => $mother?->last_name,
             'mother_phone' => $mother?->phone,
@@ -426,6 +435,9 @@ class StudentsController extends Controller
             'address' => $student->residence_address,
             'status' => $student->status,
             'notes' => $student->notes,
+            'account' => $student->user?->accountPayload(),
+            'father_account' => $father?->user?->accountPayload(),
+            'mother_account' => $mother?->user?->accountPayload(),
             'created_at' => optional($student->created_at)->toIso8601String(),
         ];
     }

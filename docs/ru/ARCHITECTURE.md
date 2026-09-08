@@ -136,10 +136,10 @@ Web-auth: guard Laravel `web`, сессии, CSRF. **Стек API-токенов
 ## Подход к базе данных
 
 - Основное подключение: **MySQL** (имя БД в `.env`; значения здесь не документируются)
-- **38** файлов миграций, включая Core Data Model (`2026_09_08_200000`)
+- **39** файлов миграций, включая Identity Layer (`2026_09_08_220000_add_account_identity_layer`)
 - Студенты: таблица `students` (не `customers`). **DECIDED:** `students` / `parents` / `student_parent`; `customers` — kit leftover
 - Родители: `parents` + `student_parent` (`AcademyParent`)
-- Преподаватели: `teachers.user_id` nullable unique; login не реализован
+- Identity Layer **implemented**: `users.account_type` (`staff` | `student` | `parent` | `teacher`), `users.is_active`; `students.user_id` / `parents.user_id` / `teachers.user_id` nullable unique FK. Один User = один actor type. `account_type` ≠ web `role_id`
 - Зачисления: unique `academy_class_student.student_id` = один активный `Class` (`AcademyClass`)
 - Legacy-таблицы kit (`orders`, `services`, `staff`, `order_staff`) есть; маршруты удалены
 - Spatie-подобные таблицы прав удалялись при создании AUB `roles` (2026-07-06). Текущее наличие пустых leftover-таблиц в MySQL не перепроверялось
@@ -148,6 +148,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. **Стек API-токенов
 
 - Session auth; вход на **`/`**
 - GET `/login` редиректит на `/`
+- Неактивный User (`is_active=false`) и Parent/Student actor accounts не получают web admin (logout на login-форме или 403)
 - Защищённые страницы: `AdminRouteMiddleware::stack()` → `['web', 'auth']` плюс `role.assigned`, `role.access`
 - Запись/удаление: `can.write` / `can.delete`
 - CRUD ролей только для администратора: middleware `administrator`
@@ -170,7 +171,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. **Стек API-токенов
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
 | `bootstrap/app.php` | `web` + `commands` + health `/up` — **без `api`** |
 
-Production `php artisan route:list`: **84** маршрута. Версионированных `/api/*` ресурсов для Flutter нет.
+Production `php artisan route:list`: **96** маршрутов (12 actor-account POST). Версионированных `/api/*` ресурсов для Flutter нет.
 
 ## Куда добавлять работу
 
@@ -195,15 +196,24 @@ Production `php artisan route:list`: **84** маршрута. Версионир
 
 Пока контракта нет, Flutter-репозиторий не может реализовать реальные функции академии против backend. Стабильный контракт **не** публиковать до Core Data Model refactor.
 
-## Identity vs административный RBAC (DECIDED)
+## Identity vs административный RBAC (implemented 2026-09-08)
 
-`User` сегодня — **web session identity**. `Teacher` — строка справочника, не логин. Parent/Student — не сущности.
+Identity Layer — **implemented**.
 
-**DECIDED:** Parent и Student **не** добавлять как RBAC-роли админки только потому, что им нужен вход. Authentication account type и административный web RBAC — разные понятия. Administrative staff продолжает существующий web RBAC.
+```
+User.account_type: staff | student | parent | teacher
+one User = one actor type
+Student.user_id / Parent.user_id / Teacher.user_id
+account_type != web RBAC
+```
 
-**DECIDED (MVP identity):** один User имеет ровно один основной actor type: `student` | `parent` | `teacher`. Один User не может быть сразу Student и Parent (и т.п.). Две роли одного человека = два аккаунта. Multi-profile identity в текущую версию не закладывать.
+- `staff` — существующие web users (administrator / secretariat / другие). `account_type=staff` **сам по себе прав не даёт**; web-права только из `role_id` + `can_write` / `can_delete`.
+- `student` / `parent` — actor accounts; `role_id` всегда `null`; web CRM недоступен.
+- `teacher` — actor type; `role_id` может быть `null` (нет CRM) или web-role, если нужен workplace. Это одна identity `teacher` + permission set, не два actor type.
+- Привязка только через `AccountIdentityService`. Staff не имеет Student/Parent/Teacher profile.
+- Один физический человек с двумя функциями = **два User**. Email unique; разные login identifier. Invitation/activation **нет**. API/token auth **нет**.
 
-Invitation / activation / `teachers.user_id` — ещё **OPEN**. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+**DECIDED:** Parent и Student **не** добавлять как RBAC-роли админки только потому, что им нужен вход. Authentication account type и административный web RBAC — разные понятия.
 
 ## `Class` vs дополнительные группы (DECIDED)
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ActorAccountController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentsController;
 use App\Http\Controllers\LessonsController;
@@ -76,9 +77,21 @@ Route::middleware(array_merge(
 
         Route::post('/customers', [StudentsController::class, 'store'])->name('customers.store');
         Route::patch('/customers/{student}', [StudentsController::class, 'update'])->name('customers.update');
+        Route::post('/customers/{student}/account', [ActorAccountController::class, 'storeStudent'])->name('customers.account.store');
+        Route::post('/customers/{student}/account/link', [ActorAccountController::class, 'linkStudent'])->name('customers.account.link');
+        Route::post('/customers/{student}/account/unlink', [ActorAccountController::class, 'unlinkStudent'])->name('customers.account.unlink');
+        Route::post('/customers/{student}/account/disable', [ActorAccountController::class, 'disableStudent'])->name('customers.account.disable');
+        Route::post('/customers/{student}/parents/{parent}/account', [ActorAccountController::class, 'storeParent'])->name('customers.parents.account.store');
+        Route::post('/customers/{student}/parents/{parent}/account/link', [ActorAccountController::class, 'linkParent'])->name('customers.parents.account.link');
+        Route::post('/customers/{student}/parents/{parent}/account/unlink', [ActorAccountController::class, 'unlinkParent'])->name('customers.parents.account.unlink');
+        Route::post('/customers/{student}/parents/{parent}/account/disable', [ActorAccountController::class, 'disableParent'])->name('customers.parents.account.disable');
 
         Route::post('/teachers', [TeachersController::class, 'store'])->name('teachers.store');
         Route::patch('/teachers/{teacher}', [TeachersController::class, 'update'])->name('teachers.update');
+        Route::post('/teachers/{teacher}/account', [ActorAccountController::class, 'storeTeacher'])->name('teachers.account.store');
+        Route::post('/teachers/{teacher}/account/link', [ActorAccountController::class, 'linkTeacher'])->name('teachers.account.link');
+        Route::post('/teachers/{teacher}/account/unlink', [ActorAccountController::class, 'unlinkTeacher'])->name('teachers.account.unlink');
+        Route::post('/teachers/{teacher}/account/disable', [ActorAccountController::class, 'disableTeacher'])->name('teachers.account.disable');
 
         Route::post('/courses-groups/courses', [\App\Http\Controllers\CoursesGroupsController::class, 'storeCourse'])->name('courses-groups.courses.store');
         Route::patch('/courses-groups/courses/{course}', [\App\Http\Controllers\CoursesGroupsController::class, 'updateCourse'])->name('courses-groups.courses.update');

@@ -7,7 +7,7 @@
 - **Planned** — не построено
 - **Unverified leftover** — исторически упоминалось; Spatie-подобные таблицы дропались в `2026_07_06_120000`; leftover в MySQL **не** перепроверялись 2026-09-07
 
-Миграции: **38 файлов**, включая `2026_09_08_200000_introduce_core_academy_data_model`.
+Миграции: **39 файлов**, включая Identity Layer `2026_09_08_220000_add_account_identity_layer`.
 
 Чувствительность: Normal / Personal data / Children’s data / Special category / Secret.
 
@@ -17,9 +17,9 @@
 
 ### users (implemented)
 
-Auth. Дополнительно: `role_id` → `roles`, `can_write`, `can_delete`.  
-Связи: `belongsTo Role`.  
-Privacy: Personal data.
+Auth. Дополнительно: `account_type` (`staff` | `student` | `parent` | `teacher`), `is_active` (default true), `role_id` → `roles`, `can_write`, `can_delete`. Email unique.
+Связи: `belongsTo Role`, `hasOne Student` (`studentProfile`), `hasOne AcademyParent` (`parentProfile`), `hasOne Teacher` (`teacherProfile`).
+`account_type` ≠ web RBAC. Privacy: Personal data.
 
 ### customers (generic kit — **legacy, not academy Student**)
 
@@ -70,13 +70,13 @@ hasMany `RoleMenuItem`, hasMany `User`.
 
 ### students
 
-Профиль ученика: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth_date`, `birth_place`, residence fields, `email`, `phone`, course flags, `medical_certificate_expiry`, document/photo paths, `notes`, `status`. **Нет** father_*/mother_* колонок.
+Профиль ученика: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth_date`, `birth_place`, residence fields, `email`, `phone`, course flags, `medical_certificate_expiry`, document/photo paths, `notes`, `status`. **Нет** father_*/mother_* колонок. Nullable unique `user_id` → `users.id` (`nullOnDelete`). `belongsTo User`.
 
 `belongsToMany AcademyParent` (`student_parent`), `belongsToMany AcademyClass` (`academy_class_student`).
 
 ### parents (`AcademyParent`)
 
-`first_name`, `last_name`, `email`, `phone`, `tax_code`, `notes`. Таблица `parents`. PHP-класс не `Parent` (зарезервировано).
+`first_name`, `last_name`, `email`, `phone`, `tax_code`, `notes`, nullable unique `user_id` → `users.id` (`nullOnDelete`). Таблица `parents`. PHP-класс не `Parent` (зарезервировано). `belongsTo User`.
 
 ### student_parent
 
@@ -85,7 +85,7 @@ hasMany `RoleMenuItem`, hasMany `User`.
 ### teachers
 
 `type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`, nullable unique `user_id`.  
-`belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). Identity/login не реализованы.  
+`belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). `belongsTo User`. Identity Layer implemented (create/link from teacher profile).  
 Фото: public disk `teachers/{id}/photos`.
 
 ### courses / academy_classes / academy_class_student
@@ -119,7 +119,7 @@ UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCH
 
 ## D. Planned / концепт (нет финальной схемы, нет миграций)
 
-Не считать список утверждённой БД для ещё не построенных модулей. Core Data Model refactor (students / Class / ClassLesson) **сделан**. Identity — следующий этап до стабильного mobile API.
+Не считать список утверждённой БД для ещё не построенных модулей. Core Data Model refactor и Identity Layer **сделаны**. Следующий этап до стабильного mobile API — **API Foundation**.
 
 ### Student / Parent (**implemented**)
 
@@ -131,9 +131,16 @@ UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCH
 - PHP-модель: `AcademyClass` / таблица `academy_classes`.
 - Дополнительные группы (события, постановки, репетиции) **не** являются `Class`. Ребёнок может быть в одном `Class` и в нескольких activity groups (схема доп. групп не строится сейчас).
 
-### Identity (DECIDED, не реализован workflow)
+### Identity (implemented 2026-09-08)
 
-Один User — ровно один основной actor type: `student` | `parent` | `teacher`. Multi-profile не закладывать. Web RBAC персонала остаётся отдельно. `teachers.user_id` **nullable unique** добавлен как foundation; login/API нет.
+```
+User.account_type: staff | student | parent | teacher
+one User = one actor type
+Student.user_id / Parent.user_id / Teacher.user_id
+account_type != web RBAC
+```
+
+Привязка только через `AccountIdentityService`. Один физический человек с двумя функциями = два User (email unique). Invitation/activation нет. API нет.
 
 ### Teacher Check-in (семантика DECIDED)
 
@@ -170,7 +177,7 @@ Student + Class + AcademicYear → ReportCard
 | Additional groups / Productions | ≠ `Class`; поздний future; схему не финализировать | DECIDED split / workflow OPEN |
 | Сущность Document + **private** storage | Сейчас: пути на public disk | OPEN (нужно до широкого mobile) |
 | ConsentType / ConsentDocumentVersion / ConsentRecord | Возраст не хардкодить | DECIDED direction / не реализовано |
-| Teacher.user_id + mobile Teacher account | Колонка `user_id` есть; login нет | DECIDED identity / не реализовано |
+| Teacher.user_id + mobile Teacher account | Связь и web create/link есть; mobile API нет | Identity implemented / API OPEN |
 | Payment / Invoice | Не начато | OPEN |
 
 Не использовать kit `orders` как зачисления или счета.

@@ -40,17 +40,25 @@ class SettingsController extends Controller
         );
 
         $users = User::query()
-            ->with('role:id,name,is_admin')
+            ->with([
+                'role:id,name,is_admin',
+                'studentProfile:id,user_id,name,first_name,last_name',
+                'parentProfile:id,user_id,first_name,last_name',
+                'teacherProfile:id,user_id,name,first_name,last_name',
+            ])
             ->orderBy('name')
-            ->get(['id', 'name', 'email', 'role_id', 'can_delete', 'can_write', 'created_at'])
+            ->get(['id', 'name', 'email', 'account_type', 'is_active', 'role_id', 'can_delete', 'can_write', 'created_at'])
             ->map(static fn (User $user): array => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'account_type' => $user->account_type,
+                'is_active' => (bool) $user->is_active,
                 'role_id' => $user->role_id,
                 'role_name' => $user->role?->name,
                 'can_delete' => $user->canDelete(),
                 'can_write' => $user->canWrite(),
+                'linked_profile' => $user->linkedProfileSummary(),
                 'created_at' => optional($user->created_at)->toIso8601String(),
             ])
             ->all();

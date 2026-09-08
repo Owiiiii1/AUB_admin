@@ -15,7 +15,7 @@ class RoleAccess
             return false;
         }
 
-        if (! $user->hasAssignedRole()) {
+        if (! $user->canAccessWebAdmin()) {
             return false;
         }
 
@@ -43,7 +43,7 @@ class RoleAccess
      */
     public static function menuItemsForUser(?User $user): array
     {
-        if ($user === null || ! $user->hasAssignedRole()) {
+        if ($user === null || ! $user->canAccessWebAdmin()) {
             return [];
         }
 
@@ -88,7 +88,7 @@ class RoleAccess
 
     public static function postLoginRedirectUrl(User $user): string
     {
-        if (! $user->hasAssignedRole()) {
+        if (! $user->canAccessWebAdmin()) {
             return route('login');
         }
 

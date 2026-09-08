@@ -26,7 +26,7 @@ Flutter must **never** contain Bitrix/webhooks, DB credentials, or `APP_KEY`. On
 3. AUB modules live in `AUB_admin` (or `AUB_app` for Flutter UI), never in `vendor/`.
 4. Do not duplicate installed generic CRM/admin behaviour; extend it.
 5. AUB is a **core + interfaces** system, not “the admin panel”.
-6. Mobile work may proceed in parallel; **features** need an API contract. A stable API comes **after** Core Data Model refactor + Identity.
+6. Mobile work may proceed in parallel; **features** need an API contract. A stable API comes **after** Identity (done). Next: API Foundation.
 7. Any `AUB_admin` change is deployed to production immediately. No exceptions.
 
 ## Before adding a module
