@@ -155,25 +155,24 @@ class AccountIdentityService
         $parentId = AcademyParent::query()->where('user_id', $user->id)->value('id');
         $teacherId = Teacher::query()->where('user_id', $user->id)->value('id');
 
-        if ($profile instanceof Student && ($parentId !== null || $teacherId !== null)) {
+        if ($profile instanceof Student && ($parentId !== null || $teacherId !== null || ($studentId !== null && (int) $studentId !== (int) $profile->id))) {
             throw $this->fail('This account cannot be linked to a student because it already has another actor profile.');
         }
 
-        if ($profile instanceof AcademyParent && ($studentId !== null || $teacherId !== null)) {
+        if ($profile instanceof AcademyParent && ($studentId !== null || $teacherId !== null || ($parentId !== null && (int) $parentId !== (int) $profile->id))) {
             throw $this->fail('This account cannot be linked to a parent because it already has another actor profile.');
         }
 
-        if ($profile instanceof Teacher && ($studentId !== null || $parentId !== null)) {
+        if ($profile instanceof Teacher && ($studentId !== null || $parentId !== null || ($teacherId !== null && (int) $teacherId !== (int) $profile->id))) {
             throw $this->fail('This account cannot be linked to a teacher because it already has another actor profile.');
         }
     }
 
     private function linkedProfile(User $user): Student|AcademyParent|Teacher|null
     {
-        return $user->studentProfile
-            ?? $user->parentProfile
-            ?? $user->teacherProfile
-            ?? null;
+        return Student::query()->where('user_id', $user->id)->first()
+            ?? AcademyParent::query()->where('user_id', $user->id)->first()
+            ?? Teacher::query()->where('user_id', $user->id)->first();
     }
 
     private function sameProfile(Model $left, Model $right): bool

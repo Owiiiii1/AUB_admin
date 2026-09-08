@@ -65,8 +65,19 @@ AUB_app lib/                            ← только Flutter
 ## Секреты
 
 - Никогда не печатать `DB_PASSWORD`, `APP_KEY`, API keys, tokens
-- `.env` не коммитится
+- `.env` и `.env.testing` не коммитятся (см. `.env.testing.example`)
 - Честно описывать security: [PRIVACY_AND_DATA_PROTECTION.md](PRIVACY_AND_DATA_PROTECTION.md)
+
+## Автотесты (только MySQL)
+
+Имя production DB: **`aub`**. Имя test DB: **`aub_test`**. Тесты никогда не должны использовать `aub`.
+
+- **Не** использовать SQLite / `:memory:`. PHPUnit — MySQL.
+- `phpunit.xml` принудительно задаёт `APP_ENV=testing`, `DB_CONNECTION=mysql`, `DB_DATABASE=aub_test` (без credentials).
+- Секреты на сервере/локально — в `.env.testing` (не в git). Шаблон: `.env.testing.example`.
+- Жёсткий предохранитель: `App\Testing\TestDatabaseGuard` — если `testing` и connection/database не MySQL `aub_test`, abort с `Refusing to run tests against non-test database.` до миграций. Подключён в `AppServiceProvider` и `tests/TestCase`.
+- Всегда `php artisan optimize:clear` **перед** `php artisan test`. Не запускать suite при активном `config:cache`: кэш игнорирует phpunit / `.env.testing` и раньше мог указать на production.
+- Безопасная проверка test-схемы: `php artisan migrate:status --env=testing` (берёт `.env.testing`; флаг Laravel `--env=testing` загружает этот файл).
 
 ## После изменений backend/frontend (AUB_admin)
 

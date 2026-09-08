@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-08** (code + Identity Layer migrations). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-08** (Identity Layer + isolated MySQL test DB). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -24,6 +24,18 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 `storage:link` exists on production.
 
 No `laravel/sanctum`, Passport, or JWT in the host app.
+
+## Automated tests
+
+| Item | Value |
+|------|--------|
+| Engine | MySQL 8 (not SQLite) |
+| Production DB | `aub` |
+| Test DB | `aub_test` |
+| Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
+| Last suite on production host | **29 passed**, 0 failed, 0 errors (88 assertions) |
+
+`php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 
 ## Routes (web CRM + identity; no API)
 

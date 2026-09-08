@@ -118,7 +118,33 @@ sudo systemctl reload nginx
 
 Обязательные ключи (значения не документируются): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`.
 
-**Никогда не раскрывать секреты.**
+**Никогда не раскрывать секреты.** Не заливать `.env` и `.env.testing`.
+
+## Test database (изолированный MySQL)
+
+| Роль | Имя БД |
+|------|--------|
+| Production-приложение | `aub` |
+| Автотесты | `aub_test` |
+
+Тесты используют отдельную MySQL DB (и отдельного test-пользователя с правами только на `aub_test`). Production `aub` никогда не является целью PHPUnit.
+
+Секреты test-подключения — только на сервере в `/var/www/aub/.env.testing`. Шаблон в git: `.env.testing.example`. phpunit.xml принудительно задаёт `DB_DATABASE=aub_test` **без** паролей.
+
+Как Laravel выбирает test-подключение:
+
+- `php artisan test` → PHPUnit → `phpunit.xml` задаёт `APP_ENV=testing` и `DB_DATABASE=aub_test`.
+- Если config **не** закэширован, Laravel грузит `.env`, затем `.env.testing`; username/password берутся из `.env.testing`.
+- `php artisan … --env=testing` загружает `.env.testing` (проверено: `migrate:status --env=testing` и `db:show --env=testing` показывают database `aub_test`).
+- `App\Testing\TestDatabaseGuard` прерывает запуск, если resolved database не строго `aub_test`.
+
+Перед любым прогоном тестов: `php artisan optimize:clear`. **Не** запускать `php artisan test` после `config:cache`.
+
+```bash
+php artisan optimize:clear
+php artisan test
+php artisan migrate:status --env=testing
+```
 
 ## Команды kit (уже установлено)
 

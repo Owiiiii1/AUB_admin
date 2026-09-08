@@ -2,7 +2,7 @@
 
 What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Status (2026-09-08):** Web core in use. Flutter repo exists. **No HTTPS API.** Core Data Model is **done**. Identity Layer is **done**. Next stage is **API Foundation**.
+**Status (2026-09-08):** Web core in use. Flutter repo exists. **No HTTPS API.** Core Data Model is **done**. Identity Layer is **done**. PHPUnit uses isolated MySQL `aub_test` (**done**). Next stage is **API Foundation**.
 
 **DECIDED:** `AUB_admin` core; `AUB_app` Flutter; HTTPS API only; separate GitHub repos; parallel backend/Flutter; one active `Class`; one User = one actor type; `customers` is a kit leftover.
 
@@ -12,8 +12,9 @@ What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_Q
 2. **Security Foundation** before wide mobile (private storage, field-level ACL, scoped teachers, view audit, API authz matrix, token security, **admin 2FA**, consent records) — design/implement in dedicated tasks.
 3. **Core Data Model refactor** — **done** (`students` / `parents` / `AcademyClass` / `ClassLesson`).
 4. **Identity model implementation** — **done** (`account_type`, profile `user_id`, `AccountIdentityService`, admin UI).
-5. **API Foundation** (Sanctum = candidate, not locked) — **next stage**.
-6. **Flutter Foundation** once a contract exists (Store distribution **OPEN**: one app vs flavors).
+5. **Test infrastructure** — **done** (MySQL `aub_test`, hard guard against production `aub`; no SQLite).
+6. **API Foundation** (Sanctum = candidate, not locked) — **next stage**. Do not start in this task.
+7. **Flutter Foundation** once a contract exists (Store distribution **OPEN**: one app vs flavors).
 
 Flutter **may** be developed in parallel (shell, navigation). Real academy features wait on the API. Do not publish a stable contract before Identity.
 

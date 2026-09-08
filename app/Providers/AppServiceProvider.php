@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\AcademyParent;
+use App\Testing\TestDatabaseGuard;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->environment('testing')) {
+            TestDatabaseGuard::assertSafe();
+        }
+
         Route::bind('parent', function (string $value): AcademyParent {
             return AcademyParent::query()->findOrFail($value);
         });

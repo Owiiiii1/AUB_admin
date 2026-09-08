@@ -2,222 +2,145 @@
 
 ## Task
 
-Implement the Identity Layer in `AUB_admin` as the foundation for a future mobile API.
-
-Rule: **one User = one primary account/actor type** (`staff` | `student` | `parent` | `teacher`). `account_type` is identity. `role_id` is web RBAC only. No API, Sanctum, Flutter, attendance, grades, or invitation workflow in this task.
+Move Laravel PHPUnit off SQLite `:memory:` onto an isolated MySQL test database. Infrastructure only: dedicated `aub_test`, hard safety guard, config without secrets in git. No API, Sanctum, Flutter, attendance, grades, communications, payments, or productions.
 
 ## Before
 
-- `users` had `role_id`, `can_write`, `can_delete`. No `account_type`, no `is_active`.
-- `teachers.user_id` existed as nullable unique FK. `students.user_id` and `parents.user_id` did not.
-- Settings → Users created web users with a required `role_id`.
-- Session login did not check account activity or actor type.
-- Parent/Student were domain rows only; no login accounts.
-- Teachers were not auto-linked to Users (correct: email matching is unsafe).
-- Production users before migration: **1** (`admin@admin.com`, `role_id=1`). Teachers: 20. Students: 0. `pdo_sqlite`: no.
+SQLite `:memory:`, missing `pdo_sqlite` on production PHP 8.3.6, suite broken.
+
+- `phpunit.xml` forced `DB_CONNECTION=sqlite` and `DB_DATABASE=:memory:`.
+- Production PHP has **no** `pdo_sqlite`. Feature tests using `RefreshDatabase` failed with `could not find driver (Connection: sqlite, Database: :memory:)`.
+- Last Identity-task result: 2 passed, 24 errors. Production MySQL `aub` was not the test target in that run (config was uncached).
+- No dedicated test database. No second-line guard if phpunit env was ignored (for example after `config:cache`).
 
 ## After
 
-Identity Layer is implemented and on production (`https://aub.owlsolutions.net`).
+MySQL `aub_test`.
 
-```
-User.account_type: staff | student | parent | teacher
-one User = one actor type
-Student.user_id / Parent.user_id / Teacher.user_id
-account_type != web RBAC
-```
+- Production app database remains **`aub`**.
+- PHPUnit and `php artisan --env=testing` use **`aub_test`**.
+- Server has a dedicated MySQL user with rights **only** on `aub_test` (credentials are not in git or this report).
+- Full suite on the production host: **29 passed**, 0 failed, 0 errors.
 
-Existing admin kept: `admin@admin.com`, `account_type=staff`, `is_active=1`, `role_id=1`.
+## Test DB safety
 
-## Database changes
+Hard guard: `App\Testing\TestDatabaseGuard`.
 
-Migration `2026_09_08_220000_add_account_identity_layer`:
+When `app()->environment('testing')`:
 
-- `users.account_type` string, default `staff`, indexed. Existing rows set to `staff`.
-- `users.is_active` boolean, default `true`. Existing rows set to `true`.
-- `students.user_id` nullable unique FK → `users.id`, `nullOnDelete`.
-- `parents.user_id` nullable unique FK → `users.id`, `nullOnDelete`.
-- `teachers.user_id` unchanged (already nullable unique FK). Not backfilled by email.
+1. `AppServiceProvider::boot()` calls `TestDatabaseGuard::assertSafe()` (covers `php artisan --env=testing`).
+2. `Tests\TestCase::refreshApplication()` calls the same guard **after** the app boots and **before** `RefreshDatabase` runs migrations.
 
-39 migration files on production. Identity is batch 2.
+The guard requires `database.default === mysql` and the resolved database name **exactly** `aub_test`. Anything else (including production `aub` and SQLite `:memory:`) throws immediately:
 
-## account_type rules
+`Refusing to run tests against non-test database.`
 
-| Type | Profile | `role_id` | Web CRM |
-|------|---------|-----------|---------|
-| `staff` | none | required for workplace (existing RBAC) | yes, if active role |
-| `student` | one `Student` | always null | no |
-| `parent` | one `AcademyParent` | always null | no |
-| `teacher` | one `Teacher` | null or web role | only if web role assigned |
+This is independent of `.env.testing`. phpunit.xml also force-sets `DB_DATABASE=aub_test`. Cached config is still dangerous for *running* tests (phpunit env would be ignored), but the guard then aborts instead of migrating `aub`. Always `php artisan optimize:clear` before `php artisan test`.
 
-`account_type=staff` grants no permissions by itself.
+Unit coverage: `tests/Unit/TestDatabaseGuardTest.php` (allows `aub_test`; refuses `aub` and sqlite `:memory:`).
 
-Constants live on `User`: `TYPE_STAFF`, `TYPE_STUDENT`, `TYPE_PARENT`, `TYPE_TEACHER`, `ACCOUNT_TYPES`. Invalid types are rejected in `User::saving`.
+## Config
 
-## Profile relations
+Git-safe:
 
-- `User::studentProfile()`, `parentProfile()`, `teacherProfile()`
-- `Student::user()`, `AcademyParent::user()`, `Teacher::user()`
-- `user_id` is not mass-assignable on Student / Parent / Teacher (`Teacher::$fillable` no longer includes `user_id`)
+- `phpunit.xml` — `APP_ENV=testing`, `DB_CONNECTION=mysql`, `DB_HOST=127.0.0.1`, `DB_PORT=3306`, `DB_DATABASE=aub_test`, empty `DB_URL`. **No username/password.**
+- `.env.testing.example` — same DB name, empty credentials.
+- `.gitignore` includes `.env.testing`.
 
-## Identity validation
+Server-only (not committed): `/var/www/aub/.env.testing` with test credentials.
 
-`AccountIdentityService` is the only bind/unlink/create-and-link path.
+How the CLI actually loads testing:
 
-- staff cannot have an actor profile
-- student/parent/teacher may link to at most one matching profile
-- cross-type links throw `AccountIdentityException`
-- unique FKs remain as a second line of defence; they do not cover cross-table conflicts
+- `php artisan test` → PHPUnit → phpunit.xml force env + Laravel loads `.env.testing` when config is not cached.
+- `php artisan migrate:status --env=testing` and `php artisan db:show --env=testing` resolve database **`aub_test`** (confirmed on the server). Empty `aub_test` before the first `RefreshDatabase` run reports “Migration table not found”; after the suite, all 39 migrations show Ran.
 
-## Admin UI changes
+## Test results
 
-- Student profile: Account section (create / link / unlink / disable)
-- Parent (Father/Mother modal, after parent is saved): same Account section
-- Teacher profile: same
-- Settings → Users: name, email, account_type, web role, active/inactive, linked profile
-- Settings create remains **staff** with a required web role
-- Student/Parent cannot be given a web role in UI or backend
-- Teacher web role is optional
-- Admin sets a temporary password. No invitation email.
+Exact suite on production host after the identity-link fix:
 
-## RBAC isolation
-
-- Login rejects inactive users and users who cannot access web admin (Parent/Student, Teacher without role, staff without role)
-- `EnsureUserHasRole` also checks `is_active` and `canAccessWebAdmin()`
-- `RoleAccess` uses `canAccessWebAdmin()` for menu, route access, and post-login redirect
-- Actor accounts do not receive admin rights from `account_type`
-
-## Migration result
-
-```
-php artisan migrate --force
-```
-
-**PASS.** `2026_09_08_220000_add_account_identity_layer` ... DONE (batch 2).
-
-```
-php artisan migrate:status
-```
-
-**PASS.** 39 migrations Ran, including Identity Layer.
-
-Production after migrate: `admin@admin.com` `type=staff` `active=1` `role=1`. Teachers 20. Students 0. Admin account was not deleted.
-
-## Tests
-
-```
-php artisan test
-```
-
-**FAIL on production (environment, not assertion failures).**
-
-| Result | Count |
+| Metric | Count |
 |--------|-------|
-| Tests | 26 |
-| Passed | 2 (`ExampleTest` unit + feature GET `/`) |
-| Errors | 24 (all `RefreshDatabase` Feature tests) |
-| Failed assertions | 0 |
-| Cause | PHP 8.3.6 has **no `pdo_sqlite`**. phpunit.xml uses `sqlite :memory:`. Error: `could not find driver (Connection: sqlite, Database: :memory:)` |
-| Production MySQL | **not wiped**. Config cache was absent. Tests targeted sqlite, not `aub`. |
+| Total | 29 |
+| Passed | 29 |
+| Failed | 0 |
+| Errors | 0 |
+| Assertions | 88 |
+| Duration | 7.06s |
 
-Local Windows clone has no PHP in PATH, so the suite was not executed locally.
+First MySQL run had **1 failed** (`AccountIdentityLayerTest`: student user can be linked to one student only): expected `AccountIdentityException`, got `UniqueConstraintViolationException` on `students.students_user_id_unique`. Root cause: `AccountIdentityService::linkedProfile()` read cached Eloquent relations (`null` after `assertCanLink`), so the second `link()` hit the unique index instead of the domain exception. SQLite never exposed this because the suite could not run. Fix: query `user_id` on the three actor tables; also reject a second same-type profile in `assertNoCrossLinks`. Re-run: 29 passed.
 
-Identity coverage that exists in `tests/Feature/AccountIdentityLayerTest.php` (16 cases) could not run on this host. A production smoke of `AccountIdentityService::createAndLink` succeeded (student account, hashed password, `role_id` null, `canAccessWebAdmin=false`, then cleaned up).
+## Production isolation
 
-## Production deploy
-
-Host: `deploy@178.156.234.23:/var/www/aub`. `.env` / `vendor` / `node_modules` not uploaded.
-
-Copied:
-
-- `app/Exceptions/AccountIdentityException.php`
-- `app/Services/AccountIdentityService.php`
-- `app/Http/Controllers/ActorAccountController.php`
-- `app/Http/Controllers/Settings/{SettingsController,UserController}.php`
-- `app/Http/Controllers/{StudentsController,TeachersController}.php`
-- `app/Http/Middleware/{EnsureUserHasRole,HandleInertiaRequests}.php`
-- `app/Http/Requests/Auth/LoginRequest.php`
-- `app/Models/{User,Student,AcademyParent,Teacher}.php`
-- `app/Providers/AppServiceProvider.php`
-- `app/Support/RoleAccess.php`
-- `database/factories/UserFactory.php`
-- `database/migrations/2026_09_08_220000_add_account_identity_layer.php`
-- `routes/owl-admin-pages.php`
-- `resources/js/Components/AccountPanel.jsx`
-- `resources/js/Pages/Customers/Profile.jsx`
-- `resources/js/Pages/Teachers/Profile.jsx`
-- `resources/js/Pages/Settings/Index.jsx`
-- `resources/js/Pages/Settings/Tabs/UsersTab.jsx`
-- `tests/Feature/AccountIdentityLayerTest.php`
-- RU + EN docs listed in Files changed
-- this Work Report (after commit)
-
-Commands:
-
-| Command | Result |
-|---------|--------|
-| `php artisan migrate --force` | PASS |
-| `php artisan migrate:status` | PASS (39 Ran) |
-| `php artisan route:list` | PASS — Showing **[96] routes** |
-| `php artisan test` | FAIL — 2 passed, 24 errors, no sqlite driver |
-| `npm run build` | PASS (vite 8.1.3, 1.02s; `AccountPanel-*.js` emitted) |
-| `php artisan optimize:clear` | PASS (before migrate, after build/test) |
-
-## Smoke tests
+Confirmed after the green suite:
 
 | Check | Result |
 |-------|--------|
-| `GET https://aub.owlsolutions.net/` | HTTP 200 |
-| `GET /customers`, `GET /settings` unauthenticated | HTTP 302 |
-| Admin password `admin@admin.com` / `admin` Hash::check | PASS |
-| Admin `canAccessWebAdmin()` | true |
-| Create+link student actor via `AccountIdentityService` | PASS (`account_type=student`, `role_id=null`, no web access, password hashed) |
-| Cleanup of smoke student/user | PASS |
-| Users after smoke | still 1 admin |
+| Production DB name | `aub` |
+| Test DB name | `aub_test` |
+| Production `users` count | 1 (unchanged) |
+| Production admin | present (`admin@admin.com`) |
+| Production `teachers` count | 20 (unchanged) |
+| App `config` database | `aub` |
+| `config:cache` | not active |
+| HTTP `/` | 200 |
+| HTTP `/owl-admin/health` | 200 |
+
+`RefreshDatabase` migrated and rolled schema on `aub_test` only. Production migration history on `aub` is unchanged (identity migration still batch 2). Test DB may be wiped/refreshed without touching `aub`.
 
 ## Files changed
 
 Created:
 
-- `app/Exceptions/AccountIdentityException.php`
-- `app/Services/AccountIdentityService.php`
-- `app/Http/Controllers/ActorAccountController.php`
-- `database/migrations/2026_09_08_220000_add_account_identity_layer.php`
-- `resources/js/Components/AccountPanel.jsx`
-- `tests/Feature/AccountIdentityLayerTest.php`
-- `docs/Development/Cursor_Work_Report.md` (rewritten)
+- `app/Testing/TestDatabaseGuard.php`
+- `tests/Unit/TestDatabaseGuardTest.php`
+- `.env.testing.example`
 
 Modified:
 
-- `app/Models/User.php`, `Student.php`, `AcademyParent.php`, `Teacher.php`
-- `database/factories/UserFactory.php`
-- `app/Http/Requests/Auth/LoginRequest.php`
-- `app/Http/Middleware/EnsureUserHasRole.php`, `HandleInertiaRequests.php`
-- `app/Support/RoleAccess.php`
+- `phpunit.xml`
+- `.gitignore`
+- `tests/TestCase.php`
 - `app/Providers/AppServiceProvider.php`
-- `app/Http/Controllers/Settings/UserController.php`, `SettingsController.php`
-- `app/Http/Controllers/StudentsController.php`, `TeachersController.php`
-- `routes/owl-admin-pages.php`
-- `resources/js/Pages/Customers/Profile.jsx`
-- `resources/js/Pages/Teachers/Profile.jsx`
-- `resources/js/Pages/Settings/Index.jsx`
-- `resources/js/Pages/Settings/Tabs/UsersTab.jsx`
-- `docs/ru` + `docs/en`: CURRENT_STATE, ARCHITECTURE, DATA_MODEL_DRAFT, USER_ROLES_AND_ACCESS, OPEN_QUESTIONS, MODULE_ROADMAP, NEXT_STEPS, DEVELOPMENT_RULES
+- `app/Services/AccountIdentityService.php` (necessary MySQL-exposed validation fix)
+- `docs/en/DEVELOPMENT_RULES.md`
+- `docs/ru/DEVELOPMENT_RULES.md`
+- `docs/en/SERVER_DEPLOYMENT.md`
+- `docs/ru/SERVER_DEPLOYMENT.md`
+- `docs/en/CURRENT_STATE.md`
+- `docs/ru/CURRENT_STATE.md`
+- `docs/en/NEXT_STEPS.md`
+- `docs/ru/NEXT_STEPS.md`
+- `docs/Development/Cursor_Work_Report.md`
 
-Deleted: none.
+Not committed: `.env`, `.env.testing`, passwords, any credentials.
 
-## Technical debt / OPEN
+## Commands executed
 
-- One physical person with two actor types = **two User accounts**. Not merged by email.
-- `users.email` stays unique, so two accounts need two login emails. Future: login identifier / alias / username.
-- Invitation / activation workflow is absent; admin sets a temporary password.
-- API / token auth is absent (`routes/api.php`, Sanctum, `/me`).
-- Production cannot run sqlite Feature tests (`pdo_sqlite` missing). Do **not** `config:cache` then `php artisan test`.
-- Teacher web-role `teacher` was not auto-created.
-- Parent multi-child rules, older-student onboarding, and teacher workplace vs mobile UX remain OPEN.
+| Command | Result |
+|---------|--------|
+| Create MySQL database `aub_test` + dedicated user (rights only on `aub_test`) | PASS |
+| Write server-only `.env.testing` | PASS |
+| `php artisan optimize:clear` | PASS |
+| `php artisan migrate:status --env=testing` (before first suite) | FAIL — expected: Migration table not found on empty `aub_test` |
+| `php artisan test` (first MySQL run) | FAIL — 1 failed, 28 passed |
+| Identity `linkedProfile` / same-type link fix + recopy service | PASS |
+| `php artisan test` (after fix) | PASS — 29 passed, 0 failed, 0 errors |
+| `php artisan migrate:status --env=testing` (after suite) | PASS — 39 Ran on `aub_test` |
+| `php artisan migrate:status` (default `.env`) | PASS — production `aub` unchanged |
+| `php artisan db:show --env=testing` | PASS — Database `aub_test` |
+| Production user/teacher/admin snapshot | PASS — 1 / 20 / admin present |
+| `curl -I https://aub.owlsolutions.net/` | PASS — 200 |
+| `curl -I https://aub.owlsolutions.net/owl-admin/health` | PASS — 200 |
+
+## Remaining technical debt
+
+- Production PHP still has no `pdo_sqlite` (irrelevant if tests stay on MySQL).
+- Do not `config:cache` then `php artisan test`. Guard now aborts, but the suite will not run until `optimize:clear`.
+- `.env.example` still has Laravel skeleton `DB_CONNECTION=sqlite`; production `.env` already uses MySQL `aub`. Out of scope to redesign local skeleton.
+- Identity same-type link now throws domain exception on MySQL; no extra Feature tests added beyond the existing case that failed.
 
 ## Next recommended step
 
-**API Foundation** — routing, versioning, token auth (Sanctum = candidate, not locked), `/me`, resources, errors, rate limits, tests.
+`API Foundation`
 
-Do **not** implement it in this task.
+Do **not** implement API, Sanctum, or Flutter in this task.

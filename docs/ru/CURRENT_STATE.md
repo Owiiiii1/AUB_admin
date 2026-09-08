@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-08** (код + миграции Identity Layer). Текст от 2026-07-20 / 2026-09-07 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-08** (Identity Layer + изолированная MySQL test DB). Текст от 2026-07-20 / 2026-09-07 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -24,6 +24,18 @@ Production-сборка есть **на сервере** (`public/build/manifest
 На production есть `storage:link`.
 
 В хост-приложении нет `laravel/sanctum`, Passport, JWT.
+
+## Автотесты
+
+| Пункт | Значение |
+|-------|----------|
+| Движок | MySQL 8 (не SQLite) |
+| Production DB | `aub` |
+| Test DB | `aub_test` |
+| Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
+| Последний suite на production-хосте | **29 passed**, 0 failed, 0 errors (88 assertions) |
+
+`php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 
 ## Маршруты (web CRM + identity; API нет)
 

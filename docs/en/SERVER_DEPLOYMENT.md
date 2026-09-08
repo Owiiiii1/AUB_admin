@@ -118,7 +118,33 @@ sudo systemctl reload nginx
 
 Required keys (values never documented): `APP_NAME`, `APP_KEY`, `APP_URL`, `DB_*`.
 
-**Never expose secret values.**
+**Never expose secret values.** Never upload `.env` or `.env.testing`.
+
+## Test database (isolated MySQL)
+
+| Role | Database name |
+|------|----------------|
+| Production app | `aub` |
+| Automated tests | `aub_test` |
+
+Tests use a dedicated MySQL database (and a dedicated test user with rights only on `aub_test`). Production `aub` is never the PHPUnit target.
+
+Server-only file `/var/www/aub/.env.testing` holds test DB credentials. Template in git: `.env.testing.example`. phpunit.xml force-sets `DB_DATABASE=aub_test` with **no** passwords.
+
+How Laravel picks the test connection:
+
+- `php artisan test` → PHPUnit → `phpunit.xml` sets `APP_ENV=testing` and `DB_DATABASE=aub_test`.
+- If config is **not** cached, Laravel loads `.env` then `.env.testing`; username/password come from `.env.testing`.
+- `php artisan … --env=testing` loads `.env.testing` (confirmed: `migrate:status --env=testing` and `db:show --env=testing` report database `aub_test`).
+- `App\Testing\TestDatabaseGuard` aborts unless the resolved database is exactly `aub_test`.
+
+Before any test run: `php artisan optimize:clear`. Do **not** run `php artisan test` after `config:cache`.
+
+```bash
+php artisan optimize:clear
+php artisan test
+php artisan migrate:status --env=testing
+```
 
 ## Kit commands (already installed)
 
