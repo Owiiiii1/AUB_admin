@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
-use App\Models\Customer;
+use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,15 +14,15 @@ class ActivityLogController extends Controller
     public function index(Request $request): Response
     {
         $userId = $request->integer('user_id') ?: null;
-        $customerId = $request->integer('customer_id') ?: null;
+        $customerId = $request->integer('customer_id') ?: $request->integer('student_id') ?: null;
 
         $logs = ActivityLog::query()
             ->with([
                 'user:id,name,email',
-                'customer:id,name,email',
+                'student:id,name,email',
             ])
             ->when($userId, fn ($query) => $query->where('user_id', $userId))
-            ->when($customerId, fn ($query) => $query->where('customer_id', $customerId))
+            ->when($customerId, fn ($query) => $query->where('student_id', $customerId))
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(25)
@@ -41,10 +41,10 @@ class ActivityLogController extends Controller
                     'name' => $log->user->name,
                     'email' => $log->user->email,
                 ] : null,
-                'customer' => $log->customer ? [
-                    'id' => $log->customer->id,
-                    'name' => $log->customer->name,
-                    'email' => $log->customer->email,
+                'customer' => $log->student ? [
+                    'id' => $log->student->id,
+                    'name' => $log->student->name,
+                    'email' => $log->student->email,
                 ] : null,
             ]);
 
@@ -58,13 +58,13 @@ class ActivityLogController extends Controller
             ])
             ->all();
 
-        $customerOptions = Customer::query()
+        $customerOptions = Student::query()
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
-            ->map(static fn (Customer $customer): array => [
-                'id' => $customer->id,
-                'name' => $customer->name,
-                'email' => $customer->email,
+            ->map(static fn (Student $student): array => [
+                'id' => $student->id,
+                'name' => $student->name,
+                'email' => $student->email,
             ])
             ->all();
 

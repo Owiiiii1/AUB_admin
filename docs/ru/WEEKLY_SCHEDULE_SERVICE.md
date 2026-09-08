@@ -40,7 +40,7 @@
 
 ### `scheduled_lessons`
 
-Связь недели, здания, зала, `course_group_id`, `teacher_id`, `lesson_id`, дата, начало/конец, заметки, цвет, статус.
+Связь недели, здания, зала, `academy_class_id`, `teacher_id`, `lesson_id`, дата, начало/конец, заметки, цвет, статус.
 
 ### `schedule_ai_runs`
 
@@ -59,10 +59,10 @@
 
 ### Связанные сущности
 
-- группы: `course_groups` (опционально `color`)
+- классы: `academy_classes` (опционально `color`; PHP `AcademyClass`)
 - предметы: `lessons` (опционально `duration_minutes`)
 - преподаватели: `teachers`
-- назначения: `course_group_lesson` — **несколько преподавателей** на группу+урок (`hours` на преподавателя); допуск через `lesson_teacher`
+- назначения: `class_lessons` + `class_lesson_teacher` — **несколько преподавателей** на ClassLesson (`hours` на преподавателя); допуск через `lesson_teacher`
 
 ## Сетка: визуал и планирование
 

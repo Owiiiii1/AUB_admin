@@ -23,7 +23,7 @@ Gaps: no field-level ACL; extra routes always allowed for any role. **Security F
 | Teachers | Directory done | No `user_id` |
 | Courses / groups | Done | `/courses-groups` |
 | Lessons catalog | Done | Settings → Academy; no `Lessons/Index.jsx` |
-| Enrollments | Partial | `course_group_customer`; unique `customer_id` conceptually = **DECIDED** “one active `Class`”. Terminology `course_groups` vs `Class` still needs normalization. Status workflow is OPEN |
+| Enrollments | Partial | unique `academy_class_student.student_id` = **DECIDED** “one active `Class`”. Status workflow is OPEN |
 
 ## Operations (Phase 3)
 

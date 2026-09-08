@@ -11,7 +11,7 @@ Access control is a **privacy requirement**. This document splits **implemented*
 | **Admin / superadmin interface** | Full web CRM for `is_admin` |
 | **Access channel** | How a person reaches the core: web workplace, admin UI, or Flutter |
 
-Parent and Student are **not** admin roles. They are planned **Flutter (and possibly web) channels** against `AUB_admin` API. The API does not exist yet.
+Parent and Student are **domain entities** and planned **Flutter channels**. They are **not** admin RBAC roles. Identity/login is not implemented yet.
 
 **DECIDED:** Parent/Student must not become administrative web RBAC roles only because they need login. Authentication account type ≠ administrative web RBAC. Administrative staff continues to use the existing web RBAC.
 

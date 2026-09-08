@@ -22,7 +22,7 @@ Companion: [MODULE_ROADMAP.md](MODULE_ROADMAP.md), [ARCHITECTURE.md](ARCHITECTUR
 | Additional activity groups (production / rehearsal / other) are **not** a `Class` | DECIDED |
 | One User has exactly one primary actor / account type (`student` / `parent` / `teacher`) | DECIDED |
 | If one physical person needs two roles — two separate accounts; no multi-profile identity in the current version | DECIDED |
-| `customers` is interim / legacy; target direction is `students` + `parents` + `student_parent` | DECIDED (direction; no migrations now) |
+| `customers` is a kit leftover; academy uses `students` + `parents` + `student_parent` | DECIDED (implemented 2026-09-08) |
 | Core Data Model refactor must happen **before** publishing a stable mobile API | DECIDED |
 | Teacher Check-in belongs to the **work day**, not to a specific lesson/session | DECIDED |
 | No running grades during the period; no per-lesson electronic gradebook | DECIDED |
@@ -40,15 +40,14 @@ Companion: [MODULE_ROADMAP.md](MODULE_ROADMAP.md), [ARCHITECTURE.md](ARCHITECTUR
 
 - **DECIDED:** a child may belong to only one primary academic class at a time. This is a mandatory business rule of the current version.
 - **Target terminology:** `Class` is the child’s permanent primary academic class. Do not mix `Class` with temporary additional groups.
-- **Code today:** unique `customer_id` on `course_group_customer` conceptually matches “one primary class”. Table names (`course_groups` vs `Class`) still need terminology normalization.
-- **Status:** the rule is DECIDED; schema/API terminology normalization is OPEN.
+- **Code today:** unique `student_id` on `academy_class_student`. PHP model `AcademyClass` / table `academy_classes`.
+- **Status:** the rule is DECIDED; PHP vs product naming is fixed (`AcademyClass` = `Class`).
 
 ### Students / parents vs `customers`
 
-- **DECIDED direction:** `customers` is not the long-term Student domain model. Target entities: `students`, `parents`, `student_parent`.
-- **Production fact:** there is no valuable user data (test data only). A future migration may be designed without preserving the current test structure at all costs.
-- **Do not do now:** migrations, table replacement, or a stable API contract on top of `customers`.
-- **Status:** direction DECIDED. Implementation is a separate Core Data Model refactor task.
+- **DECIDED / implemented:** `customers` is not academy Student. Entities: `students`, `parents`, `student_parent`.
+- **Production fact:** test `customers` / schedule / course_groups data was cleared by the 2026-09-08 migration. Admin users were kept.
+- **Status:** implemented. Identity (User binding) is a separate stage.
 
 ### Unique vs additional groups
 

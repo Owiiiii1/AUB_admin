@@ -46,7 +46,7 @@ Production `/var/www/aub` **не** git-репозиторий. Деплой — 
 | Dashboard | `Dashboard.jsx` — **заглушка** |
 | Пользователи | `Settings\UserController` |
 | Профиль | `ProfileController` |
-| Студенты | `CustomersController` / `customers` (interim) |
+| Студенты | `StudentsController` / `students` (URL `/customers`) |
 | Orders / services / staff / calendar | Legacy без маршрутов |
 | AI / app settings | вкладки `/settings` |
 | Каталог уроков | Настройки → Академия (`LessonsTab.jsx`); `/lessons` редирект |

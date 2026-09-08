@@ -73,7 +73,7 @@ class ScheduleConflictService
     public function detectForWeek(ScheduleWeek $week, ?int $excludeLessonId = null): array
     {
         $lessons = $week->scheduledLessons()
-            ->with(['courseGroup.course', 'teacher:id,name', 'lesson:id,name', 'room:id,name', 'building:id,name'])
+            ->with(['academyClass.course', 'teacher:id,name', 'lesson:id,name', 'room:id,name', 'building:id,name'])
             ->orderBy('lesson_date')
             ->orderBy('starts_at')
             ->get();
@@ -128,7 +128,7 @@ class ScheduleConflictService
 
         /** @var Collection<int, ScheduledLesson> $existingLessons */
         $existingLessons = $query
-            ->with(['courseGroup.course', 'teacher:id,name', 'lesson:id,name', 'room:id,name', 'building:id,name'])
+            ->with(['academyClass.course', 'teacher:id,name', 'lesson:id,name', 'room:id,name', 'building:id,name'])
             ->get();
 
         $conflicts = [];
@@ -136,8 +136,8 @@ class ScheduleConflictService
         $teacherId = isset($payload['teacher_id']) && $payload['teacher_id'] !== '' && $payload['teacher_id'] !== null
             ? (int) $payload['teacher_id']
             : null;
-        $groupId = isset($payload['course_group_id']) && $payload['course_group_id'] !== '' && $payload['course_group_id'] !== null
-            ? (int) $payload['course_group_id']
+        $groupId = isset($payload['academy_class_id']) && $payload['academy_class_id'] !== '' && $payload['academy_class_id'] !== null
+            ? (int) $payload['academy_class_id']
             : null;
 
         foreach ($existingLessons as $existing) {
@@ -149,7 +149,7 @@ class ScheduleConflictService
                 $conflicts[] = $this->conflictEntry('teacher_overlap', $existing, 'Teacher is already assigned for this time.');
             }
 
-            if ($groupId !== null && $existing->course_group_id !== null && (int) $existing->course_group_id === $groupId) {
+            if ($groupId !== null && $existing->academy_class_id !== null && (int) $existing->academy_class_id === $groupId) {
                 $conflicts[] = $this->conflictEntry('group_overlap', $existing, 'Group/class is already scheduled for this time.');
             }
         }
@@ -183,7 +183,7 @@ class ScheduleConflictService
             'academy_building_id' => $lesson->academy_building_id,
             'academy_room_id' => $lesson->academy_room_id,
             'teacher_id' => $lesson->teacher_id,
-            'course_group_id' => $lesson->course_group_id,
+            'academy_class_id' => $lesson->academy_class_id,
         ];
     }
 
@@ -191,7 +191,7 @@ class ScheduleConflictService
     {
         $parts = array_filter([
             $lesson->title,
-            $lesson->courseGroup?->name,
+            $lesson->academyClass?->name,
             $lesson->lesson?->name,
         ]);
 

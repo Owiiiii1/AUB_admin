@@ -7,7 +7,7 @@ Status legend:
 - **Planned** — not built
 - **Unverified leftover** — mentioned historically; Spatie-style tables were dropped in `2026_07_06_120000`; MySQL leftovers were **not** re-checked on 2026-09-07
 
-Migrations: **37 files**, all **Ran** on production, batches **1–29**.
+Migrations: **38 files**, including `2026_09_08_200000_introduce_core_academy_data_model`.
 
 Privacy tags: Normal / Personal data / Children’s data / Special category / Secret.
 
@@ -21,15 +21,13 @@ Auth. Extra columns: `role_id` → `roles`, `can_write`, `can_delete`.
 Relations: `belongsTo Role`.  
 Privacy: Personal data.
 
-### customers (implemented — **students, interim / not the long-term model**)
+### customers (generic kit — **legacy, not academy Student**)
 
-Kit columns: `name`, `email`, `phone`, `address`, `notes`, `status`.
+Kit columns remain. Academy student profiles live in `students`. Production test `customers` rows were cleared by `2026_09_08_200000`. Table kept for kit compatibility.
 
-AUB profile columns (migrations `2026_07_06_210000`, `2026_07_06_221000`): first/last name, gender, tax code, birth, residence, student email/phone, course flags, document paths, father/mother blocks, `student_notes`. Legacy `parent_phone` / `parent_email` kept.
+Relations in code: `hasMany Order` (legacy).
 
-Relations in code: `hasMany Order` (legacy). **No** `courseGroups()` inverse; enrollments queried via `course_group_customer`.
-
-Files: public disk `students/{id}/documents` — **privacy gap**.
+Student files: public disk `students/{id}/documents` — **privacy gap**.
 
 Privacy: Children’s data / Personal data.
 
@@ -47,7 +45,7 @@ Unused in UI/routes. `staff.role` is free text, **not** RBAC.
 
 ### activity_logs (implemented)
 
-`user_id`, `customer_id`, `action`, `subject_*`, `properties`, `route_name`, `ip_address`, `user_agent`, `created_at` (no `updated_at`). CRUD + login/logout. **Not** a read/access audit.
+`user_id`, `customer_id` (legacy), `student_id`, `action`, `subject_*`, `properties`, `route_name`, `ip_address`, `user_agent`, `created_at` (no `updated_at`). CRUD + login/logout. **Not** a read/access audit.
 
 ---
 
@@ -64,35 +62,54 @@ hasMany `RoleMenuItem`, hasMany `User`.
 
 ---
 
-## C. Implemented academy tables (2026-07-08+)
+## C. Implemented academy tables
+
+### academic_years
+
+`name`, `starts_at`, `ends_at`, `is_active`. Current year = `is_active` (no auto-switch). PHP: `AcademicYear::current()`. No AcademicYear admin UI.
+
+### students
+
+Student profile: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth_date`, `birth_place`, residence fields, `email`, `phone`, course flags, `medical_certificate_expiry`, document/photo paths, `notes`, `status`. **No** father_*/mother_* columns.
+
+`belongsToMany AcademyParent` (`student_parent`), `belongsToMany AcademyClass` (`academy_class_student`).
+
+### parents (`AcademyParent`)
+
+`first_name`, `last_name`, `email`, `phone`, `tax_code`, `notes`. Table `parents`. PHP class is not `Parent` (reserved).
+
+### student_parent
+
+`student_id`, `parent_id`, `relation_type` (nullable string: `father` / `mother` / `guardian` / `other`). Unique `(student_id, parent_id)`.
 
 ### teachers
 
-`type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`.  
-`belongsToMany Lesson` (`lesson_teacher`). **No `user_id`.**  
+`type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`, nullable unique `user_id`.  
+`belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). Identity/login not implemented.  
 Photos: public disk `teachers/{id}/photos`.
 
-### courses / course_groups / course_group_customer
+### courses / academy_classes / academy_class_student
 
-`courses`: `discipline`, `name`, `sort_order`, `study_starts_at`, `study_ends_at`.  
-`course_groups`: `course_id`, `name`, `color`, `sort_order`.  
-`course_group_customer`: `course_group_id`, `customer_id`, `discipline` (column remains).  
+`courses`: `discipline`, `name`, `sort_order`, `study_starts_at`, `study_ends_at`. Learning direction.
 
-**Enrollment constraint in code:** unique `customer_id` — at most one CourseGroup per student in the database. **DECIDED:** this conceptually matches the “one primary `Class`” rule. Target terminology: `Class` = permanent primary academic class; do not mix with additional activity groups. Table names (`course_groups` vs `Class`) still need normalization. Do not change migrations in this task. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+`academy_classes`: `course_id`, `name`, `color`, `sort_order`. Product **Class**. PHP model `AcademyClass` (`Class` is reserved).
 
-The earlier unique `(customer_id, discipline)` was replaced by `2026_07_08_170000`.
+`academy_class_student`: unique `student_id` — at most one active primary Class.
 
-### lessons + pivots
+Tables `course_groups`, `course_group_customer`, `course_group_lesson` were **dropped**.
+
+### lessons + ClassLesson
 
 `lessons`: `discipline`, `name`, `description`, `duration_minutes`, `sort_order`.  
 `lesson_teacher`, `lesson_course`.  
-`course_group_lesson`: `teacher_id`, `hours`; unique `(course_group_id, lesson_id, teacher_id)`.
+`class_lessons`: `academic_year_id`, `academy_class_id`, `lesson_id`, `hours`, `sort_order`; unique `(academic_year_id, academy_class_id, lesson_id)`.  
+`class_lesson_teacher`: several teachers; `hours` on the pivot.
 
-### Weekly schedule (2026-07-20)
+### Weekly schedule (2026-07-20, FK 2026-09-08)
 
-`academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **No lat/lng/radius columns today.** Geofence fields are a **conceptual** requirement for Teacher Check-in, not implemented.  
+`academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **No lat/lng/radius columns today.**  
 `schedule_weeks`: Monday `week_start_date`, Friday `week_end_date`, `work_starts_at` / `work_ends_at`, `draft`/`published`/`locked`.  
-`scheduled_lessons`: week, building, room, group, teacher, lesson, date/time, color, status.  
+`scheduled_lessons`: week, building, room, **`academy_class_id`**, teacher, lesson, date/time, color, status.  
 `schedule_ai_runs`: prompt, preferences JSON, metrics, report, warnings.
 
 UI: visual 30 min, planning 5 min. See [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHEDULE_SERVICE.md).  
@@ -102,21 +119,21 @@ UI: visual 30 min, planning 5 min. See [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHED
 
 ## D. Planned / conceptual (no final schema, no migrations)
 
-Do not treat this list as an approved database. Do **not** create migrations in a docs-only task. Core Data Model refactor comes **before** a stable mobile API.
+Do not treat this list as an approved database for modules that are not built yet. Core Data Model refactor (students / Class / ClassLesson) is **done**. Identity is the next stage before a stable mobile API.
 
-### Student / Parent (DECIDED direction)
+### Student / Parent (**implemented**)
 
-`customers` is interim / legacy, **not** the long-term Student domain model. Production has no valuable user data (test only). Target entities: `students`, `parents`, `student_parent`. Do not start migrations now.
+`students`, `parents`, `student_parent` are implemented. `customers` is an unused kit leftover. PHP: `Student`, `AcademyParent`.
 
 ### `Class` vs additional groups (DECIDED)
 
-- `Class` is the permanent primary academic class; at most one active per child.
-- Additional groups (events, productions, rehearsals) are **not** a `Class`. A child may belong to one `Class` and several activity groups.
-- Preliminary future types (not a schema): `ProductionGroup`, `RehearsalGroup`, possibly others. Do not finalize a schema now.
+- `Class` is the permanent primary academic class; at most one active per child (**unique `academy_class_student.student_id`**).
+- PHP model: `AcademyClass` / table `academy_classes`.
+- Additional groups (events, productions, rehearsals) are **not** a `Class`. A child may belong to one `Class` and several activity groups (additional-group schema is not built now).
 
-### Identity (DECIDED)
+### Identity (DECIDED, workflow not implemented)
 
-One User has exactly one primary actor type: `student` | `parent` | `teacher`. Do not design multi-profile identity. Staff web RBAC stays separate. `teachers.user_id` does not exist in code.
+One User has exactly one primary actor type: `student` | `parent` | `teacher`. Do not design multi-profile identity. Staff web RBAC stays separate. `teachers.user_id` is **nullable unique** as foundation; there is no login/API.
 
 ### Teacher Check-in (semantics DECIDED)
 
@@ -144,7 +161,7 @@ Target entities: `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Possi
 
 | Topic | Notes | Status |
 |-------|--------|--------|
-| `students` / `parents` / `student_parent` tables | Direction DECIDED; today `customers` | DECIDED direction / not implemented |
+| `students` / `parents` / `student_parent` | Implemented 2026-09-08 | DECIDED / implemented |
 | Enrollment workflow around `Class` | Statuses, history, transfers | OPEN |
 | **Student Attendance** | Presence on a **session**. Not teacher GPS | OPEN |
 | **Teacher Check-in** | Daily geofence check-in. Radius/accuracy details OPEN | DECIDED semantics / not implemented |
@@ -153,7 +170,7 @@ Target entities: `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Possi
 | Additional groups / Productions | ≠ `Class`; late future; do not finalize schema | DECIDED split / workflow OPEN |
 | Document entity + **private** storage | Today: public disk paths | OPEN (required before wide mobile) |
 | ConsentType / ConsentDocumentVersion / ConsentRecord | Do not hardcode age | DECIDED direction / not implemented |
-| Teacher.user_id + mobile Teacher account | One actor type per User | DECIDED identity / not implemented |
+| Teacher.user_id + mobile Teacher account | `user_id` column exists; no login | DECIDED identity / not implemented |
 | Payment / Invoice | Not started | OPEN |
 
 Do not reuse kit `orders` as enrollments or invoices.
@@ -164,8 +181,8 @@ Do not reuse kit `orders` as enrollments or invoices.
 
 | Kit | AUB now | Target direction |
 |-----|---------|------------------|
-| customers | Students (interim) | `students` / `parents` / `student_parent` — separate refactor task, not now |
-| course_groups | Study groups in code | Product `Class` (terminology normalization OPEN) |
+| customers | Legacy kit leftover | Academy uses `students` / `parents` |
+| course_groups | Dropped | `academy_classes` / `AcademyClass` = product `Class` |
 | services | courses | Separate table exists |
 | staff | teachers + roles | Do not confuse |
 | orders | enrollments / invoices | New domain, not kit |

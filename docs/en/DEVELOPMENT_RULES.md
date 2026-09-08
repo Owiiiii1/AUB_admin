@@ -46,7 +46,7 @@ Flutter must **never** contain Bitrix/webhooks, DB credentials, or `APP_KEY`. On
 | Dashboard | `Dashboard.jsx` — **placeholder** |
 | Users | `Settings\UserController` |
 | Profile | `ProfileController` |
-| Students | `CustomersController` / `customers` (interim) |
+| Students | `StudentsController` / `students` (URL `/customers`) |
 | Orders / services / staff / calendar | Unrouted legacy |
 | AI / app settings | `/settings` tabs |
 | Lessons catalog | Settings → Academy (`LessonsTab.jsx`); `/lessons` redirects |

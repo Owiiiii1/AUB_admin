@@ -22,7 +22,7 @@
 | Дополнительные activity groups (production / rehearsal / иное) **не** являются `Class` | DECIDED |
 | Один User имеет ровно один основной actor / account type (`student` / `parent` / `teacher`) | DECIDED |
 | Если одному физическому человеку нужны две роли — два отдельных аккаунта; multi-profile identity в текущую версию не закладывать | DECIDED |
-| `customers` — interim / legacy; целевое направление `students` + `parents` + `student_parent` | DECIDED (направление; миграции не сейчас) |
+| `customers` — kit leftover; academy uses `students` + `parents` + `student_parent` | DECIDED (implemented 2026-09-08) |
 | Core Data Model refactor должен произойти **до** публикации стабильного mobile API | DECIDED |
 | Teacher Check-in относится к **рабочему дню**, не к конкретному lesson/session | DECIDED |
 | Текущих оценок в течение периода нет; электронный gradebook за каждый урок не нужен | DECIDED |
@@ -40,15 +40,14 @@
 
 - **DECIDED:** ребёнок может состоять только в одном основном учебном классе одновременно. Это обязательное бизнес-правило текущей версии.
 - **Терминология (целевая):** `Class` — постоянный основной учебный класс ребёнка. Не смешивать `Class` с временными дополнительными группами.
-- **Код сейчас:** unique `customer_id` на `course_group_customer` концептуально соответствует правилу «один основной класс». Имена таблиц (`course_groups` vs `Class`) требуют дальнейшей нормализации.
-- **Status:** правило — DECIDED; нормализация терминологии схема/API — OPEN.
+- **Код сейчас:** unique `student_id` на `academy_class_student`. PHP-модель `AcademyClass` / таблица `academy_classes`.
+- **Status:** правило DECIDED; терминология PHP vs продукт зафиксирована (`AcademyClass` = `Class`).
 
 ### Студенты / родители vs `customers`
 
-- **DECIDED direction:** `customers` не долгосрочная доменная модель Student. Целевые сущности: `students`, `parents`, `student_parent`.
-- **Факт production:** ценных пользовательских данных нет (тестовые данные). Миграцию можно проектировать без требования сохранять текущую тестовую структуру любой ценой.
-- **Сейчас не делать:** миграции, смену таблиц, API-контракт поверх `customers` как стабильной модели.
-- **Status:** направление DECIDED. Реализация — отдельная задача Core Data Model refactor.
+- **DECIDED / implemented:** `customers` не academy Student. Сущности: `students`, `parents`, `student_parent`.
+- **Production fact:** тестовые `customers` / schedule / course_groups очищены миграцией 2026-09-08. Admin users сохранены.
+- **Status:** реализовано. Identity (привязка User) — отдельный этап.
 
 ### Unique vs дополнительные группы
 

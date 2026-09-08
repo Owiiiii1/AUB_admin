@@ -505,7 +505,7 @@ export default function CoursesGroupsIndex({
     });
     const groupForm = useForm({ name: '', color: DEFAULT_GROUP_COLOR, view: activeView });
     const groupEditForm = useForm({ name: '', color: DEFAULT_GROUP_COLOR, view: activeView });
-    const studentForm = useForm({ customer_ids: [], confirm_move: false });
+    const studentForm = useForm({ student_ids: [], confirm_move: false });
     const lessonForm = useForm({ items: [] });
     const lessonEditForm = useForm({ assignments: [], duration_minutes: '' });
 
@@ -652,7 +652,7 @@ export default function CoursesGroupsIndex({
         e.preventDefault();
         if (!showStudentModal) return;
 
-        const selectedIds = studentForm.data.customer_ids;
+        const selectedIds = studentForm.data.student_ids;
         const occupiedStudents = selectedIds
             .map((id) => {
                 const assignment = studentAssignments[id];
@@ -930,23 +930,23 @@ export default function CoursesGroupsIndex({
     );
 
     const toggleStudentSelection = (studentId) => {
-        const ids = studentForm.data.customer_ids;
+        const ids = studentForm.data.student_ids;
         if (ids.includes(studentId)) {
-            studentForm.setData('customer_ids', ids.filter((id) => id !== studentId));
+            studentForm.setData('student_ids', ids.filter((id) => id !== studentId));
         } else {
-            studentForm.setData('customer_ids', [...ids, studentId]);
+            studentForm.setData('student_ids', [...ids, studentId]);
         }
     };
 
     const selectAllStudents = () => {
         studentForm.setData(
-            'customer_ids',
+            'student_ids',
             selectableStudentsForGroup.map((student) => student.id),
         );
     };
 
     const deselectAllStudents = () => {
-        studentForm.setData('customer_ids', []);
+        studentForm.setData('student_ids', []);
     };
 
     const selectableStudentsForGroup = useMemo(() => {
@@ -1183,7 +1183,7 @@ export default function CoursesGroupsIndex({
                                                                         return;
                                                                     }
 
-                                                                    studentForm.setData({ customer_ids: [], confirm_move: false });
+                                                                    studentForm.setData({ student_ids: [], confirm_move: false });
                                                                     studentForm.clearErrors();
                                                                     setStudentListMode('available');
                                                                     setPendingMove(null);
@@ -1541,8 +1541,8 @@ export default function CoursesGroupsIndex({
                                         onClick={() => {
                                             setStudentListMode('available');
                                             studentForm.setData(
-                                                'customer_ids',
-                                                studentForm.data.customer_ids.filter(
+                                                'student_ids',
+                                                studentForm.data.student_ids.filter(
                                                     (id) => !studentAssignments[id],
                                                 ),
                                             );
@@ -1573,7 +1573,7 @@ export default function CoursesGroupsIndex({
                             {selectableStudentsForGroup.length > 0 && (
                                 <div className="mb-2 flex items-center justify-end gap-2 text-xs">
                                     <span className="text-slate-500">
-                                        {t.selectedCount}: {studentForm.data.customer_ids.length}
+                                        {t.selectedCount}: {studentForm.data.student_ids.length}
                                     </span>
                                     <button
                                         type="button"
@@ -1596,7 +1596,7 @@ export default function CoursesGroupsIndex({
                             ) : (
                                 <div className="max-h-72 overflow-y-auto rounded-lg border border-slate-200 divide-y divide-slate-100">
                                     {selectableStudentsForGroup.map((student) => {
-                                        const checked = studentForm.data.customer_ids.includes(student.id);
+                                        const checked = studentForm.data.student_ids.includes(student.id);
                                         const assignment = studentAssignments[student.id];
 
                                         return (
@@ -1633,8 +1633,8 @@ export default function CoursesGroupsIndex({
                                     })}
                                 </div>
                             )}
-                            {studentForm.errors.customer_ids && (
-                                <p className="mt-1 text-sm text-red-600">{studentForm.errors.customer_ids}</p>
+                            {studentForm.errors.student_ids && (
+                                <p className="mt-1 text-sm text-red-600">{studentForm.errors.student_ids}</p>
                             )}
                         </div>
                         <div className="flex justify-end gap-2">
@@ -1654,11 +1654,11 @@ export default function CoursesGroupsIndex({
                                 disabled={
                                     studentForm.processing
                                     || selectableStudentsForGroup.length === 0
-                                    || studentForm.data.customer_ids.length === 0
+                                    || studentForm.data.student_ids.length === 0
                                 }
                                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                             >
-                                {t.add} ({studentForm.data.customer_ids.length})
+                                {t.add} ({studentForm.data.student_ids.length})
                             </button>
                         </div>
                     </form>

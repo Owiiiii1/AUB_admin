@@ -19,9 +19,9 @@ class Course extends Model
         'study_ends_at',
     ];
 
-    public function groups(): HasMany
+    public function academyClasses(): HasMany
     {
-        return $this->hasMany(CourseGroup::class)->orderBy('sort_order')->orderBy('name');
+        return $this->hasMany(AcademyClass::class)->orderBy('sort_order')->orderBy('name');
     }
 
     public function lessons(): BelongsToMany

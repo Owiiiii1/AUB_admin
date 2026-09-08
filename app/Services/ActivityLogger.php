@@ -30,10 +30,12 @@ class ActivityLogger
         ?string $subjectLabel = null,
         ?int $customerId = null,
         ?array $properties = null,
+        ?int $studentId = null,
     ): ActivityLog {
         return ActivityLog::query()->create([
             'user_id' => $request->user()?->id,
             'customer_id' => $customerId,
+            'student_id' => $studentId,
             'action' => $action,
             'subject_type' => $subjectType,
             'subject_id' => $subjectId,
@@ -59,6 +61,7 @@ class ActivityLogger
         ?int $customerId = null,
         ?array $before = null,
         ?array $after = null,
+        ?int $studentId = null,
     ): ActivityLog {
         $properties = [];
 
@@ -78,6 +81,7 @@ class ActivityLogger
             $subjectLabel,
             $customerId,
             $properties === [] ? null : $properties,
+            $studentId,
         );
     }
 
@@ -90,15 +94,18 @@ class ActivityLogger
         ?array $before = null,
         ?array $after = null,
     ): ActivityLog {
+        $studentId = $model instanceof \App\Models\Student ? (int) $model->getKey() : null;
+
         return $this->logModelChange(
             $request,
             $action,
             $subjectType,
             (int) $model->getKey(),
             $this->resolveLabel($model, $subjectType),
-            $customerId,
+            $studentId !== null ? null : $customerId,
             $before,
             $after,
+            $studentId,
         );
     }
 
@@ -156,6 +163,7 @@ class ActivityLogger
     {
         return match ($subjectType) {
             'customer' => (string) ($model->getAttribute('name') ?? $model->getAttribute('email') ?? ''),
+            'student' => (string) ($model->getAttribute('name') ?? $model->getAttribute('email') ?? ''),
             'teacher' => (string) ($model->getAttribute('name') ?? $model->getAttribute('email') ?? ''),
             'lesson' => (string) ($model->getAttribute('name') ?? ''),
             'user', 'profile' => (string) ($model->getAttribute('name') ?? $model->getAttribute('email') ?? ''),

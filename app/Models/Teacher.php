@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Teacher extends Model
@@ -20,7 +21,20 @@ class Teacher extends Model
         'tax_code',
         'description',
         'photo_path',
+        'user_id',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function classLessons(): BelongsToMany
+    {
+        return $this->belongsToMany(ClassLesson::class, 'class_lesson_teacher')
+            ->withPivot('hours')
+            ->withTimestamps();
+    }
 
     public function lessons(): BelongsToMany
     {

@@ -197,7 +197,7 @@ export default function LessonPalette({
             return unassignedCards;
         }
 
-        return unassignedCards.filter((card) => String(card.course_group_id) === String(filter));
+        return unassignedCards.filter((card) => String(card.academy_class_id) === String(filter));
     }, [unassignedCards, filter]);
 
     const handleDragStart = (event, card) => {

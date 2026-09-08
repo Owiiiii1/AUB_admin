@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lesson extends Model
 {
@@ -44,10 +45,8 @@ class Lesson extends Model
             ->orderBy('courses.name');
     }
 
-    public function groups(): BelongsToMany
+    public function classLessons(): HasMany
     {
-        return $this->belongsToMany(CourseGroup::class, 'course_group_lesson')
-            ->withPivot('teacher_id', 'hours')
-            ->withTimestamps();
+        return $this->hasMany(ClassLesson::class);
     }
 }

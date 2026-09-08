@@ -136,11 +136,11 @@ Web-auth: guard Laravel `web`, сессии, CSRF. **Стек API-токенов
 ## Подход к базе данных
 
 - Основное подключение: **MySQL** (имя БД в `.env`; значения здесь не документируются)
-- **37** файлов миграций; на production **все Ran**, batch **1–29**
-- Студенты: interim расширенная таблица `customers` (таблицы `students` нет). **DECIDED direction:** `students` / `parents` / `student_parent`; `customers` не долгосрочная модель
-- Родители: встроенные колонки на `customers` (таблицы `parents` нет)
-- Преподаватели: `teachers` **не** связаны с `users`
-- Зачисления: `course_group_customer` unique `customer_id` концептуально соответствует **DECIDED** правилу «один активный `Class`». Терминология `course_groups` vs `Class` ещё нормализовать
+- **38** файлов миграций, включая Core Data Model (`2026_09_08_200000`)
+- Студенты: таблица `students` (не `customers`). **DECIDED:** `students` / `parents` / `student_parent`; `customers` — kit leftover
+- Родители: `parents` + `student_parent` (`AcademyParent`)
+- Преподаватели: `teachers.user_id` nullable unique; login не реализован
+- Зачисления: unique `academy_class_student.student_id` = один активный `Class` (`AcademyClass`)
 - Legacy-таблицы kit (`orders`, `services`, `staff`, `order_staff`) есть; маршруты удалены
 - Spatie-подобные таблицы прав удалялись при создании AUB `roles` (2026-07-06). Текущее наличие пустых leftover-таблиц в MySQL не перепроверялось
 

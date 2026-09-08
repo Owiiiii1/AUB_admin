@@ -67,7 +67,7 @@ Production `route:list`: **84** web routes. **Zero** Flutter API endpoints.
 | `customers` | Students (interim; target `students` / `parents`) | Partial |
 | `services` | Not courses — separate `courses` | Courses implemented |
 | `staff` directory | Not RBAC — separate `teachers` + `roles` | Teachers + RBAC implemented |
-| `orders` | Not enrollments — pivot `course_group_customer` | Partial |
+| `orders` | Not enrollments — pivot `academy_class_student` | Partial |
 | `calendar` page | Weekly schedule at `/schedule-service` | Implemented |
 
 Kit `staff.role` is free text, **not** access control.

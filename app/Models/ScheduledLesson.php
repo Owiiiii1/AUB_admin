@@ -24,7 +24,7 @@ class ScheduledLesson extends Model
         'schedule_week_id',
         'academy_building_id',
         'academy_room_id',
-        'course_group_id',
+        'academy_class_id',
         'teacher_id',
         'lesson_id',
         'lesson_date',
@@ -61,9 +61,9 @@ class ScheduledLesson extends Model
         return $this->belongsTo(AcademyRoom::class, 'academy_room_id');
     }
 
-    public function courseGroup(): BelongsTo
+    public function academyClass(): BelongsTo
     {
-        return $this->belongsTo(CourseGroup::class);
+        return $this->belongsTo(AcademyClass::class);
     }
 
     public function teacher(): BelongsTo

@@ -697,7 +697,7 @@ function hasTimelineConflict(candidate, existing) {
     }
 
     return (
-        (candidate.course_group_id && existing.course_group_id && Number(candidate.course_group_id) === Number(existing.course_group_id))
+        (candidate.academy_class_id && existing.academy_class_id && Number(candidate.academy_class_id) === Number(existing.academy_class_id))
         || (candidate.teacher_id && existing.teacher_id && Number(candidate.teacher_id) === Number(existing.teacher_id))
         || (candidate.academy_room_id && existing.academy_room_id && Number(candidate.academy_room_id) === Number(existing.academy_room_id))
     );
@@ -729,7 +729,7 @@ function resolveNextFreeStart({
             lesson_date: lessonDate,
             starts_at: minutesToTime(cursor),
             ends_at: minutesToTime(candidateEnd),
-            course_group_id: courseGroupId,
+            academy_class_id: courseGroupId,
             teacher_id: teacherId,
             academy_room_id: roomId,
         };
@@ -985,7 +985,7 @@ function appendAiPromptHistory(prompt) {
 function resolveDefaultPaletteFilter(cards) {
     for (const card of cards) {
         if (Number(card.remaining_hours) > 0) {
-            return String(card.course_group_id);
+            return String(card.academy_class_id);
         }
     }
 
@@ -1179,7 +1179,7 @@ export default function WeeklyScheduleIndex({
         ends_at: '10:00',
         academy_building_id: buildings[0]?.id ?? '',
         academy_room_id: buildings[0]?.rooms?.[0]?.id ?? '',
-        course_group_id: '',
+        academy_class_id: '',
         teacher_id: '',
         lesson_id: '',
         title: '',
@@ -1208,10 +1208,10 @@ export default function WeeklyScheduleIndex({
     const lessonsByGroupDate = useMemo(() => {
         const map = {};
         scheduledLessons.forEach((lesson) => {
-            if (!lesson.course_group_id) {
+            if (!lesson.academy_class_id) {
                 return;
             }
-            const key = `${lesson.lesson_date}:${lesson.course_group_id}`;
+            const key = `${lesson.lesson_date}:${lesson.academy_class_id}`;
             if (!map[key]) {
                 map[key] = [];
             }
@@ -1231,7 +1231,7 @@ export default function WeeklyScheduleIndex({
         }
 
         return scheduledLessons.filter(
-            (lesson) => Number(lesson.course_group_id) === Number(selectedGroupId),
+            (lesson) => Number(lesson.academy_class_id) === Number(selectedGroupId),
         );
     }, [scheduledLessons, selectedGroupId]);
 
@@ -1427,7 +1427,7 @@ export default function WeeklyScheduleIndex({
         }
         openCreateModal({
             lesson_date: dayDate,
-            course_group_id: selectedGroupId,
+            academy_class_id: selectedGroupId,
         });
     };
 
@@ -1438,7 +1438,7 @@ export default function WeeklyScheduleIndex({
             ends_at: defaults.ends_at ?? '10:00',
             academy_building_id: defaults.academy_building_id ?? buildings[0]?.id ?? '',
             academy_room_id: defaults.academy_room_id ?? buildings[0]?.rooms?.[0]?.id ?? '',
-            course_group_id: defaults.course_group_id ?? '',
+            academy_class_id: defaults.academy_class_id ?? '',
             teacher_id: defaults.teacher_id ?? '',
             lesson_id: defaults.lesson_id ?? '',
             title: defaults.title ?? '',
@@ -1726,7 +1726,7 @@ export default function WeeklyScheduleIndex({
                 lessonDate: column.dayDate,
                 startsAt,
                 durationMinutes: defaultHours,
-                courseGroupId: card.course_group_id,
+                courseGroupId: card.academy_class_id,
                 teacherId: card.teacher_id,
                 roomId: column.roomId,
                 scheduledLessons,
@@ -1765,7 +1765,7 @@ export default function WeeklyScheduleIndex({
                 ends_at: minutesToTime(timeToMinutes(startsAt) + durationMinutes),
                 academy_building_id: column.buildingId,
                 academy_room_id: column.roomId,
-                course_group_id: scheduledLesson.course_group_id ?? '',
+                academy_class_id: scheduledLesson.academy_class_id ?? '',
                 teacher_id: scheduledLesson.teacher_id ?? '',
                 lesson_id: scheduledLesson.lesson_id ?? '',
                 title: scheduledLesson.title ?? '',
@@ -1798,7 +1798,7 @@ export default function WeeklyScheduleIndex({
             lessonDate: dropPlacement.lesson_date,
             startsAt: dropPlacement.starts_at,
             durationMinutes: hours,
-            courseGroupId: dropPlacement.card.course_group_id,
+            courseGroupId: dropPlacement.card.academy_class_id,
             teacherId: dropTeacherId,
             roomId: dropPlacement.academy_room_id,
             scheduledLessons,
@@ -1817,7 +1817,7 @@ export default function WeeklyScheduleIndex({
             ends_at: addMinutesToTime(resolvedStartAt, hours),
             academy_building_id: dropPlacement.academy_building_id,
             academy_room_id: dropPlacement.academy_room_id,
-            course_group_id: dropPlacement.card.course_group_id,
+            academy_class_id: dropPlacement.card.academy_class_id,
             teacher_id: dropTeacherId,
             lesson_id: dropPlacement.card.lesson_id,
             title: '',
@@ -1969,7 +1969,7 @@ export default function WeeklyScheduleIndex({
                             {canWrite && week.is_editable && (
                                 <ToolbarIconButton
                                     onClick={() => openCreateModal(
-                                        selectedGroupId ? { course_group_id: selectedGroupId } : {},
+                                        selectedGroupId ? { academy_class_id: selectedGroupId } : {},
                                     )}
                                     title={t.addLesson}
                                     variant="dark"
@@ -2367,7 +2367,7 @@ export default function WeeklyScheduleIndex({
                                     </select>
                                 </Field>
                                 <Field label={t.group}>
-                                    <select value={lessonForm.data.course_group_id} onChange={(e) => lessonForm.setData('course_group_id', e.target.value)} className={inputClass}>
+                                    <select value={lessonForm.data.academy_class_id} onChange={(e) => lessonForm.setData('academy_class_id', e.target.value)} className={inputClass}>
                                         <option value="">—</option>
                                         {groups.map((group) => (
                                             <option key={group.id} value={group.id}>{group.name} {group.course_name ? `(${group.course_name})` : ''}</option>

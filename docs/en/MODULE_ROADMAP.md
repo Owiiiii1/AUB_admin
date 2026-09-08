@@ -7,10 +7,10 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 ## Already in production (web core)
 
 - Laravel 13 + kit v0.4.0, session auth, RBAC Phase 1
-- Students on `customers` (**interim**; target direction `students` / `parents` / `student_parent`)
-- Parents embedded; teachers directory (no `user_id`)
-- Courses / groups; lessons catalog in Settings → Academy
-- Weekly schedule + hybrid AI (`scheduled_lessons` only)
+- Students on `students` + parents on `parents` / `student_parent`
+- Teachers directory (nullable `user_id`; no login)
+- Courses / `AcademyClass`; lessons catalog in Settings → Academy
+- `ClassLesson` + teacher assignments; weekly schedule on `academy_class_id`
 - CRUD activity log; settings tabs
 - Flutter repo exists; **no API**
 
@@ -22,7 +22,7 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 |---|-----------|--------|
 | 0 | Baseline / GitHub / documentation | In progress as living docs |
 | 1 | **Security Foundation** | **Required before wide mobile rollout.** Private storage for children’s files; field-level ACL; scoped teacher access; access/view audit; API authorization matrix; mobile token security; **2FA for admin staff**; consent/privacy records. **Not implemented.** |
-| 2 | **Core Data Model refactor** | Target `students`, `parents`, `student_parent`. `customers` is not the long-term model. One active `Class` per child. **Before** a stable mobile API. Migrations are a separate task, not now. |
+| 2 | **Core Data Model refactor** | **Done** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
 | 3 | **Identity model implementation** | One User = one actor type (`student` / `parent` / `teacher`). Two roles for one person = two accounts. Identity ≠ admin web RBAC. |
 | 4 | **API Foundation** | Routing, versioning, token auth (Sanctum = candidate), `/me`, resources, errors, rate limits, tests. Only after 2–3. |
 | 5 | **Flutter Foundation** | App shell, env, HTTPS client, auth against API — Store distribution model OPEN |

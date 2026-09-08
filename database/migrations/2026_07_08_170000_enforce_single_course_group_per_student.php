@@ -9,6 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         $duplicates = DB::table('course_group_customer')
             ->select('customer_id', DB::raw('MIN(id) as keep_id'))
             ->groupBy('customer_id')
@@ -41,6 +45,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         if ($this->hasIndex('course_group_customer_customer_id_unique')) {
             Schema::table('course_group_customer', function (Blueprint $table) {
                 $table->dropUnique(['customer_id']);

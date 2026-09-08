@@ -5,8 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class CourseGroup extends Model
+class AcademyClass extends Model
 {
     /**
      * @var list<string>
@@ -23,19 +24,20 @@ class CourseGroup extends Model
         return $this->belongsTo(Course::class);
     }
 
-    public function customers(): BelongsToMany
+    public function students(): BelongsToMany
     {
-        return $this->belongsToMany(Customer::class, 'course_group_customer')
-            ->withPivot('discipline')
+        return $this->belongsToMany(Student::class, 'academy_class_student')
             ->withTimestamps()
-            ->orderBy('customers.name');
+            ->orderBy('students.name');
     }
 
-    public function lessons(): BelongsToMany
+    public function classLessons(): HasMany
     {
-        return $this->belongsToMany(Lesson::class, 'course_group_lesson')
-            ->withPivot('teacher_id', 'hours')
-            ->withTimestamps()
-            ->orderBy('lessons.name');
+        return $this->hasMany(ClassLesson::class);
+    }
+
+    public function scheduledLessons(): HasMany
+    {
+        return $this->hasMany(ScheduledLesson::class);
     }
 }

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcademicYear;
+use App\Models\AcademyClass;
+use App\Models\ClassLesson;
 use App\Models\Course;
-use App\Models\CourseGroup;
-use App\Models\Customer;
 use App\Models\Lesson;
+use App\Models\Student;
 use App\Models\Teacher;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
@@ -30,12 +32,11 @@ class CoursesGroupsController extends Controller
         $courses = Course::query()
             ->where('discipline', $tab)
             ->with([
-                'groups' => fn ($query) => $query
+                'academyClasses' => fn ($query) => $query
                     ->orderBy('sort_order')
                     ->orderBy('name')
                     ->with([
-                        'customers' => fn ($customerQuery) => $customerQuery->orderBy('name'),
-                        'lessons' => fn ($lessonQuery) => $lessonQuery->orderBy('lessons.name'),
+                        'students' => fn ($studentQuery) => $studentQuery->orderBy('name'),
                     ]),
             ])
             ->orderBy('sort_order')
@@ -60,14 +61,14 @@ class CoursesGroupsController extends Controller
             ->map(fn (Lesson $lesson): array => $this->catalogLessonPayload($lesson))
             ->all();
 
-        $students = Customer::query()
+        $students = Student::query()
             ->orderBy('name')
             ->get(['id', 'name', 'first_name', 'last_name', 'email', 'student_photo_path'])
-            ->map(fn (Customer $customer): array => [
-                'id' => $customer->id,
-                'name' => $this->studentLabel($customer),
-                'email' => $customer->email,
-                'student_photo_path' => $customer->student_photo_path,
+            ->map(fn (Student $student): array => [
+                'id' => $student->id,
+                'name' => $this->studentLabel($student),
+                'email' => $student->email,
+                'student_photo_path' => $student->student_photo_path,
             ])
             ->all();
 
@@ -171,9 +172,9 @@ class CoursesGroupsController extends Controller
             'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
-        $sortOrder = (int) $course->groups()->max('sort_order') + 1;
+        $sortOrder = (int) $course->academyClasses()->max('sort_order') + 1;
 
-        $group = $course->groups()->create([
+        $group = $course->academyClasses()->create([
             'name' => $validated['name'],
             'color' => $validated['color'] ?? null,
             'sort_order' => $sortOrder,
@@ -182,7 +183,7 @@ class CoursesGroupsController extends Controller
         $this->activityLogger->log(
             $request,
             'created',
-            'course_group',
+            'academy_class',
             $group->id,
             $group->name,
             null,
@@ -198,17 +199,17 @@ class CoursesGroupsController extends Controller
         return $this->redirectBack($course->discipline, $this->resolveView($request->input('view')));
     }
 
-    public function updateGroup(Request $request, CourseGroup $courseGroup): RedirectResponse
+    public function updateGroup(Request $request, AcademyClass $academyClass): RedirectResponse
     {
-        $courseGroup->loadMissing('course');
+        $academyClass->loadMissing('course');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
-        $before = $courseGroup->only(['name', 'color']);
-        $courseGroup->update([
+        $before = $academyClass->only(['name', 'color']);
+        $academyClass->update([
             'name' => $validated['name'],
             'color' => $validated['color'] ?? null,
         ]);
@@ -216,153 +217,152 @@ class CoursesGroupsController extends Controller
         $this->activityLogger->logModelChange(
             $request,
             'updated',
-            'course_group',
-            $courseGroup->id,
-            $courseGroup->name,
+            'academy_class',
+            $academyClass->id,
+            $academyClass->name,
             null,
             $before,
-            $courseGroup->only(['name', 'color']),
+            $academyClass->only(['name', 'color']),
         );
 
         return $this->redirectBack(
-            $courseGroup->course->discipline,
+            $academyClass->course->discipline,
             $this->resolveView($request->input('view')),
         );
     }
 
-    public function destroyGroup(Request $request, CourseGroup $courseGroup): RedirectResponse
+    public function destroyGroup(Request $request, AcademyClass $academyClass): RedirectResponse
     {
-        $courseGroup->loadMissing('course');
-        $discipline = $courseGroup->course->discipline;
-        $groupId = $courseGroup->id;
-        $label = $courseGroup->name;
+        $academyClass->loadMissing('course');
+        $discipline = $academyClass->course->discipline;
+        $groupId = $academyClass->id;
+        $label = $academyClass->name;
 
         $this->activityLogger->logModelChange(
             $request,
             'deleted',
-            'course_group',
+            'academy_class',
             $groupId,
             $label,
             null,
             [
-                'course_id' => $courseGroup->course_id,
-                'course_name' => $courseGroup->course->name,
-                'name' => $courseGroup->name,
+                'course_id' => $academyClass->course_id,
+                'course_name' => $academyClass->course->name,
+                'name' => $academyClass->name,
             ],
         );
 
-        $courseGroup->delete();
+        $academyClass->delete();
 
         return $this->redirectBack($discipline, $this->resolveView($request->input('view')));
     }
 
-    public function attachStudent(Request $request, CourseGroup $courseGroup): RedirectResponse
+    public function attachStudent(Request $request, AcademyClass $academyClass): RedirectResponse
     {
         $validated = $request->validate([
-            'customer_ids' => ['required', 'array', 'min:1'],
-            'customer_ids.*' => ['required', 'integer', 'exists:customers,id'],
+            'student_ids' => ['required', 'array', 'min:1'],
+            'student_ids.*' => ['required', 'integer', 'exists:students,id'],
             'confirm_move' => ['sometimes', 'boolean'],
         ]);
 
-        $courseGroup->loadMissing('course');
+        $academyClass->loadMissing('course');
 
-        $requestedIds = array_values(array_unique(array_map('intval', $validated['customer_ids'])));
-        $existingIds = $courseGroup->customers()
-            ->whereIn('customers.id', $requestedIds)
-            ->pluck('customers.id')
+        $requestedIds = array_values(array_unique(array_map('intval', $validated['student_ids'])));
+        $existingIds = $academyClass->students()
+            ->whereIn('students.id', $requestedIds)
+            ->pluck('students.id')
             ->map(static fn ($id): int => (int) $id)
             ->all();
         $newIds = array_values(array_diff($requestedIds, $existingIds));
 
         if ($newIds === []) {
-            return $this->redirectBack($courseGroup->course->discipline, 'students')->withErrors([
-                'customer_ids' => 'Selected students are already in this group.',
+            return $this->redirectBack($academyClass->course->discipline, 'students')->withErrors([
+                'student_ids' => 'Selected students are already in this group.',
             ]);
         }
 
-        $discipline = $courseGroup->course->discipline;
+        $discipline = $academyClass->course->discipline;
         $confirmMove = (bool) ($validated['confirm_move'] ?? false);
-        $occupiedIds = $this->findStudentsInOtherGroups($courseGroup->id, $newIds);
+        $occupiedIds = $this->findStudentsInOtherGroups($academyClass->id, $newIds);
 
         if ($occupiedIds !== [] && ! $confirmMove) {
             return $this->redirectBack($discipline, 'students')->withErrors([
-                'customer_ids' => 'Some selected students are already assigned to another group.',
+                'student_ids' => 'Some selected students are already assigned to another group.',
             ]);
         }
 
         $this->detachStudentsFromOtherGroups(
             $request,
-            $courseGroup->id,
+            $academyClass->id,
             $newIds,
         );
 
-        $attachData = collect($newIds)
-            ->mapWithKeys(static fn (int $id): array => [$id => ['discipline' => $discipline]])
-            ->all();
+        $academyClass->students()->attach($newIds);
 
-        $courseGroup->customers()->attach($attachData);
+        $students = Student::query()->whereIn('id', $newIds)->get();
 
-        $customers = Customer::query()->whereIn('id', $newIds)->get();
-
-        foreach ($customers as $customer) {
+        foreach ($students as $student) {
             $this->activityLogger->log(
                 $request,
                 'created',
-                'course_group_student',
-                $courseGroup->id,
-                $this->studentLabel($customer),
-                $customer->id,
+                'academy_class_student',
+                $academyClass->id,
+                $this->studentLabel($student),
+                null,
                 [
                     'attributes' => [
-                        'group_id' => $courseGroup->id,
-                        'group_name' => $courseGroup->name,
-                        'course_name' => $courseGroup->course->name,
-                        'customer_id' => $customer->id,
-                        'customer_name' => $this->studentLabel($customer),
+                        'group_id' => $academyClass->id,
+                        'group_name' => $academyClass->name,
+                        'course_name' => $academyClass->course->name,
+                        'student_id' => $student->id,
+                        'student_name' => $this->studentLabel($student),
                     ],
                 ],
+                $student->id,
             );
         }
 
         return $this->redirectBack($discipline, 'students');
     }
 
-    public function detachStudent(Request $request, CourseGroup $courseGroup, Customer $customer): RedirectResponse
+    public function detachStudent(Request $request, AcademyClass $academyClass, Student $student): RedirectResponse
     {
-        $courseGroup->loadMissing('course');
+        $academyClass->loadMissing('course');
 
-        if (! $courseGroup->customers()->where('customers.id', $customer->id)->exists()) {
-            return $this->redirectBack($courseGroup->course->discipline, 'students');
+        if (! $academyClass->students()->where('students.id', $student->id)->exists()) {
+            return $this->redirectBack($academyClass->course->discipline, 'students');
         }
 
-        $courseGroup->customers()->detach($customer->id);
+        $academyClass->students()->detach($student->id);
 
         $this->activityLogger->log(
             $request,
             'deleted',
-            'course_group_student',
-            $courseGroup->id,
-            $this->studentLabel($customer),
-            $customer->id,
+            'academy_class_student',
+            $academyClass->id,
+            $this->studentLabel($student),
+            null,
             [
                 'attributes' => [
-                    'group_id' => $courseGroup->id,
-                    'group_name' => $courseGroup->name,
-                    'course_name' => $courseGroup->course->name,
-                    'customer_id' => $customer->id,
-                    'customer_name' => $this->studentLabel($customer),
+                    'group_id' => $academyClass->id,
+                    'group_name' => $academyClass->name,
+                    'course_name' => $academyClass->course->name,
+                    'student_id' => $student->id,
+                    'student_name' => $this->studentLabel($student),
                 ],
             ],
+            $student->id,
         );
 
-        return $this->redirectBack($courseGroup->course->discipline, 'students');
+        return $this->redirectBack($academyClass->course->discipline, 'students');
     }
 
-    public function attachLesson(Request $request, CourseGroup $courseGroup): RedirectResponse
+    public function attachLesson(Request $request, AcademyClass $academyClass): RedirectResponse
     {
-        $courseGroup->loadMissing('course');
-        $discipline = $courseGroup->course->discipline;
+        $academyClass->loadMissing('course');
+        $discipline = $academyClass->course->discipline;
         $lessonDiscipline = $this->lessonDisciplineFor($discipline);
+        $year = $this->currentAcademicYear();
 
         $validated = $request->validate([
             'items' => ['required', 'array', 'min:1'],
@@ -386,9 +386,11 @@ class CoursesGroupsController extends Controller
             ->all();
 
         $lessonIds = array_column($items, 'lesson_id');
-        $existingIds = $courseGroup->lessons()
-            ->whereIn('lessons.id', $lessonIds)
-            ->pluck('lessons.id')
+        $existingIds = ClassLesson::query()
+            ->where('academy_class_id', $academyClass->id)
+            ->where('academic_year_id', $year->id)
+            ->whereIn('lesson_id', $lessonIds)
+            ->pluck('lesson_id')
             ->map(static fn ($id): int => (int) $id)
             ->all();
         $newItems = array_values(array_filter(
@@ -402,10 +404,8 @@ class CoursesGroupsController extends Controller
             ]);
         }
 
-        $newLessonIds = array_column($newItems, 'lesson_id');
-
         $lessons = Lesson::query()
-            ->whereIn('id', $newLessonIds)
+            ->whereIn('id', array_column($newItems, 'lesson_id'))
             ->with(['teachers:id'])
             ->get()
             ->keyBy('id');
@@ -430,25 +430,28 @@ class CoursesGroupsController extends Controller
                 continue;
             }
 
-            $courseGroup->lessons()->attach($item['lesson_id'], [
-                'teacher_id' => $item['teacher_id'],
+            $classLesson = ClassLesson::query()->create([
+                'academic_year_id' => $year->id,
+                'academy_class_id' => $academyClass->id,
+                'lesson_id' => $lesson->id,
                 'hours' => $item['hours'],
             ]);
+            $classLesson->teachers()->attach($item['teacher_id'], ['hours' => $item['hours']]);
 
             $teacherName = Teacher::query()->whereKey($item['teacher_id'])->value('name');
 
             $this->activityLogger->log(
                 $request,
                 'created',
-                'course_group_lesson',
-                $courseGroup->id,
+                'class_lesson',
+                $classLesson->id,
                 $lesson->name,
-                $lesson->id,
+                null,
                 [
                     'attributes' => [
-                        'group_id' => $courseGroup->id,
-                        'group_name' => $courseGroup->name,
-                        'course_name' => $courseGroup->course->name,
+                        'group_id' => $academyClass->id,
+                        'group_name' => $academyClass->name,
+                        'course_name' => $academyClass->course->name,
                         'lesson_id' => $lesson->id,
                         'lesson_name' => $lesson->name,
                         'teacher_id' => $item['teacher_id'],
@@ -462,58 +465,63 @@ class CoursesGroupsController extends Controller
         return $this->redirectBack($discipline, 'lessons');
     }
 
-    public function detachLesson(Request $request, CourseGroup $courseGroup, Lesson $lesson): RedirectResponse
+    public function detachLesson(Request $request, AcademyClass $academyClass, Lesson $lesson): RedirectResponse
     {
-        $courseGroup->loadMissing('course');
+        $academyClass->loadMissing('course');
+        $year = $this->currentAcademicYear();
 
-        if (! $courseGroup->lessons()->where('lessons.id', $lesson->id)->exists()) {
-            return $this->redirectBack($courseGroup->course->discipline, 'lessons');
-        }
-
-        $assignment = DB::table('course_group_lesson')
-            ->where('course_group_id', $courseGroup->id)
+        $classLesson = ClassLesson::query()
+            ->where('academy_class_id', $academyClass->id)
+            ->where('academic_year_id', $year->id)
             ->where('lesson_id', $lesson->id)
+            ->with('teachers')
             ->first();
 
-        $courseGroup->lessons()->detach($lesson->id);
+        if (! $classLesson) {
+            return $this->redirectBack($academyClass->course->discipline, 'lessons');
+        }
 
-        $teacherName = $assignment
-            ? Teacher::query()->whereKey($assignment->teacher_id)->value('name')
-            : null;
+        $firstTeacher = $classLesson->teachers->first();
+        $classLesson->delete();
 
         $this->activityLogger->log(
             $request,
             'deleted',
-            'course_group_lesson',
-            $courseGroup->id,
+            'class_lesson',
+            $academyClass->id,
             $lesson->name,
-            $lesson->id,
+            null,
             [
                 'attributes' => [
-                    'group_id' => $courseGroup->id,
-                    'group_name' => $courseGroup->name,
-                    'course_name' => $courseGroup->course->name,
+                    'group_id' => $academyClass->id,
+                    'group_name' => $academyClass->name,
+                    'course_name' => $academyClass->course->name,
                     'lesson_id' => $lesson->id,
                     'lesson_name' => $lesson->name,
-                    'teacher_id' => $assignment?->teacher_id,
-                    'teacher_name' => $teacherName,
-                    'hours' => $assignment?->hours,
+                    'teacher_id' => $firstTeacher?->id,
+                    'teacher_name' => $firstTeacher?->name,
+                    'hours' => $classLesson->hours,
                 ],
             ],
         );
 
-        return $this->redirectBack($courseGroup->course->discipline, 'lessons');
+        return $this->redirectBack($academyClass->course->discipline, 'lessons');
     }
 
-    public function updateGroupLesson(Request $request, CourseGroup $courseGroup, Lesson $lesson): RedirectResponse
+    public function updateGroupLesson(Request $request, AcademyClass $academyClass, Lesson $lesson): RedirectResponse
     {
-        $courseGroup->loadMissing('course');
-        $discipline = $courseGroup->course->discipline;
+        $academyClass->loadMissing('course');
+        $discipline = $academyClass->course->discipline;
+        $year = $this->currentAcademicYear();
 
-        if (! DB::table('course_group_lesson')
-            ->where('course_group_id', $courseGroup->id)
+        $classLesson = ClassLesson::query()
+            ->where('academy_class_id', $academyClass->id)
+            ->where('academic_year_id', $year->id)
             ->where('lesson_id', $lesson->id)
-            ->exists()) {
+            ->with('teachers')
+            ->first();
+
+        if (! $classLesson) {
             return $this->redirectBack($discipline, 'lessons');
         }
 
@@ -547,34 +555,25 @@ class CoursesGroupsController extends Controller
             }
         }
 
-        $existingRows = DB::table('course_group_lesson')
-            ->where('course_group_id', $courseGroup->id)
-            ->where('lesson_id', $lesson->id)
-            ->get()
-            ->keyBy('teacher_id');
+        $existingRows = $classLesson->teachers->map(static fn (Teacher $teacher): array => [
+            'teacher_id' => (int) $teacher->id,
+            'hours' => (int) ($teacher->pivot->hours ?? $classLesson->hours),
+        ]);
 
-        DB::transaction(function () use ($courseGroup, $lesson, $assignments, $validated): void {
+        DB::transaction(function () use ($classLesson, $lesson, $assignments, $validated): void {
             $lesson->update([
                 'duration_minutes' => (int) $validated['duration_minutes'],
             ]);
 
-            DB::table('course_group_lesson')
-                ->where('course_group_id', $courseGroup->id)
-                ->where('lesson_id', $lesson->id)
-                ->delete();
+            $classLesson->update([
+                'hours' => (int) collect($assignments)->sum('hours'),
+            ]);
 
-            $now = now();
-
+            $sync = [];
             foreach ($assignments as $assignment) {
-                DB::table('course_group_lesson')->insert([
-                    'course_group_id' => $courseGroup->id,
-                    'lesson_id' => $lesson->id,
-                    'teacher_id' => $assignment['teacher_id'],
-                    'hours' => $assignment['hours'],
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
+                $sync[$assignment['teacher_id']] = ['hours' => $assignment['hours']];
             }
+            $classLesson->teachers()->sync($sync);
         });
 
         $teacherNames = Teacher::query()
@@ -584,19 +583,16 @@ class CoursesGroupsController extends Controller
         $this->activityLogger->log(
             $request,
             'updated',
-            'course_group_lesson',
-            $courseGroup->id,
+            'class_lesson',
+            $classLesson->id,
             $lesson->name,
-            $lesson->id,
+            null,
             [
-                'old' => $existingRows->map(static fn ($row): array => [
-                    'teacher_id' => (int) $row->teacher_id,
-                    'hours' => (int) $row->hours,
-                ])->values()->all(),
+                'old' => $existingRows->values()->all(),
                 'attributes' => [
-                    'group_id' => $courseGroup->id,
-                    'group_name' => $courseGroup->name,
-                    'course_name' => $courseGroup->course->name,
+                    'group_id' => $academyClass->id,
+                    'group_name' => $academyClass->name,
+                    'course_name' => $academyClass->course->name,
                     'lesson_id' => $lesson->id,
                     'lesson_name' => $lesson->name,
                     'duration_minutes' => (int) $validated['duration_minutes'],
@@ -610,6 +606,21 @@ class CoursesGroupsController extends Controller
         );
 
         return $this->redirectBack($discipline, 'lessons');
+    }
+
+    private function currentAcademicYear(): AcademicYear
+    {
+        $year = AcademicYear::current();
+        if ($year) {
+            return $year;
+        }
+
+        return AcademicYear::query()->create([
+            'name' => now()->year.'/'.(now()->year + 1),
+            'starts_at' => now()->startOfYear()->toDateString(),
+            'ends_at' => now()->endOfYear()->toDateString(),
+            'is_active' => true,
+        ]);
     }
 
     private function resolveTab(?string $tab): string
@@ -651,15 +662,15 @@ class CoursesGroupsController extends Controller
             'discipline' => $course->discipline,
             'study_starts_at' => $course->studyStartsAt(),
             'study_ends_at' => $course->studyEndsAt(),
-            'groups' => $course->groups->map(fn (CourseGroup $group): array => [
+            'groups' => $course->academyClasses->map(fn (AcademyClass $group): array => [
                 'id' => $group->id,
                 'name' => $group->name,
                 'color' => $group->color,
-                'students' => $group->customers->map(fn (Customer $customer): array => [
-                    'id' => $customer->id,
-                    'name' => $this->studentLabel($customer),
-                    'email' => $customer->email,
-                    'student_photo_path' => $customer->student_photo_path,
+                'students' => $group->students->map(fn (Student $student): array => [
+                    'id' => $student->id,
+                    'name' => $this->studentLabel($student),
+                    'email' => $student->email,
+                    'student_photo_path' => $student->student_photo_path,
                 ])->all(),
                 'lessons' => $this->serializeGroupLessons($group->id, $teacherNames),
             ])->all(),
@@ -672,18 +683,20 @@ class CoursesGroupsController extends Controller
      */
     private function serializeGroupLessons(int $groupId, array $teacherNames): array
     {
-        $rows = DB::table('course_group_lesson as cgl')
-            ->join('lessons as l', 'l.id', '=', 'cgl.lesson_id')
-            ->where('cgl.course_group_id', $groupId)
+        $rows = DB::table('class_lesson_teacher as clt')
+            ->join('class_lessons as cl', 'cl.id', '=', 'clt.class_lesson_id')
+            ->join('lessons as l', 'l.id', '=', 'cl.lesson_id')
+            ->where('cl.academy_class_id', $groupId)
+            ->where('cl.academic_year_id', $this->currentAcademicYear()->id)
             ->orderBy('l.name')
-            ->orderBy('cgl.teacher_id')
+            ->orderBy('clt.teacher_id')
             ->get([
                 'l.id as lesson_id',
                 'l.name',
                 'l.description',
                 'l.duration_minutes',
-                'cgl.teacher_id',
-                'cgl.hours',
+                'clt.teacher_id',
+                'clt.hours',
             ]);
 
         return $rows
@@ -730,19 +743,19 @@ class CoursesGroupsController extends Controller
         ];
     }
 
-    private function studentLabel(Customer $customer): string
+    private function studentLabel(Student $student): string
     {
-        $name = trim((string) $customer->name);
+        $name = trim((string) $student->name);
         if ($name !== '') {
             return $name;
         }
 
         $fullName = trim(implode(' ', array_filter([
-            $customer->first_name,
-            $customer->last_name,
+            $student->first_name,
+            $student->last_name,
         ])));
 
-        return $fullName !== '' ? $fullName : ('Student #'.$customer->id);
+        return $fullName !== '' ? $fullName : ('Student #'.$student->id);
     }
 
     /**
@@ -750,11 +763,11 @@ class CoursesGroupsController extends Controller
      */
     private function studentAssignmentsPayload(): array
     {
-        return DB::table('course_group_customer as cgc')
-            ->join('course_groups as cg', 'cg.id', '=', 'cgc.course_group_id')
+        return DB::table('academy_class_student as cgc')
+            ->join('academy_classes as cg', 'cg.id', '=', 'cgc.academy_class_id')
             ->join('courses as c', 'c.id', '=', 'cg.course_id')
             ->select([
-                'cgc.customer_id',
+                'cgc.student_id',
                 'cg.id as group_id',
                 'cg.name as group_name',
                 'c.name as course_name',
@@ -762,7 +775,7 @@ class CoursesGroupsController extends Controller
             ])
             ->get()
             ->mapWithKeys(static fn ($row): array => [
-                (int) $row->customer_id => [
+                (int) $row->student_id => [
                     'group_id' => (int) $row->group_id,
                     'group_name' => (string) $row->group_name,
                     'course_name' => (string) $row->course_name,
@@ -777,11 +790,11 @@ class CoursesGroupsController extends Controller
      */
     private function lessonAssignmentsPayload(): array
     {
-        return DB::table('course_group_lesson as cgl')
-            ->join('course_groups as cg', 'cg.id', '=', 'cgl.course_group_id')
+        return DB::table('class_lessons as cl')
+            ->join('academy_classes as cg', 'cg.id', '=', 'cl.academy_class_id')
             ->join('courses as c', 'c.id', '=', 'cg.course_id')
             ->select([
-                'cgl.lesson_id',
+                'cl.lesson_id',
                 'cg.id as group_id',
                 'cg.name as group_name',
                 'c.name as course_name',
@@ -801,19 +814,19 @@ class CoursesGroupsController extends Controller
     }
 
     /**
-     * @param  list<int>  $customerIds
+     * @param  list<int>  $studentIds
      * @return list<int>
      */
-    private function findStudentsInOtherGroups(int $targetGroupId, array $customerIds): array
+    private function findStudentsInOtherGroups(int $targetGroupId, array $studentIds): array
     {
-        if ($customerIds === []) {
+        if ($studentIds === []) {
             return [];
         }
 
-        return DB::table('course_group_customer')
-            ->where('course_group_id', '!=', $targetGroupId)
-            ->whereIn('customer_id', $customerIds)
-            ->pluck('customer_id')
+        return DB::table('academy_class_student')
+            ->where('academy_class_id', '!=', $targetGroupId)
+            ->whereIn('student_id', $studentIds)
+            ->pluck('student_id')
             ->map(static fn ($id): int => (int) $id)
             ->unique()
             ->values()
@@ -821,26 +834,26 @@ class CoursesGroupsController extends Controller
     }
 
     /**
-     * @param  list<int>  $customerIds
+     * @param  list<int>  $studentIds
      */
     private function detachStudentsFromOtherGroups(
         Request $request,
         int $targetGroupId,
-        array $customerIds,
+        array $studentIds,
     ): void {
-        if ($customerIds === []) {
+        if ($studentIds === []) {
             return;
         }
 
-        $assignments = DB::table('course_group_customer')
-            ->join('course_groups', 'course_groups.id', '=', 'course_group_customer.course_group_id')
-            ->join('courses', 'courses.id', '=', 'course_groups.course_id')
-            ->where('course_group_customer.course_group_id', '!=', $targetGroupId)
-            ->whereIn('course_group_customer.customer_id', $customerIds)
+        $assignments = DB::table('academy_class_student')
+            ->join('academy_classes', 'academy_classes.id', '=', 'academy_class_student.academy_class_id')
+            ->join('courses', 'courses.id', '=', 'academy_classes.course_id')
+            ->where('academy_class_student.academy_class_id', '!=', $targetGroupId)
+            ->whereIn('academy_class_student.student_id', $studentIds)
             ->select([
-                'course_group_customer.customer_id',
-                'course_group_customer.course_group_id',
-                'course_groups.name as group_name',
+                'academy_class_student.student_id',
+                'academy_class_student.academy_class_id',
+                'academy_classes.name as group_name',
                 'courses.name as course_name',
             ])
             ->get();
@@ -849,39 +862,40 @@ class CoursesGroupsController extends Controller
             return;
         }
 
-        $customers = Customer::query()
-            ->whereIn('id', $assignments->pluck('customer_id')->unique()->all())
+        $students = Student::query()
+            ->whereIn('id', $assignments->pluck('student_id')->unique()->all())
             ->get()
             ->keyBy('id');
 
         foreach ($assignments as $assignment) {
-            DB::table('course_group_customer')
-                ->where('course_group_id', $assignment->course_group_id)
-                ->where('customer_id', $assignment->customer_id)
+            DB::table('academy_class_student')
+                ->where('academy_class_id', $assignment->academy_class_id)
+                ->where('student_id', $assignment->student_id)
                 ->delete();
 
-            $customer = $customers->get($assignment->customer_id);
-            if (! $customer) {
+            $student = $students->get($assignment->student_id);
+            if (! $student) {
                 continue;
             }
 
             $this->activityLogger->log(
                 $request,
                 'deleted',
-                'course_group_student',
-                (int) $assignment->course_group_id,
-                $this->studentLabel($customer),
-                $customer->id,
+                'academy_class_student',
+                (int) $assignment->academy_class_id,
+                $this->studentLabel($student),
+                null,
                 [
                     'attributes' => [
-                        'group_id' => (int) $assignment->course_group_id,
+                        'group_id' => (int) $assignment->academy_class_id,
                         'group_name' => $assignment->group_name,
                         'course_name' => $assignment->course_name,
-                        'customer_id' => $customer->id,
-                        'customer_name' => $this->studentLabel($customer),
+                        'student_id' => $student->id,
+                        'student_name' => $this->studentLabel($student),
                         'moved_to_group_id' => $targetGroupId,
                     ],
                 ],
+                $student->id,
             );
         }
     }

@@ -67,7 +67,7 @@ Production `route:list`: **84** web-маршрута. **Ноль** API-endpoint�
 | `customers` | Студенты (interim; целевое `students` / `parents`) | Частично |
 | `services` | Не курсы — отдельная `courses` | Курсы реализованы |
 | справочник `staff` | Не RBAC — отдельные `teachers` + `roles` | Teachers + RBAC реализованы |
-| `orders` | Не зачисления — pivot `course_group_customer` | Частично |
+| `orders` | Не зачисления — pivot `academy_class_student` | Частично |
 | страница `calendar` | Недельное расписание `/schedule-service` | Реализовано |
 
 Поле kit `staff.role` — свободный текст, **не** контроль доступа.

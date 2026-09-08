@@ -2,25 +2,25 @@
 
 Что построено: [CURRENT_STATE.md](CURRENT_STATE.md). Полный список вопросов: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Статус (2026-09-08):** Web-ядро в работе. Репозиторий Flutter есть. **HTTPS API нет.** Core Data Model refactor должен предшествовать стабильному API-контракту.
+**Статус (2026-09-08):** Web-ядро в работе. Репозиторий Flutter есть. **HTTPS API нет.** Core Data Model refactor **сделан**. Следующий этап — Identity.
 
-**DECIDED:** ядро `AUB_admin`; Flutter `AUB_app`; только HTTPS API; раздельные GitHub-репо; параллельный backend/Flutter; один активный `Class`; один User = один actor type; `customers` — interim.
+**DECIDED:** ядро `AUB_admin`; Flutter `AUB_app`; только HTTPS API; раздельные GitHub-репо; параллельный backend/Flutter; один активный `Class`; один User = один actor type; `customers` — kit leftover.
 
 ## Ближайший технический трек
 
 1. Честные docs (этот поток).
 2. **Security Foundation** до широкого mobile (private storage, field-level ACL, scoped teachers, view audit, матрица API-авторизации, token security, **2FA админов**, consent records) — отдельные задачи.
-3. **Core Data Model refactor** (`students` / `parents` / `student_parent`; один `Class`) — **до** стабильного API. Миграции не в этой задаче.
-4. **Identity model implementation** (один User = один actor type; identity ≠ web RBAC).
-5. **API Foundation** (Sanctum = кандидат, не зафиксирован) — только после п. 3–4.
+3. **Core Data Model refactor** — **сделан** (`students` / `parents` / `AcademyClass` / `ClassLesson`).
+4. **Identity model implementation** (один User = один actor type; identity ≠ web RBAC). **Следующий этап.**
+5. **API Foundation** (Sanctum = кандидат, не зафиксирован) — только после Identity.
 6. **Flutter Foundation**, когда появится контракт (дистрибуция в Store **OPEN**: одно приложение vs flavors).
 
-Flutter **можно** развивать параллельно (оболочка, навигация). Реальные функции академии ждут API. Стабильный контракт не публиковать поверх `customers`.
+Flutter **можно** развивать параллельно (оболочка, навигация). Реальные функции академии ждут API. Стабильный контракт не публиковать до Identity.
 
 ## Зафиксированные продуктовые правила (не OPEN)
 
-- Ребёнок: максимум один активный основной `Class`; плюс отдельно дополнительные группы ≠ `Class`.
-- Unique `customer_id` на `course_group_customer` концептуально соответствует «один основной класс»; терминологию ещё нормализовать.
+- Ребёнок: максимум один активный основной `Class` (`unique academy_class_student.student_id`); плюс отдельно дополнительные группы ≠ `Class`.
+- PHP-модель Class = `AcademyClass` / `academy_classes`.
 - Teacher Check-in = **daily presence**, не per lesson.
 - Текущих оценок нет. Итог: `StudentFinalResult` (Student + Class + Lesson + AcademicYear). PDF табеля формирует Administrator.
 
@@ -42,7 +42,7 @@ Flutter **можно** развивать параллельно (оболочк
 
 ## Уже сделано (web)
 
-Студенты на `customers` (interim), справочник преподавателей, курсы/группы, уроки в Settings, недельное расписание + гибридный ИИ, CRUD-логи, шаблон Flutter на GitHub.
+Студенты на `students` + родители на `parents`, `AcademyClass`, `ClassLesson`, справочник преподавателей (`user_id` foundation), курсы, уроки в Settings, недельное расписание на `academy_class_id` + гибридный ИИ, CRUD-логи, шаблон Flutter на GitHub.
 
 ### Опциональная полировка web-расписания
 
@@ -54,7 +54,7 @@ Flutter **можно** развивать параллельно (оболочк
 - Не править `vendor/`
 - Не раскрывать секреты
 - Не фиксировать Sanctum
-- Не реализовывать миграции `students` / `parents`
-- Не публиковать стабильный mobile API до Core Data Model refactor
+- Не реализовывать Identity / API / Flutter login в этой задаче
+- Не публиковать стабильный mobile API до Identity
 - Не реализовывать здесь check-in, табели или постановки
 - Не хардкодить возрастной порог consent

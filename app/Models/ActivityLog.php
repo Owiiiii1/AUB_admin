@@ -15,6 +15,7 @@ class ActivityLog extends Model
     protected $fillable = [
         'user_id',
         'customer_id',
+        'student_id',
         'action',
         'subject_type',
         'subject_id',
@@ -45,5 +46,10 @@ class ActivityLog extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(Student::class);
     }
 }

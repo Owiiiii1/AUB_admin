@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-07** (код + миграции + production `route:list` / `migrate:status`). Текст от 2026-07-20 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-08** (код + миграции Core Data Model). Текст от 2026-07-20 / 2026-09-07 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -46,9 +46,9 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | URI | Name | Примечания |
 |-----|------|------------|
 | `/dashboard` | `dashboard` | **Заглушка** Home |
-| `/customers`, `/customers/create`, `/customers/{id}` | `customers.*` | Студенты на `customers` |
-| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | Нет `user_id` |
-| `/courses-groups` | `courses-groups.*` | Курсы, группы, привязка студентов/уроков |
+| `/customers`, `/customers/create`, `/customers/{student}` | `customers.*` | Студенты (`Student`); URL пока `/customers` |
+| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | Nullable `teachers.user_id` (identity ещё нет) |
+| `/courses-groups` | `courses-groups.*` | Курсы + `AcademyClass`; URL пока `/courses-groups` |
 | `/lessons` | `lessons.*` | **GET index редиректит** на `/settings?tab=academy&academyTab=lessons` |
 | `/schedule-service` | `weekly-schedule.*` | Алиасы `/schedules`, `/weekly-schedule` |
 | `/documents` | `placeholder.documents` | Скоро будет |
@@ -83,15 +83,13 @@ Production-сборка есть **на сервере** (`public/build/manifest
 
 ## Миграции
 
-**37 файлов** в `database/migrations/`. Production: **все Ran**, batch **1–29**.
+**38 файлов** в `database/migrations/`. После `2026_09_08_200000_introduce_core_academy_data_model` — целевая academy-схема.
 
 Ядро Laravel: users (включая sessions / password_reset_tokens), cache, jobs.
 
-Kit: `customers`, `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
+Kit: `customers` (legacy, academy больше не использует), `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
 
-AUB: роли, seed меню, activity_logs, поля профиля студента, teachers, courses/groups, lessons/pivots, `can_write` / `can_delete`, недельное расписание, AI-прогоны, учебные окна, несколько преподавателей на группу+урок.
-
-Не путать «29 batch» с «29 файлами».
+AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id` nullable), courses, lessons/pivots, `can_write` / `can_delete`, недельное расписание (`academy_class_id`), AI-прогоны, учебные окна.
 
 ## Таблицы
 
@@ -101,17 +99,24 @@ AUB: роли, seed меню, activity_logs, поля профиля студе�
 |---------|------------|
 | `users` | Auth; `role_id`, `can_write`, `can_delete` |
 | `roles`, `role_menu_items` | RBAC |
-| `customers` | **Студенты** (interim-таблица kit) |
-| `teachers` | Преподаватели; **не** связаны с `users` |
-| `courses`, `course_groups` | Курсы/группы; учебное окно курса |
-| `course_group_customer` | Зачисление; unique `customer_id` (концептуально = **DECIDED** один активный `Class`; терминология vs `course_groups` ещё нормализовать) |
-| `lessons` | Каталог (`duration_minutes`) |
-| `lesson_teacher`, `lesson_course`, `course_group_lesson` | Связи уроков; несколько преподавателей |
+| `academic_years` | Учебный год; один `is_active` как текущий |
+| `students` | Профиль ученика (не `customers`) |
+| `parents` | Родители/опекуны; PHP-модель `AcademyParent` (`Parent` зарезервирован) |
+| `student_parent` | M2M + `relation_type` (`father` / `mother` / `guardian` / `other`) |
+| `teachers` | Преподаватели; nullable unique `user_id` (identity ещё не реализован) |
+| `courses` | Направление/курс; учебное окно |
+| `academy_classes` | Продуктовый `Class`; PHP-модель `AcademyClass` |
+| `academy_class_student` | Зачисление; **unique `student_id`** = максимум один активный Class |
+| `class_lessons` | Программа класса на AcademicYear; unique (year, class, lesson) |
+| `class_lesson_teacher` | Несколько преподавателей на ClassLesson (`hours` на pivot) |
+| `lessons` | Каталог дисциплин (`duration_minutes`) |
+| `lesson_teacher`, `lesson_course` | Каталог: кто может вести урок / связь с курсом |
 | `academy_buildings`, `academy_rooms` | Локации (колонок geofence lat/lng/radius нет) |
-| `schedule_weeks`, `scheduled_lessons` | Недельное расписание |
+| `schedule_weeks`, `scheduled_lessons` | Недельное расписание; `scheduled_lessons.academy_class_id` |
 | `schedule_ai_runs` | Журнал ИИ |
-| `activity_logs` | CRUD (+ login/logout) |
+| `activity_logs` | CRUD (+ login/logout); `student_id` + legacy `customer_id` |
 | `ai_provider_settings` | Encrypted ключи провайдеров |
+| `customers` | **Legacy kit**; academy-логика больше не использует |
 
 ### Legacy kit (нет активных маршрутов)
 
@@ -123,23 +128,26 @@ AUB: роли, seed меню, activity_logs, поля профиля студе�
 |-------|--------|
 | User | Реализована — role, `can_write`, `can_delete` |
 | Role, RoleMenuItem | Реализованы (фаза 1) |
-| Customer | **Профиль студента** (нет inverse `courseGroups()`) |
-| Teacher | Реализована; нет `user_id` |
-| Course, CourseGroup | Реализованы |
-| Lesson | Реализована |
+| Customer | Legacy kit — **не** academy Student |
+| Student | Профиль ученика |
+| AcademyParent | Родитель (`parents`) |
+| Teacher | Реализована; nullable `user_id` |
+| Course | Направление |
+| AcademyClass | Продуктовый `Class` |
+| AcademicYear | Учебный год |
+| ClassLesson | Урок класса на год |
+| Lesson | Каталог дисциплин |
 | AcademyBuilding, AcademyRoom | Реализованы |
-| ScheduleWeek, ScheduledLesson, ScheduleAiRun | Реализованы |
-| ActivityLog | Реализована |
+| ScheduleWeek, ScheduledLesson, ScheduleAiRun | Реализованы; `ScheduledLesson` → `AcademyClass` |
+| ActivityLog | Реализована (`student_id`) |
 | AiProviderSetting | Реализована (`api_key` encrypted) |
 | Service, Staff, Order | Legacy kit — не в маршрутах |
-
-Моделей `Student` и `Parent` нет. Поля отца/матери на `customers`.
 
 ## Контроллеры / сервисы
 
 | Область | Расположение |
 |---------|--------------|
-| Студенты | `CustomersController` |
+| Студенты | `StudentsController` (Inertia `Customers/*`, URL `/customers`) |
 | Преподаватели | `TeachersController` |
 | Курсы/группы | `CoursesGroupsController` |
 | Каталог уроков | `LessonsController` (UI через Settings) |
@@ -194,9 +202,9 @@ Layouts: `AdminLayout.jsx`, `AuthLayout.jsx`.
 
 `.env.example` — скелет Laravel `APP_LOCALE=en`; default в `config/app.php` — `it`.
 
-## Студенты (interim)
+## Студенты
 
-Реализовано на **`customers`**. **DECIDED direction:** целевые `students` / `parents` / `student_parent`; `customers` не долгосрочная модель. Миграции не в этой задаче. Файлы: `storage/app/public/students/{id}/documents` (диск public) — **не** `customers/`. Фото преподавателей: `teachers/{id}/photos`.
+Реализовано на **`students`** + **`parents`** + **`student_parent`**. UI Father/Mother сохранён; backend пишет `AcademyParent` + `relation_type`. URL `/customers` и Inertia `Customers/*` оставлены без redesign. Файлы: `storage/app/public/students/{id}/documents` (диск **public**) — security debt, private storage отдельным этапом. Фото преподавателей: `teachers/{id}/photos`.
 
 Field-level ограничений нет: роль с доступом к `customers.*` видит контакты родителей и срок медсправки.
 
@@ -206,11 +214,11 @@ Field-level ограничений нет: роль с доступом к `cust
 |------|--------|--------|
 | 0 | Основа admin kit | Завершена |
 | 1 | Роли и workplaces | Завершена (2026-07-06) |
-| 2 | Студенты | Частично — `customers` |
-| 2 | Родители | Частично — встроенные поля |
-| 2 | Преподаватели | Справочник готов; нет связи с user |
-| 2 | Курсы / группы | Готово |
-| 2 | Зачисления | Частично — только pivot |
+| 2 | Студенты | Готово — `students` |
+| 2 | Родители | Готово — `parents` / `student_parent` |
+| 2 | Преподаватели | Справочник готов; nullable `user_id`, login нет |
+| 2 | Курсы / Class | Готово — `Course` + `AcademyClass` |
+| 2 | Зачисления | Частично — unique один Class; workflow статусов OPEN |
 | 2 | Каталог уроков | Готово (Настройки → Академия) |
 | 3 | Недельное расписание | Готово + гибридный ИИ (2026-07-20) |
 | 3 | Загрузка файлов студента | Частично — public disk, нет модуля документов |
@@ -224,7 +232,8 @@ Field-level ограничений нет: роль с доступом к `cust
 
 ## Что НЕ реализовано
 
-- Отдельные таблицы `students` / `parents` / `student_parent` (направление DECIDED; код всё ещё `customers`)
+- Identity (login Student/Parent/Teacher, `actor_type`) — следующий этап
+- Полноценный UI AcademicYear
 - Полный workflow зачислений (статусы, переводы, история). Правило «один активный `Class`» — DECIDED
 - **Student Attendance** (уровень session) и **Teacher Check-in** (daily presence — семантика DECIDED, код нет)
 - Final Assessment / `StudentFinalResult` / `ReportCard` (ядро DECIDED; не реализовано; текущих оценок нет)

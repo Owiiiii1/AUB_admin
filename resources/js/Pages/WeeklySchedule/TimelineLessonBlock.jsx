@@ -44,7 +44,7 @@ function lessonPatchPayload(lesson, overrides = {}) {
         ends_at: overrides.ends_at ?? lesson.ends_at,
         academy_building_id: lesson.academy_building_id,
         academy_room_id: lesson.academy_room_id,
-        course_group_id: lesson.course_group_id ?? '',
+        academy_class_id: lesson.academy_class_id ?? '',
         teacher_id: overrides.teacher_id ?? lesson.teacher_id ?? '',
         lesson_id: lesson.lesson_id ?? '',
         title: lesson.title ?? '',

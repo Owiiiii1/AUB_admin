@@ -40,7 +40,7 @@ Locations and halls (seeded). Managed under Settings → Academy.
 
 ### `scheduled_lessons`
 
-Links week, building, room, `course_group_id`, `teacher_id`, `lesson_id`, date, start/end, notes, color, status.
+Links week, building, room, `academy_class_id`, `teacher_id`, `lesson_id`, date, start/end, notes, color, status.
 
 ### `schedule_ai_runs`
 
@@ -59,10 +59,10 @@ Courses are balanced across shifts by weekly hour load.
 
 ### Related entities
 
-- groups: `course_groups` (optional `color`)
+- classes: `academy_classes` (optional `color`; PHP `AcademyClass`)
 - subjects: `lessons` (`duration_minutes` optional)
 - teachers: `teachers`
-- assignments: `course_group_lesson` — **multiple teachers** per group+lesson allowed (`hours` per teacher); eligibility via `lesson_teacher`
+- assignments: `class_lessons` + `class_lesson_teacher` — **multiple teachers** per ClassLesson (`hours` per teacher); eligibility via `lesson_teacher`
 
 ## Grid: visual vs planning
 

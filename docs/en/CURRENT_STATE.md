@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-07** (code + migrations + production `route:list` / `migrate:status`). Previous text dated 2026-07-20 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-08** (code + Core Data Model migrations). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -46,9 +46,9 @@ Password reset routes (`password.request` etc.) **do not exist**.
 | URI | Name | Notes |
 |-----|------|-------|
 | `/dashboard` | `dashboard` | **Placeholder** home |
-| `/customers`, `/customers/create`, `/customers/{id}` | `customers.*` | Students on `customers` |
-| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | No `user_id` |
-| `/courses-groups` | `courses-groups.*` | Courses, groups, attach students/lessons |
+| `/customers`, `/customers/create`, `/customers/{student}` | `customers.*` | Students (`Student`); URL still `/customers` |
+| `/teachers`, `/teachers/create`, `/teachers/{id}` | `teachers.*` | Nullable `teachers.user_id` (identity not implemented) |
+| `/courses-groups` | `courses-groups.*` | Courses + `AcademyClass`; URL still `/courses-groups` |
 | `/lessons` | `lessons.*` | **GET index redirects** to `/settings?tab=academy&academyTab=lessons` |
 | `/schedule-service` | `weekly-schedule.*` | Aliases `/schedules`, `/weekly-schedule` |
 | `/documents` | `placeholder.documents` | Coming soon |
@@ -83,15 +83,13 @@ The extra routes versus the old “78” count include filesystem serve routes, 
 
 ## Migrations
 
-**37 files** in `database/migrations/`. Production: **all Ran**, batch numbers **1 through 29**.
+**38 files** in `database/migrations/`. After `2026_09_08_200000_introduce_core_academy_data_model` the target academy schema is in place.
 
 Laravel core: users (incl. sessions / password_reset_tokens), cache, jobs.
 
-Kit: `customers`, `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
+Kit: `customers` (legacy; academy no longer uses it), `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
 
-AUB: roles, menu seeds, activity_logs, student profile columns, teachers, courses/groups, lessons/pivots, `can_write` / `can_delete`, weekly schedule, AI runs, study windows, multi-teacher group lessons.
-
-Do not confuse “29 batches” with “29 files”.
+AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (nullable `user_id`), courses, lessons/pivots, `can_write` / `can_delete`, weekly schedule (`academy_class_id`), AI runs, study windows.
 
 ## Database tables
 
@@ -101,17 +99,24 @@ Do not confuse “29 batches” with “29 files”.
 |-------|---------|
 | `users` | Auth; `role_id`, `can_write`, `can_delete` |
 | `roles`, `role_menu_items` | RBAC |
-| `customers` | **Students** (interim kit table) |
-| `teachers` | Academy teachers; **not** linked to `users` |
-| `courses`, `course_groups` | Courses/groups; course study window |
-| `course_group_customer` | Enrollment pivot; unique `customer_id` (conceptually = **DECIDED** one active `Class`; terminology vs `course_groups` still needs normalization) |
-| `lessons` | Catalog (`duration_minutes`) |
-| `lesson_teacher`, `lesson_course`, `course_group_lesson` | Lesson relations; several teachers per group+lesson |
+| `academic_years` | Academic year; one `is_active` current year |
+| `students` | Student profile (not `customers`) |
+| `parents` | Parents/guardians; PHP model `AcademyParent` (`Parent` is reserved) |
+| `student_parent` | M2M + `relation_type` (`father` / `mother` / `guardian` / `other`) |
+| `teachers` | Teachers; nullable unique `user_id` (identity not implemented) |
+| `courses` | Direction/course; study window |
+| `academy_classes` | Product `Class`; PHP model `AcademyClass` |
+| `academy_class_student` | Enrollment; **unique `student_id`** = at most one active Class |
+| `class_lessons` | Class program for an AcademicYear; unique (year, class, lesson) |
+| `class_lesson_teacher` | Several teachers per ClassLesson (`hours` on pivot) |
+| `lessons` | Discipline catalog (`duration_minutes`) |
+| `lesson_teacher`, `lesson_course` | Catalog eligibility / course link |
 | `academy_buildings`, `academy_rooms` | Locations (no geofence lat/lng/radius columns) |
-| `schedule_weeks`, `scheduled_lessons` | Weekly schedule |
+| `schedule_weeks`, `scheduled_lessons` | Weekly schedule; `scheduled_lessons.academy_class_id` |
 | `schedule_ai_runs` | AI run log |
-| `activity_logs` | CRUD (+ login/logout) audit |
+| `activity_logs` | CRUD (+ login/logout); `student_id` + legacy `customer_id` |
 | `ai_provider_settings` | Encrypted provider keys |
+| `customers` | **Kit legacy**; academy logic no longer uses it |
 
 ### Legacy kit (no active routes)
 
@@ -123,23 +128,26 @@ Do not confuse “29 batches” with “29 files”.
 |-------|--------|
 | User | Implemented — role, `can_write`, `can_delete` |
 | Role, RoleMenuItem | Implemented (Phase 1) |
-| Customer | **Student profile** (no `courseGroups()` inverse) |
-| Teacher | Implemented; no `user_id` |
-| Course, CourseGroup | Implemented |
-| Lesson | Implemented |
+| Customer | Kit legacy — **not** academy Student |
+| Student | Student profile |
+| AcademyParent | Parent (`parents`) |
+| Teacher | Implemented; nullable `user_id` |
+| Course | Direction |
+| AcademyClass | Product `Class` |
+| AcademicYear | Academic year |
+| ClassLesson | Class lesson for a year |
+| Lesson | Discipline catalog |
 | AcademyBuilding, AcademyRoom | Implemented |
-| ScheduleWeek, ScheduledLesson, ScheduleAiRun | Implemented |
-| ActivityLog | Implemented |
+| ScheduleWeek, ScheduledLesson, ScheduleAiRun | Implemented; `ScheduledLesson` → `AcademyClass` |
+| ActivityLog | Implemented (`student_id`) |
 | AiProviderSetting | Implemented (`api_key` encrypted) |
 | Service, Staff, Order | Kit legacy — not routed |
-
-No `Student` or `Parent` models. Father/mother fields live on `customers`.
 
 ## Controllers / services
 
 | Area | Location |
 |------|----------|
-| Students | `CustomersController` |
+| Students | `StudentsController` (Inertia `Customers/*`, URL `/customers`) |
 | Teachers | `TeachersController` |
 | Courses/groups | `CoursesGroupsController` |
 | Lessons catalog | `LessonsController` (UI via Settings) |
@@ -194,9 +202,9 @@ UI locales: **it** (default), en, ru, uk. Validation files exist for those local
 
 `.env.example` still has Laravel skeleton `APP_LOCALE=en`; `config/app.php` default is `it`.
 
-## Students (interim)
+## Students
 
-Implemented on **`customers`**. **DECIDED direction:** target `students` / `parents` / `student_parent`; `customers` is not the long-term model. No migrations in this task. Files: `storage/app/public/students/{id}/documents` (public disk) — **not** `customers/`. Teacher photos: `teachers/{id}/photos`.
+Implemented on **`students`** + **`parents`** + **`student_parent`**. Father/Mother UI sections remain; the backend writes `AcademyParent` + `relation_type`. `/customers` URLs and Inertia `Customers/*` are kept without a redesign. Files: `storage/app/public/students/{id}/documents` (**public** disk) — security debt; private storage is a separate stage. Teacher photos: `teachers/{id}/photos`.
 
 No field-level restriction: a role that can open `customers.*` sees parent contacts and medical-certificate expiry.
 
@@ -206,11 +214,11 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 |-------|--------|--------|
 | 0 | Admin kit foundation | Complete |
 | 1 | Staff roles & workplaces | Complete (2026-07-06) |
-| 2 | Students | Partial — `customers` |
-| 2 | Parents | Partial — embedded fields |
-| 2 | Teachers | Complete as directory; no user link |
-| 2 | Courses / groups | Complete |
-| 2 | Enrollments | Partial — pivot only |
+| 2 | Students | Complete — `students` |
+| 2 | Parents | Complete — `parents` / `student_parent` |
+| 2 | Teachers | Directory complete; nullable `user_id`, no login |
+| 2 | Courses / Class | Complete — `Course` + `AcademyClass` |
+| 2 | Enrollments | Partial — unique one Class; status workflow OPEN |
 | 2 | Lessons catalog | Complete (Settings → Academy) |
 | 3 | Weekly schedule | Complete + hybrid AI (2026-07-20) |
 | 3 | Student file uploads | Partial — public disk, no documents module |
@@ -224,7 +232,8 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 
 ## What is NOT implemented
 
-- Separate `students` / `parents` / `student_parent` tables (direction DECIDED; code still uses `customers`)
+- Identity (Student/Parent/Teacher login, `actor_type`) — next stage
+- Full AcademicYear admin UI
 - Full enrollment workflow (statuses, transfers, history). The “one active `Class`” rule is DECIDED
 - **Student Attendance** (session-level) and **Teacher Check-in** (daily presence — semantics DECIDED, no code)
 - Final Assessment / `StudentFinalResult` / `ReportCard` (core DECIDED; not implemented; no running grades)

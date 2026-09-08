@@ -11,7 +11,7 @@
 | **Admin / superadmin interface** | Полная web-CRM при `is_admin` |
 | **Канал доступа** | Как человек входит в ядро: web workplace, админка или Flutter |
 
-Parent и Student — **не** роли админки. Это планируемые **каналы Flutter (и возможно web)** к API `AUB_admin`. API ещё нет.
+Parent и Student — **доменные сущности** и планируемые **каналы Flutter**. Они **не** роли админки. Identity/login ещё не реализованы.
 
 **DECIDED:** Parent/Student не должны становиться RBAC-ролями админки только потому, что им нужен login. Authentication account type ≠ административный web RBAC. Administrative staff продолжает существующий web RBAC.
 

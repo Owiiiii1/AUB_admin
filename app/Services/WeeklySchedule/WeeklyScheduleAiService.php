@@ -618,7 +618,7 @@ PROMPT;
                     'ends_at' => (string) $placement['ends_at'],
                     'academy_building_id' => (int) $placement['academy_building_id'],
                     'academy_room_id' => (int) $placement['academy_room_id'],
-                    'course_group_id' => (int) $card['course_group_id'],
+                    'academy_class_id' => (int) $card['academy_class_id'],
                     'teacher_id' => (int) $card['teacher_id'],
                     'lesson_id' => (int) $card['lesson_id'],
                     'status' => ScheduledLesson::STATUS_SCHEDULED,
@@ -734,7 +734,7 @@ PROMPT;
             'rooms' => $rooms,
             'cards_to_place' => array_map(static fn (array $card): array => [
                 'key' => $card['key'],
-                'course_group_id' => $card['course_group_id'],
+                'academy_class_id' => $card['academy_class_id'],
                 'lesson_id' => $card['lesson_id'],
                 'teacher_id' => $card['teacher_id'],
                 'group_name' => $card['group_name'],
@@ -754,7 +754,7 @@ PROMPT;
                 'ends_at' => $lesson['ends_at'],
                 'academy_building_id' => $lesson['academy_building_id'],
                 'academy_room_id' => $lesson['academy_room_id'],
-                'course_group_id' => $lesson['course_group_id'],
+                'academy_class_id' => $lesson['academy_class_id'],
                 'teacher_id' => $lesson['teacher_id'],
                 'lesson_id' => $lesson['lesson_id'],
                 'group_name' => $lesson['group_name'],
@@ -862,7 +862,7 @@ PROMPT;
             ], $context['rooms'] ?? []),
             'cards_to_place' => array_map(static fn (array $card): array => [
                 'key' => $card['key'] ?? '',
-                'course_group_id' => $card['course_group_id'] ?? null,
+                'academy_class_id' => $card['academy_class_id'] ?? null,
                 'lesson_id' => $card['lesson_id'] ?? null,
                 'teacher_id' => $card['teacher_id'] ?? null,
                 'group_name' => $card['group_name'] ?? '',
@@ -880,7 +880,7 @@ PROMPT;
                 'ends_at' => $lesson['ends_at'] ?? '',
                 'academy_building_id' => $lesson['academy_building_id'] ?? null,
                 'academy_room_id' => $lesson['academy_room_id'] ?? null,
-                'course_group_id' => $lesson['course_group_id'] ?? null,
+                'academy_class_id' => $lesson['academy_class_id'] ?? null,
                 'teacher_id' => $lesson['teacher_id'] ?? null,
                 'lesson_id' => $lesson['lesson_id'] ?? null,
             ], $context['frozen_lessons'] ?? []),
@@ -913,7 +913,7 @@ PROMPT;
         $lessons = $week->scheduledLessons()
             ->with([
                 'teacher:id,name',
-                'courseGroup:id,name',
+                'academyClass:id,name',
                 'lesson:id,name',
             ])
             ->orderBy('lesson_date')
@@ -969,7 +969,7 @@ PROMPT;
 
         $cardsByGroupLesson = [];
         foreach ($groupLessonCards as $card) {
-            $groupLessonKey = $card['course_group_id'].'-'.$card['lesson_id'];
+            $groupLessonKey = $card['academy_class_id'].'-'.$card['lesson_id'];
             $cardsByGroupLesson[$groupLessonKey][] = [
                 'key' => $card['key'],
                 'teacher_id' => $card['teacher_id'],
@@ -988,7 +988,7 @@ PROMPT;
         foreach ($cardsByGroupLesson as $groupLessonKey => $cards) {
             [$groupId, $lessonId] = array_map('intval', explode('-', $groupLessonKey, 2));
             $scheduledByTeacher = $week->scheduledLessons()
-                ->where('course_group_id', $groupId)
+                ->where('academy_class_id', $groupId)
                 ->where('lesson_id', $lessonId)
                 ->get(['teacher_id', 'starts_at', 'ends_at'])
                 ->groupBy('teacher_id')
@@ -1228,7 +1228,7 @@ PROMPT;
                     'ends_at' => $this->conflicts->normalizeTime((string) ($placement['ends_at'] ?? '')),
                     'academy_building_id' => (int) ($placement['academy_building_id'] ?? 0),
                     'academy_room_id' => (int) ($placement['academy_room_id'] ?? 0),
-                    'course_group_id' => (int) $card['course_group_id'],
+                    'academy_class_id' => (int) $card['academy_class_id'],
                     'teacher_id' => (int) $card['teacher_id'],
                     'lesson_id' => (int) $card['lesson_id'],
                     'status' => ScheduledLesson::STATUS_SCHEDULED,
@@ -1297,7 +1297,7 @@ PROMPT;
 
         $sameDayLessons = $week->scheduledLessons()
             ->whereDate('lesson_date', $date)
-            ->get(['teacher_id', 'course_group_id', 'starts_at', 'ends_at']);
+            ->get(['teacher_id', 'academy_class_id', 'starts_at', 'ends_at']);
 
         foreach ($sameDayLessons as $existing) {
             $existingStart = $this->timeToMinutes(substr((string) $existing->starts_at, 0, 5));
@@ -1319,7 +1319,7 @@ PROMPT;
                 $warnings[] = 'Short break for teacher on '.$date;
             }
 
-            if ((int) $existing->course_group_id === (int) $payload['course_group_id']) {
+            if ((int) $existing->academy_class_id === (int) $payload['academy_class_id']) {
                 $warnings[] = 'Short break for group on '.$date;
             }
         }

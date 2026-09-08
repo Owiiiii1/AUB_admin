@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AcademyBuilding;
-use App\Models\CourseGroup;
+use App\Models\AcademyClass;
 use App\Models\Lesson;
 use App\Models\ScheduleAiRun;
 use App\Models\ScheduledLesson;
@@ -108,7 +108,7 @@ class WeeklyScheduleController extends Controller
 
         $before = $lesson->only([
             'lesson_date', 'starts_at', 'ends_at', 'academy_building_id', 'academy_room_id',
-            'course_group_id', 'teacher_id', 'lesson_id', 'status',
+            'academy_class_id', 'teacher_id', 'lesson_id', 'status',
         ]);
 
         $lesson->update($validated);
@@ -123,7 +123,7 @@ class WeeklyScheduleController extends Controller
             $before,
             $lesson->fresh()?->only([
                 'lesson_date', 'starts_at', 'ends_at', 'academy_building_id', 'academy_room_id',
-                'course_group_id', 'teacher_id', 'lesson_id', 'status',
+                'academy_class_id', 'teacher_id', 'lesson_id', 'status',
             ]),
         );
 
@@ -252,7 +252,7 @@ class WeeklyScheduleController extends Controller
             $week->scheduledLessons()->create([
                 'academy_building_id' => $source->academy_building_id,
                 'academy_room_id' => $source->academy_room_id,
-                'course_group_id' => $source->course_group_id,
+                'academy_class_id' => $source->academy_class_id,
                 'teacher_id' => $source->teacher_id,
                 'lesson_id' => $source->lesson_id,
                 'lesson_date' => $sourceDate->copy()->addDays(7)->format('Y-m-d'),
@@ -400,7 +400,7 @@ class WeeklyScheduleController extends Controller
             ->with([
                 'building:id,name',
                 'room:id,name,academy_building_id',
-                'courseGroup.course:id,name,discipline',
+                'academyClass.course:id,name,discipline',
                 'teacher:id,name',
                 'lesson:id,name',
             ])
@@ -550,7 +550,7 @@ class WeeklyScheduleController extends Controller
             ->with([
                 'building:id,name',
                 'room:id,name,academy_building_id',
-                'courseGroup.course:id,name,discipline',
+                'academyClass.course:id,name,discipline',
                 'teacher:id,name',
                 'lesson:id,name',
             ])
@@ -611,7 +611,7 @@ class WeeklyScheduleController extends Controller
 
         foreach ($groupLessonCards as $card) {
             $cardsByTeacherKey[$card['key']] = $card;
-            $groupLessonKey = $card['course_group_id'].'-'.$card['lesson_id'];
+            $groupLessonKey = $card['academy_class_id'].'-'.$card['lesson_id'];
             $teachersByGroupLesson[$groupLessonKey] = $card['teachers'];
 
             if (! isset($budgetsByGroupLesson[$groupLessonKey])) {
@@ -634,7 +634,7 @@ class WeeklyScheduleController extends Controller
             $durationMinutes = $this->lessonDurationMinutes($lesson);
             $durationHours = round($durationMinutes / 60, 2);
 
-            if (empty($lesson['course_group_id']) || empty($lesson['lesson_id'])) {
+            if (empty($lesson['academy_class_id']) || empty($lesson['lesson_id'])) {
                 return array_merge($lesson, [
                     'duration_minutes' => $durationMinutes,
                     'duration_hours' => $durationHours,
@@ -647,7 +647,7 @@ class WeeklyScheduleController extends Controller
                 ]);
             }
 
-            $groupLessonKey = $lesson['course_group_id'].'-'.$lesson['lesson_id'];
+            $groupLessonKey = $lesson['academy_class_id'].'-'.$lesson['lesson_id'];
             $teacherKey = $groupLessonKey.'-'.$lesson['teacher_id'];
             $card = $cardsByTeacherKey[$teacherKey] ?? null;
 
@@ -688,7 +688,7 @@ class WeeklyScheduleController extends Controller
                 'academy_building_id' => $lesson['academy_building_id'],
                 'academy_room_id' => $lesson['academy_room_id'],
                 'teacher_id' => $lesson['teacher_id'],
-                'course_group_id' => $lesson['course_group_id'],
+                'academy_class_id' => $lesson['academy_class_id'],
             ];
 
             $map[$lesson['id']] = $this->conflicts->validatePayload($payload, $lesson['id']) !== [];
@@ -703,23 +703,23 @@ class WeeklyScheduleController extends Controller
     private function unscheduledGroups(ScheduleWeek $week): array
     {
         $scheduledGroupIds = $week->scheduledLessons()
-            ->whereNotNull('course_group_id')
-            ->pluck('course_group_id')
+            ->whereNotNull('academy_class_id')
+            ->pluck('academy_class_id')
             ->unique()
             ->all();
 
-        return CourseGroup::query()
-            ->with(['course:id,name,discipline', 'lessons:id,name'])
+        return AcademyClass::query()
+            ->with(['course:id,name,discipline', 'classLessons.lesson:id,name'])
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
-            ->filter(fn (CourseGroup $group): bool => ! in_array($group->id, $scheduledGroupIds, true))
-            ->map(fn (CourseGroup $group): array => [
+            ->filter(fn (AcademyClass $group): bool => ! in_array($group->id, $scheduledGroupIds, true))
+            ->map(fn (AcademyClass $group): array => [
                 'id' => $group->id,
                 'name' => $group->name,
                 'course_name' => $group->course?->name,
                 'discipline' => $group->course?->discipline,
-                'subjects' => $group->lessons->pluck('name')->all(),
+                'subjects' => $group->classLessons->pluck('lesson.name')->filter()->values()->all(),
                 'default_duration_minutes' => 60,
             ])
             ->values()
@@ -736,15 +736,16 @@ class WeeklyScheduleController extends Controller
             ->map(static fn ($name, $id): string => (string) $name)
             ->all();
 
-        $pivotRows = DB::table('course_group_lesson as cgl')
-            ->join('course_groups as cg', 'cg.id', '=', 'cgl.course_group_id')
+        $pivotRows = DB::table('class_lesson_teacher as clt')
+            ->join('class_lessons as cl', 'cl.id', '=', 'clt.class_lesson_id')
+            ->join('academy_classes as cg', 'cg.id', '=', 'cl.academy_class_id')
             ->join('courses as c', 'c.id', '=', 'cg.course_id')
-            ->join('lessons as l', 'l.id', '=', 'cgl.lesson_id')
+            ->join('lessons as l', 'l.id', '=', 'cl.lesson_id')
             ->select([
-                'cgl.course_group_id',
-                'cgl.lesson_id',
-                'cgl.teacher_id',
-                'cgl.hours as weekly_hours',
+                'cl.academy_class_id',
+                'cl.lesson_id',
+                'clt.teacher_id',
+                DB::raw('COALESCE(clt.hours, cl.hours) as weekly_hours'),
                 'cg.name as group_name',
                 'cg.color as group_color',
                 'c.id as course_id',
@@ -758,7 +759,7 @@ class WeeklyScheduleController extends Controller
             ->orderBy('c.name')
             ->orderBy('cg.name')
             ->orderBy('l.name')
-            ->orderBy('cgl.teacher_id')
+            ->orderBy('clt.teacher_id')
             ->get();
 
         if ($pivotRows->isEmpty()) {
@@ -766,7 +767,7 @@ class WeeklyScheduleController extends Controller
         }
 
         $teachersByGroupLesson = $pivotRows
-            ->groupBy(static fn ($row): string => $row->course_group_id.'-'.$row->lesson_id)
+            ->groupBy(static fn ($row): string => $row->academy_class_id.'-'.$row->lesson_id)
             ->map(static function ($rows) use ($teacherNames): array {
                 return $rows
                     ->unique('teacher_id')
@@ -780,10 +781,10 @@ class WeeklyScheduleController extends Controller
             ->all();
 
         $scheduledMinutesByKey = $week->scheduledLessons()
-            ->whereNotNull('course_group_id')
+            ->whereNotNull('academy_class_id')
             ->whereNotNull('lesson_id')
-            ->get(['course_group_id', 'lesson_id', 'teacher_id', 'starts_at', 'ends_at'])
-            ->groupBy(static fn ($lesson): string => $lesson->course_group_id.'-'.$lesson->lesson_id.'-'.$lesson->teacher_id)
+            ->get(['academy_class_id', 'lesson_id', 'teacher_id', 'starts_at', 'ends_at'])
+            ->groupBy(static fn ($lesson): string => $lesson->academy_class_id.'-'.$lesson->lesson_id.'-'.$lesson->teacher_id)
             ->map(function ($lessons): int {
                 return (int) $lessons->sum(function ($lesson): int {
                     $start = $this->timeToMinutes(substr((string) $lesson->starts_at, 0, 5));
@@ -796,7 +797,7 @@ class WeeklyScheduleController extends Controller
 
         return $pivotRows
             ->map(function ($row) use ($teacherNames, $teachersByGroupLesson, $scheduledMinutesByKey): array {
-                $groupLessonKey = $row->course_group_id.'-'.$row->lesson_id;
+                $groupLessonKey = $row->academy_class_id.'-'.$row->lesson_id;
                 $cardKey = $groupLessonKey.'-'.$row->teacher_id;
                 $weeklyHours = (float) $row->weekly_hours;
                 $weeklyMinutes = (int) round($weeklyHours * 60);
@@ -807,7 +808,7 @@ class WeeklyScheduleController extends Controller
 
                 return [
                     'key' => $cardKey,
-                    'course_group_id' => (int) $row->course_group_id,
+                    'academy_class_id' => (int) $row->academy_class_id,
                     'course_id' => (int) $row->course_id,
                     'lesson_id' => (int) $row->lesson_id,
                     'teacher_id' => (int) $row->teacher_id,
@@ -842,12 +843,12 @@ class WeeklyScheduleController extends Controller
      */
     private function groupsPayload(): array
     {
-        return CourseGroup::query()
+        return AcademyClass::query()
             ->with('course:id,name,discipline')
             ->orderBy('sort_order')
             ->orderBy('name')
             ->get()
-            ->map(fn (CourseGroup $group): array => [
+            ->map(fn (AcademyClass $group): array => [
                 'id' => $group->id,
                 'name' => $group->name,
                 'color' => $group->color,
@@ -951,10 +952,10 @@ class WeeklyScheduleController extends Controller
             'academy_room_id' => $lesson->academy_room_id,
             'building_name' => $lesson->building?->name,
             'room_name' => $lesson->room?->name,
-            'course_group_id' => $lesson->course_group_id,
-            'group_name' => $lesson->courseGroup?->name,
-            'group_color' => $lesson->courseGroup?->color,
-            'course_name' => $lesson->courseGroup?->course?->name,
+            'academy_class_id' => $lesson->academy_class_id,
+            'group_name' => $lesson->academyClass?->name,
+            'group_color' => $lesson->academyClass?->color,
+            'course_name' => $lesson->academyClass?->course?->name,
             'teacher_id' => $lesson->teacher_id,
             'teacher_name' => $lesson->teacher?->name,
             'lesson_id' => $lesson->lesson_id,
@@ -978,7 +979,7 @@ class WeeklyScheduleController extends Controller
             'ends_at' => ['required', 'string'],
             'academy_building_id' => ['required', 'exists:academy_buildings,id'],
             'academy_room_id' => ['required', 'exists:academy_rooms,id'],
-            'course_group_id' => ['nullable', 'exists:course_groups,id'],
+            'academy_class_id' => ['nullable', 'exists:academy_classes,id'],
             'teacher_id' => ['nullable', 'exists:teachers,id'],
             'lesson_id' => ['nullable', 'exists:lessons,id'],
             'title' => ['nullable', 'string', 'max:255'],
@@ -1057,7 +1058,7 @@ class WeeklyScheduleController extends Controller
     {
         $parts = array_filter([
             $lesson->title,
-            $lesson->courseGroup?->name,
+            $lesson->academyClass?->name,
             $lesson->lesson?->name,
         ]);
 

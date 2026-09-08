@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CustomersController;
+use App\Http\Controllers\StudentsController;
 use App\Http\Controllers\LessonsController;
 use App\Http\Controllers\TeachersController;
 use App\Http\Controllers\Settings\AcademySettingsController;
@@ -32,9 +32,9 @@ Route::middleware(array_merge(
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::get('/customers', [CustomersController::class, 'index'])->name('customers.index');
-    Route::get('/customers/create', [CustomersController::class, 'create'])->name('customers.create');
-    Route::get('/customers/{customer}', [CustomersController::class, 'show'])->name('customers.show');
+    Route::get('/customers', [StudentsController::class, 'index'])->name('customers.index');
+    Route::get('/customers/create', [StudentsController::class, 'create'])->name('customers.create');
+    Route::get('/customers/{student}', [StudentsController::class, 'show'])->name('customers.show');
 
     Route::get('/teachers', [TeachersController::class, 'index'])->name('teachers.index');
     Route::get('/teachers/create', [TeachersController::class, 'create'])->name('teachers.create');
@@ -74,8 +74,8 @@ Route::middleware(array_merge(
             Route::patch('/roles/{role}', [\App\Http\Controllers\RolesController::class, 'update'])->name('roles.update');
         });
 
-        Route::post('/customers', [CustomersController::class, 'store'])->name('customers.store');
-        Route::patch('/customers/{customer}', [CustomersController::class, 'update'])->name('customers.update');
+        Route::post('/customers', [StudentsController::class, 'store'])->name('customers.store');
+        Route::patch('/customers/{student}', [StudentsController::class, 'update'])->name('customers.update');
 
         Route::post('/teachers', [TeachersController::class, 'store'])->name('teachers.store');
         Route::patch('/teachers/{teacher}', [TeachersController::class, 'update'])->name('teachers.update');
@@ -83,10 +83,10 @@ Route::middleware(array_merge(
         Route::post('/courses-groups/courses', [\App\Http\Controllers\CoursesGroupsController::class, 'storeCourse'])->name('courses-groups.courses.store');
         Route::patch('/courses-groups/courses/{course}', [\App\Http\Controllers\CoursesGroupsController::class, 'updateCourse'])->name('courses-groups.courses.update');
         Route::post('/courses-groups/courses/{course}/groups', [\App\Http\Controllers\CoursesGroupsController::class, 'storeGroup'])->name('courses-groups.groups.store');
-        Route::patch('/courses-groups/groups/{courseGroup}', [\App\Http\Controllers\CoursesGroupsController::class, 'updateGroup'])->name('courses-groups.groups.update');
-        Route::post('/courses-groups/groups/{courseGroup}/students', [\App\Http\Controllers\CoursesGroupsController::class, 'attachStudent'])->name('courses-groups.students.attach');
-        Route::post('/courses-groups/groups/{courseGroup}/lessons', [\App\Http\Controllers\CoursesGroupsController::class, 'attachLesson'])->name('courses-groups.lessons.attach');
-        Route::patch('/courses-groups/groups/{courseGroup}/lessons/{lesson}', [\App\Http\Controllers\CoursesGroupsController::class, 'updateGroupLesson'])->name('courses-groups.lessons.update');
+        Route::patch('/courses-groups/groups/{academyClass}', [\App\Http\Controllers\CoursesGroupsController::class, 'updateGroup'])->name('courses-groups.groups.update');
+        Route::post('/courses-groups/groups/{academyClass}/students', [\App\Http\Controllers\CoursesGroupsController::class, 'attachStudent'])->name('courses-groups.students.attach');
+        Route::post('/courses-groups/groups/{academyClass}/lessons', [\App\Http\Controllers\CoursesGroupsController::class, 'attachLesson'])->name('courses-groups.lessons.attach');
+        Route::patch('/courses-groups/groups/{academyClass}/lessons/{lesson}', [\App\Http\Controllers\CoursesGroupsController::class, 'updateGroupLesson'])->name('courses-groups.lessons.update');
 
         Route::post('/lessons', [LessonsController::class, 'store'])->name('lessons.store');
         Route::patch('/lessons/{lesson}', [LessonsController::class, 'update'])->name('lessons.update');
@@ -122,12 +122,12 @@ Route::middleware(array_merge(
             Route::delete('/roles/{role}', [\App\Http\Controllers\RolesController::class, 'destroy'])->name('roles.destroy');
         });
 
-        Route::delete('/customers/{customer}', [CustomersController::class, 'destroy'])->name('customers.destroy');
+        Route::delete('/customers/{student}', [StudentsController::class, 'destroy'])->name('customers.destroy');
         Route::delete('/teachers/{teacher}', [TeachersController::class, 'destroy'])->name('teachers.destroy');
         Route::delete('/courses-groups/courses/{course}', [\App\Http\Controllers\CoursesGroupsController::class, 'destroyCourse'])->name('courses-groups.courses.destroy');
-        Route::delete('/courses-groups/groups/{courseGroup}', [\App\Http\Controllers\CoursesGroupsController::class, 'destroyGroup'])->name('courses-groups.groups.destroy');
-        Route::delete('/courses-groups/groups/{courseGroup}/students/{customer}', [\App\Http\Controllers\CoursesGroupsController::class, 'detachStudent'])->name('courses-groups.students.detach');
-        Route::delete('/courses-groups/groups/{courseGroup}/lessons/{lesson}', [\App\Http\Controllers\CoursesGroupsController::class, 'detachLesson'])->name('courses-groups.lessons.detach');
+        Route::delete('/courses-groups/groups/{academyClass}', [\App\Http\Controllers\CoursesGroupsController::class, 'destroyGroup'])->name('courses-groups.groups.destroy');
+        Route::delete('/courses-groups/groups/{academyClass}/students/{student}', [\App\Http\Controllers\CoursesGroupsController::class, 'detachStudent'])->name('courses-groups.students.detach');
+        Route::delete('/courses-groups/groups/{academyClass}/lessons/{lesson}', [\App\Http\Controllers\CoursesGroupsController::class, 'detachLesson'])->name('courses-groups.lessons.detach');
         Route::delete('/lessons/{lesson}', [LessonsController::class, 'destroy'])->name('lessons.destroy');
         Route::delete('/settings/users/{user}', [SettingsUserController::class, 'destroy'])->name('settings.users.destroy');
         Route::delete('/settings/academy/buildings/{academyBuilding}', [AcademySettingsController::class, 'destroyBuilding'])->name('settings.academy.buildings.destroy');

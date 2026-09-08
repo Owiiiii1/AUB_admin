@@ -7,7 +7,7 @@
 - **Planned** — не построено
 - **Unverified leftover** — исторически упоминалось; Spatie-подобные таблицы дропались в `2026_07_06_120000`; leftover в MySQL **не** перепроверялись 2026-09-07
 
-Миграции: **37 файлов**, на production все **Ran**, batch **1–29**.
+Миграции: **38 файлов**, включая `2026_09_08_200000_introduce_core_academy_data_model`.
 
 Чувствительность: Normal / Personal data / Children’s data / Special category / Secret.
 
@@ -21,15 +21,13 @@ Auth. Дополнительно: `role_id` → `roles`, `can_write`, `can_delet
 Связи: `belongsTo Role`.  
 Privacy: Personal data.
 
-### customers (implemented — **студенты, interim / не долгосрочная модель**)
+### customers (generic kit — **legacy, not academy Student**)
 
-Колонки kit: `name`, `email`, `phone`, `address`, `notes`, `status`.
+Kit columns remain. Academy student profiles live in `students`. Production test `customers` rows were cleared by `2026_09_08_200000`. Table kept for kit compatibility.
 
-Поля профиля AUB (миграции `2026_07_06_210000`, `2026_07_06_221000`): имя/фамилия, пол, codice fiscale, рождение, проживание, email/телефон студента, флаги курса, пути документов, блоки отца/матери, `student_notes`. Legacy `parent_phone` / `parent_email` сохранены.
+Relations in code: `hasMany Order` (legacy).
 
-Связи в коде: `hasMany Order` (legacy). **Нет** inverse `courseGroups()`; зачисления через `course_group_customer`.
-
-Файлы: диск public `students/{id}/documents` — **разрыв privacy**.
+Files for students: public disk `students/{id}/documents` — **privacy gap**.
 
 Privacy: Children’s data / Personal data.
 
@@ -47,7 +45,7 @@ Privacy: Children’s data / Personal data.
 
 ### activity_logs (implemented)
 
-`user_id`, `customer_id`, `action`, `subject_*`, `properties`, `route_name`, `ip_address`, `user_agent`, `created_at` (без `updated_at`). CRUD + login/logout. **Не** audit чтений.
+`user_id`, `customer_id` (legacy), `student_id`, `action`, `subject_*`, `properties`, `route_name`, `ip_address`, `user_agent`, `created_at` (без `updated_at`). CRUD + login/logout. **Не** audit чтений.
 
 ---
 
@@ -64,35 +62,54 @@ hasMany `RoleMenuItem`, hasMany `User`.
 
 ---
 
-## C. Реализованные таблицы академии (2026-07-08+)
+## C. Реализованные таблицы академии
+
+### academic_years
+
+`name`, `starts_at`, `ends_at`, `is_active`. Текущий год = `is_active` (без auto-switch). PHP: `AcademicYear::current()`. Админ-UI годов нет.
+
+### students
+
+Профиль ученика: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth_date`, `birth_place`, residence fields, `email`, `phone`, course flags, `medical_certificate_expiry`, document/photo paths, `notes`, `status`. **Нет** father_*/mother_* колонок.
+
+`belongsToMany AcademyParent` (`student_parent`), `belongsToMany AcademyClass` (`academy_class_student`).
+
+### parents (`AcademyParent`)
+
+`first_name`, `last_name`, `email`, `phone`, `tax_code`, `notes`. Таблица `parents`. PHP-класс не `Parent` (зарезервировано).
+
+### student_parent
+
+`student_id`, `parent_id`, `relation_type` (nullable string: `father` / `mother` / `guardian` / `other`). Unique `(student_id, parent_id)`.
 
 ### teachers
 
-`type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`.  
-`belongsToMany Lesson` (`lesson_teacher`). **Нет `user_id`.**  
+`type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`, nullable unique `user_id`.  
+`belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). Identity/login не реализованы.  
 Фото: public disk `teachers/{id}/photos`.
 
-### courses / course_groups / course_group_customer
+### courses / academy_classes / academy_class_student
 
-`courses`: `discipline`, `name`, `sort_order`, `study_starts_at`, `study_ends_at`.  
-`course_groups`: `course_id`, `name`, `color`, `sort_order`.  
-`course_group_customer`: `course_group_id`, `customer_id`, `discipline` (колонка осталась).
+`courses`: `discipline`, `name`, `sort_order`, `study_starts_at`, `study_ends_at`. Направление обучения.
 
-**Ограничение зачисления в коде:** unique `customer_id` — не больше одной CourseGroup на студента в БД. **DECIDED:** это концептуально соответствует правилу «один основной `Class`». Целевая терминология: `Class` = постоянный основной учебный класс; не смешивать с дополнительными activity groups. Имена таблиц (`course_groups` vs `Class`) ещё нормализовать. Миграции в этой задаче не менять. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+`academy_classes`: `course_id`, `name`, `color`, `sort_order`. Продуктовый **Class**. PHP-модель `AcademyClass` (`Class` зарезервировано).
 
-Ранее unique `(customer_id, discipline)` заменён миграцией `2026_07_08_170000`.
+`academy_class_student`: unique `student_id` — максимум один активный основной Class.
 
-### lessons + pivots
+Таблицы `course_groups`, `course_group_customer`, `course_group_lesson` **удалены**.
+
+### lessons + ClassLesson
 
 `lessons`: `discipline`, `name`, `description`, `duration_minutes`, `sort_order`.  
 `lesson_teacher`, `lesson_course`.  
-`course_group_lesson`: `teacher_id`, `hours`; unique `(course_group_id, lesson_id, teacher_id)`.
+`class_lessons`: `academic_year_id`, `academy_class_id`, `lesson_id`, `hours`, `sort_order`; unique `(academic_year_id, academy_class_id, lesson_id)`.  
+`class_lesson_teacher`: несколько преподавателей; `hours` на pivot.
 
-### Недельное расписание (2026-07-20)
+### Недельное расписание (2026-07-20, FK 2026-09-08)
 
-`academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **Колонок lat/lng/radius сейчас нет.** Поля geofence — **концептуальное** требование Teacher Check-in, не реализовано.  
+`academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **Колонок lat/lng/radius сейчас нет.**  
 `schedule_weeks`: понедельник `week_start_date`, пятница `week_end_date`, `work_starts_at` / `work_ends_at`, `draft`/`published`/`locked`.  
-`scheduled_lessons`: неделя, здание, зал, группа, преподаватель, урок, дата/время, цвет, статус.  
+`scheduled_lessons`: неделя, здание, зал, **`academy_class_id`**, преподаватель, урок, дата/время, цвет, статус.  
 `schedule_ai_runs`: промпт, preferences JSON, метрики, отчёт, предупреждения.
 
 UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHEDULE_SERVICE.md).  
@@ -102,21 +119,21 @@ UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCH
 
 ## D. Planned / концепт (нет финальной схемы, нет миграций)
 
-Не считать список утверждённой БД. Миграции **не** создавать в docs-only задаче. Core Data Model refactor — **до** стабильного mobile API.
+Не считать список утверждённой БД для ещё не построенных модулей. Core Data Model refactor (students / Class / ClassLesson) **сделан**. Identity — следующий этап до стабильного mobile API.
 
-### Student / Parent (направление DECIDED)
+### Student / Parent (**implemented**)
 
-`customers` — interim / legacy, **не** долгосрочная модель Student. В production ценных пользовательских данных нет (тест). Целевые сущности: `students`, `parents`, `student_parent`. Реализацию миграций не начинать сейчас.
+`students`, `parents`, `student_parent` реализованы. `customers` — unused kit leftover. PHP: `Student`, `AcademyParent`.
 
 ### `Class` vs дополнительные группы (DECIDED)
 
-- `Class` — постоянный основной учебный класс; максимум один активный на ребёнка.
-- Дополнительные группы (события, постановки, репетиции) **не** являются `Class`. Ребёнок может быть в одном `Class` и в нескольких activity groups.
-- Предварительные будущие типы (не схема): `ProductionGroup`, `RehearsalGroup`, возможно другие. Финальную схему не создавать сейчас.
+- `Class` — постоянный основной учебный класс; максимум один активный на ребёнка (**unique `academy_class_student.student_id`**).
+- PHP-модель: `AcademyClass` / таблица `academy_classes`.
+- Дополнительные группы (события, постановки, репетиции) **не** являются `Class`. Ребёнок может быть в одном `Class` и в нескольких activity groups (схема доп. групп не строится сейчас).
 
-### Identity (DECIDED)
+### Identity (DECIDED, не реализован workflow)
 
-Один User — ровно один основной actor type: `student` | `parent` | `teacher`. Multi-profile не закладывать. Web RBAC персонала остаётся отдельно. `teachers.user_id` в коде нет.
+Один User — ровно один основной actor type: `student` | `parent` | `teacher`. Multi-profile не закладывать. Web RBAC персонала остаётся отдельно. `teachers.user_id` **nullable unique** добавлен как foundation; login/API нет.
 
 ### Teacher Check-in (семантика DECIDED)
 
@@ -144,8 +161,8 @@ Student + Class + AcademicYear → ReportCard
 
 | Тема | Примечание | Status |
 |------|------------|--------|
-| Таблицы `students` / `parents` / `student_parent` | Направление DECIDED; сейчас `customers` | DECIDED direction / не реализовано |
-| Workflow зачислений в `Class` | Статусы, история, переводы | OPEN |
+| `students` / `parents` / `student_parent` | Реализовано 2026-09-08 | DECIDED / implemented |
+| Enrollment workflow вокруг `Class` | Статусы, история, переводы | OPEN |
 | **Student Attendance** | Присутствие на **session**. Не GPS преподавателя | OPEN |
 | **Teacher Check-in** | Daily geofence check-in. Детали radius/accuracy OPEN | DECIDED semantics / не реализовано |
 | Final Assessment | `StudentFinalResult` / `ReportCard`. Шкала OPEN | DECIDED core / детали OPEN |
@@ -153,7 +170,7 @@ Student + Class + AcademicYear → ReportCard
 | Additional groups / Productions | ≠ `Class`; поздний future; схему не финализировать | DECIDED split / workflow OPEN |
 | Сущность Document + **private** storage | Сейчас: пути на public disk | OPEN (нужно до широкого mobile) |
 | ConsentType / ConsentDocumentVersion / ConsentRecord | Возраст не хардкодить | DECIDED direction / не реализовано |
-| Teacher.user_id + mobile Teacher account | Один actor type на User | DECIDED identity / не реализовано |
+| Teacher.user_id + mobile Teacher account | Колонка `user_id` есть; login нет | DECIDED identity / не реализовано |
 | Payment / Invoice | Не начато | OPEN |
 
 Не использовать kit `orders` как зачисления или счета.
@@ -164,8 +181,8 @@ Student + Class + AcademicYear → ReportCard
 
 | Kit | AUB сейчас | Целевое направление |
 |-----|------------|---------------------|
-| customers | Студенты (interim) | `students` / `parents` / `student_parent` — отдельная задача refactor, не сейчас |
-| course_groups | Учебные группы в коде | Продуктовый `Class` (нормализация терминологии OPEN) |
+| customers | Legacy kit leftover | Academy использует `students` / `parents` |
+| course_groups | Удалены | `academy_classes` / `AcademyClass` = продукт `Class` |
 | services | courses | Отдельная таблица есть |
 | staff | teachers + roles | Не путать |
 | orders | enrollments / invoices | Новый домен, не kit |

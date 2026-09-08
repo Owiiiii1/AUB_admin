@@ -136,11 +136,11 @@ Web auth: Laravel `web` guard, sessions, CSRF. **No API token stack is installed
 ## Database approach
 
 - Primary connection: **MySQL** (production database name is configured in `.env`; values are not documented here)
-- **37** migration files; on production **all Ran**, batches **1–29**
-- Students: interim extended `customers` table (no `students` table). **DECIDED direction:** `students` / `parents` / `student_parent`; `customers` is not the long-term model
-- Parents: embedded columns on `customers` (no `parents` table)
-- Teachers: `teachers` **not** linked to `users`
-- Enrollments: `course_group_customer` unique `customer_id` conceptually matches the **DECIDED** “one active `Class`” rule. Terminology `course_groups` vs `Class` still needs normalization
+- **38** migration files, including Core Data Model (`2026_09_08_200000`)
+- Students: `students` table (not `customers`). **DECIDED:** `students` / `parents` / `student_parent`; `customers` is a kit leftover
+- Parents: `parents` + `student_parent` (`AcademyParent`)
+- Teachers: nullable unique `teachers.user_id`; login not implemented
+- Enrollments: unique `academy_class_student.student_id` = one active `Class` (`AcademyClass`)
 - Legacy kit tables (`orders`, `services`, `staff`, `order_staff`) exist; routes removed
 - Spatie-style permission tables were dropped when AUB `roles` were created (2026-07-06). Whether empty leftover tables still exist in MySQL was not re-verified
 

@@ -23,7 +23,7 @@ MVP AUB — **ядро академии** плюс **интерфейсы** (web
 | Преподаватели | Справочник готов | Нет `user_id` |
 | Курсы / группы | Готово | `/courses-groups` |
 | Каталог уроков | Готово | Настройки → Академия; нет `Lessons/Index.jsx` |
-| Зачисления | Частично | `course_group_customer`; unique `customer_id` концептуально = **DECIDED** «один активный `Class`». Терминология `course_groups` vs `Class` ещё нормализовать. Workflow статусов — OPEN |
+| Зачисления | Частично | unique `academy_class_student.student_id` = **DECIDED** «один активный `Class`». Workflow статусов — OPEN |
 
 ## Операции (фаза 3)
 

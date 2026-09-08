@@ -121,15 +121,15 @@ class DeterministicSchedulePlanner
             $date = $lesson['lesson_date'];
             $teacherDailyMinutes[$lesson['teacher_id'].'|'.$date] =
                 ($teacherDailyMinutes[$lesson['teacher_id'].'|'.$date] ?? 0) + $duration;
-            $groupDailyMinutes[$lesson['course_group_id'].'|'.$date] =
-                ($groupDailyMinutes[$lesson['course_group_id'].'|'.$date] ?? 0) + $duration;
+            $groupDailyMinutes[$lesson['academy_class_id'].'|'.$date] =
+                ($groupDailyMinutes[$lesson['academy_class_id'].'|'.$date] ?? 0) + $duration;
             $dayMinutes[$date] = ($dayMinutes[$date] ?? 0) + $duration;
             $roomDayMinutes[$lesson['academy_room_id'].'|'.$date] =
                 ($roomDayMinutes[$lesson['academy_room_id'].'|'.$date] ?? 0) + $duration;
 
             $half = $lesson['start_minutes'] < $dayHalfSplit ? 'morning' : 'afternoon';
             $halfLoadMinutes[$half] += $duration;
-            $groupId = (int) $lesson['course_group_id'];
+            $groupId = (int) $lesson['academy_class_id'];
             if ($groupId > 0 && ! isset($groupWeekHalf[$groupId])) {
                 $groupWeekHalf[$groupId] = $half;
             }
@@ -183,7 +183,7 @@ class DeterministicSchedulePlanner
                 'ends_at' => $this->minutesToTime($candidate['end_minutes']),
                 'academy_building_id' => $candidate['academy_building_id'],
                 'academy_room_id' => $candidate['academy_room_id'],
-                'course_group_id' => $session['course_group_id'],
+                'academy_class_id' => $session['academy_class_id'],
                 'teacher_id' => $session['teacher_id'],
                 'lesson_id' => $session['lesson_id'],
                 'duration_minutes' => $session['duration_minutes'],
@@ -198,7 +198,7 @@ class DeterministicSchedulePlanner
             $date = $candidate['lesson_date'];
             $duration = $session['duration_minutes'];
             $teacherKey = $session['teacher_id'].'|'.$date;
-            $groupKey = $session['course_group_id'].'|'.$date;
+            $groupKey = $session['academy_class_id'].'|'.$date;
             $roomKey = $candidate['academy_room_id'].'|'.$date;
             $teacherDailyMinutes[$teacherKey] = ($teacherDailyMinutes[$teacherKey] ?? 0) + $duration;
             $groupDailyMinutes[$groupKey] = ($groupDailyMinutes[$groupKey] ?? 0) + $duration;
@@ -207,7 +207,7 @@ class DeterministicSchedulePlanner
 
             $half = $candidate['start_minutes'] < $dayHalfSplit ? 'morning' : 'afternoon';
             $halfLoadMinutes[$half] += $duration;
-            $groupId = (int) $session['course_group_id'];
+            $groupId = (int) $session['academy_class_id'];
             if ($groupId > 0 && ! isset($groupWeekHalf[$groupId])) {
                 $groupWeekHalf[$groupId] = $half;
             }
@@ -257,11 +257,11 @@ class DeterministicSchedulePlanner
             $rightDemand = $teacherDemand[(int) ($right['teacher_id'] ?? 0)] ?? 0;
 
             return [
-                (int) ($left['course_group_id'] ?? 0),
+                (int) ($left['academy_class_id'] ?? 0),
                 -$leftDemand,
                 -(int) ($left['remaining_minutes'] ?? 0),
             ] <=> [
-                (int) ($right['course_group_id'] ?? 0),
+                (int) ($right['academy_class_id'] ?? 0),
                 -$rightDemand,
                 -(int) ($right['remaining_minutes'] ?? 0),
             ];
@@ -298,7 +298,7 @@ class DeterministicSchedulePlanner
 
                 $sessions[] = [
                     'card_key' => (string) $card['key'],
-                    'course_group_id' => (int) $card['course_group_id'],
+                    'academy_class_id' => (int) $card['academy_class_id'],
                     'lesson_id' => (int) $card['lesson_id'],
                     'teacher_id' => (int) $card['teacher_id'],
                     'group_name' => (string) ($card['group_name'] ?? ''),
@@ -356,7 +356,7 @@ class DeterministicSchedulePlanner
         $best = null;
         $bestScore = PHP_INT_MAX;
         $duration = (int) $session['duration_minutes'];
-        $groupId = (int) $session['course_group_id'];
+        $groupId = (int) $session['academy_class_id'];
         $groupRule = $this->resolveGroupRule($session, $groupRules) ?? [];
         $sessionPreferredStart = $this->normalizePreferenceTime(
             $groupRule['preferred_start'] ?? null,
@@ -387,7 +387,7 @@ class DeterministicSchedulePlanner
 
         foreach ($days as $dayIndex => $date) {
             $teacherKey = $session['teacher_id'].'|'.$date;
-            $groupKey = $session['course_group_id'].'|'.$date;
+            $groupKey = $session['academy_class_id'].'|'.$date;
 
             if (($teacherDailyMinutes[$teacherKey] ?? 0) + $duration > $maxTeacherDaily) {
                 continue;
@@ -451,7 +451,7 @@ class DeterministicSchedulePlanner
                         'end_minutes' => $end,
                         'academy_building_id' => $room['academy_building_id'],
                         'academy_room_id' => $room['academy_room_id'],
-                        'course_group_id' => $session['course_group_id'],
+                        'academy_class_id' => $session['academy_class_id'],
                         'teacher_id' => $session['teacher_id'],
                     ];
 
@@ -555,7 +555,7 @@ class DeterministicSchedulePlanner
     {
         $blocks = [];
         foreach ($occupancy as $item) {
-            if ((int) ($item['course_group_id'] ?? 0) !== $groupId) {
+            if ((int) ($item['academy_class_id'] ?? 0) !== $groupId) {
                 continue;
             }
             if (($item['lesson_date'] ?? '') !== $date) {
@@ -613,7 +613,7 @@ class DeterministicSchedulePlanner
     private function groupDayBuilding(array $occupancy, int $groupId, string $date): ?int
     {
         foreach ($occupancy as $item) {
-            if ((int) ($item['course_group_id'] ?? 0) !== $groupId) {
+            if ((int) ($item['academy_class_id'] ?? 0) !== $groupId) {
                 continue;
             }
             if (($item['lesson_date'] ?? '') !== $date) {
@@ -671,7 +671,7 @@ class DeterministicSchedulePlanner
 
             $sameRoom = (int) $candidate['academy_room_id'] === (int) ($existing['academy_room_id'] ?? 0);
             $sameTeacher = (int) $candidate['teacher_id'] === (int) ($existing['teacher_id'] ?? 0);
-            $sameGroup = (int) $candidate['course_group_id'] === (int) ($existing['course_group_id'] ?? 0);
+            $sameGroup = (int) $candidate['academy_class_id'] === (int) ($existing['academy_class_id'] ?? 0);
 
             if ($overlaps && ($sameRoom || $sameTeacher || $sameGroup)) {
                 return true;
@@ -734,7 +734,7 @@ class DeterministicSchedulePlanner
             'end_minutes' => $this->timeToMinutes(substr((string) ($lesson['ends_at'] ?? '00:00'), 0, 5)),
             'academy_building_id' => (int) ($lesson['academy_building_id'] ?? 0),
             'academy_room_id' => (int) ($lesson['academy_room_id'] ?? 0),
-            'course_group_id' => (int) ($lesson['course_group_id'] ?? 0),
+            'academy_class_id' => (int) ($lesson['academy_class_id'] ?? 0),
             'teacher_id' => (int) ($lesson['teacher_id'] ?? 0),
         ];
     }

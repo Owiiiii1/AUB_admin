@@ -2,25 +2,25 @@
 
 What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Status (2026-09-08):** Web core in use. Flutter repo exists. **No HTTPS API.** Core Data Model refactor must precede a stable API contract.
+**Status (2026-09-08):** Web core in use. Flutter repo exists. **No HTTPS API.** Core Data Model refactor is **done**. Next stage is Identity.
 
-**DECIDED:** `AUB_admin` core; `AUB_app` Flutter; HTTPS API only; separate GitHub repos; parallel backend/Flutter; one active `Class`; one User = one actor type; `customers` is interim.
+**DECIDED:** `AUB_admin` core; `AUB_app` Flutter; HTTPS API only; separate GitHub repos; parallel backend/Flutter; one active `Class`; one User = one actor type; `customers` is a kit leftover.
 
 ## Immediate technical track
 
 1. Keep docs honest (this stream).
 2. **Security Foundation** before wide mobile (private storage, field-level ACL, scoped teachers, view audit, API authz matrix, token security, **admin 2FA**, consent records) — design/implement in dedicated tasks.
-3. **Core Data Model refactor** (`students` / `parents` / `student_parent`; one `Class`) — **before** a stable API. No migrations in this task.
-4. **Identity model implementation** (one User = one actor type; identity ≠ web RBAC).
-5. **API Foundation** (Sanctum = candidate, not locked) — only after items 3–4.
+3. **Core Data Model refactor** — **done** (`students` / `parents` / `AcademyClass` / `ClassLesson`).
+4. **Identity model implementation** (one User = one actor type; identity ≠ web RBAC). **Next stage.**
+5. **API Foundation** (Sanctum = candidate, not locked) — only after Identity.
 6. **Flutter Foundation** once a contract exists (Store distribution **OPEN**: one app vs flavors).
 
-Flutter **may** be developed in parallel (shell, navigation). Real academy features wait on the API. Do not publish a stable contract on top of `customers`.
+Flutter **may** be developed in parallel (shell, navigation). Real academy features wait on the API. Do not publish a stable contract before Identity.
 
 ## Locked product rules (not OPEN)
 
-- A child: at most one active primary `Class`; plus separate additional groups ≠ `Class`.
-- Unique `customer_id` on `course_group_customer` conceptually matches “one primary class”; terminology still needs normalization.
+- A child: at most one active primary `Class` (`unique academy_class_student.student_id`); plus separate additional groups ≠ `Class`.
+- PHP Class model = `AcademyClass` / `academy_classes`.
 - Teacher Check-in = **daily presence**, not per lesson.
 - No running grades. Final result: `StudentFinalResult` (Student + Class + Lesson + AcademicYear). Administrator generates the report-card PDF.
 
@@ -42,7 +42,7 @@ Flutter **may** be developed in parallel (shell, navigation). Real academy featu
 
 ## Already done (web)
 
-Students-on-customers (interim), teachers directory, courses/groups, lessons in Settings, weekly schedule + hybrid AI, CRUD logs, Flutter GitHub template.
+Students on `students` + parents on `parents`, `AcademyClass`, `ClassLesson`, teachers directory (`user_id` foundation), courses, lessons in Settings, weekly schedule on `academy_class_id` + hybrid AI, CRUD logs, Flutter GitHub template.
 
 ### Optional web schedule polish
 
@@ -54,7 +54,7 @@ Actionable AI, PDF, 5-min UI snap, room capacity vs study windows.
 - Do not edit `vendor/`
 - Do not expose secrets
 - Do not lock Sanctum
-- Do not implement `students` / `parents` migrations
-- Do not publish a stable mobile API before Core Data Model refactor
+- Do not implement Identity / API / Flutter login in this task
+- Do not publish a stable mobile API before Identity
 - Do not implement check-in, report cards, or productions here
 - Do not hardcode a consent age threshold
