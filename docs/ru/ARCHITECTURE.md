@@ -239,5 +239,5 @@ Invitation / activation / `teachers.user_id` — ещё **OPEN**. См. [OPEN_QU
 
 1. **Никогда не размещать бизнес-логику AUB в `custom-admin-kit`.**
 2. **Никогда не обращаться к БД или секретам из Flutter.** Только HTTPS API.
-3. **Не считать production `/var/www/aub` git-remote**, пока явно не спроектирован deploy workflow.
+3. **Не считать production `/var/www/aub` git-remote.** Деплой — копирование файлов сразу после push.
 4. **Не выдумывать ответы** на пункты [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).

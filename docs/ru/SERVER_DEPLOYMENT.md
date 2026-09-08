@@ -27,7 +27,8 @@ Nginx: `/etc/nginx/sites-available/aub.owlsolutions.net`
 
 - Tech Lead смотрит **GitHub `main`**.
 - Production — **файловое дерево**. `git pull` на сервере сейчас нет.
-- После push Cursor в GitHub копирование в `/var/www/aub` — **отдельный ops-шаг**, если задача не запрещает трогать production (docs-only не меняет сервер).
+- **Обязательно:** любое изменение `AUB_admin` (код и docs) после push в `main` сразу копируется в `/var/www/aub`. Задача не закончена, пока файлы не на сервере.
+- Не заливать `.env`, `vendor`, `node_modules`, storage runtime, Flutter.
 - Не инициализировать git на production, пока Tech Lead не откроет такую задачу.
 
 ## Стандартные команды (когда выкладываются файлы AUB_admin)

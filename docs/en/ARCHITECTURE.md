@@ -239,5 +239,5 @@ Late discovery-needed stage. Activity groups ≠ `Class`. Do not detail workflow
 
 1. **Never put AUB-specific business logic into `custom-admin-kit`.**
 2. **Never call the database or secrets from Flutter.** Only HTTPS API.
-3. **Do not treat production `/var/www/aub` as a git remote** until a deploy workflow is explicitly designed.
+3. **Do not treat production `/var/www/aub` as a git remote.** Deploy is file copy immediately after push.
 4. **Do not invent answers** to items in [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).

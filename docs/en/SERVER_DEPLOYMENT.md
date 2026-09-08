@@ -27,7 +27,8 @@ Nginx: `/etc/nginx/sites-available/aub.owlsolutions.net`
 
 - Tech Lead reviews **GitHub `main`**.
 - Production is a **file tree**. There is no `git pull` on the server today.
-- After Cursor pushes docs or code to GitHub, copying files to `/var/www/aub` is a **separate ops step** unless the task forbids touching production (docs-only tasks must not change server state).
+- **Mandatory:** any `AUB_admin` change (code and docs) is copied to `/var/www/aub` immediately after pushing `main`. The task is not finished until the files are on the server.
+- Never upload `.env`, `vendor`, `node_modules`, storage runtime, or Flutter.
 - Do not initialize git on production unless Tech Lead opens that task.
 
 ## Standard commands (when deploying AUB_admin files)

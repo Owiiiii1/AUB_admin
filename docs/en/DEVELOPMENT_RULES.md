@@ -15,7 +15,7 @@ Rules for Cursor and all AUB development.
 | AUB_admin | `Owiiiii1/AUB_admin` | Core: CRM, DB, business logic, web workplaces, API |
 | AUB_app | `Owiiiii1/AUB_app` | Flutter only; HTTPS API client |
 
-Production `/var/www/aub` is **not** a git repository (2026-09-07). Do not invent a git-pull deploy until Tech Lead specifies one.
+Production `/var/www/aub` is **not** a git repository. Deploy is **file copy** to `deploy@178.156.234.23:/var/www/aub` immediately after push. Do not `git pull` on the server.
 
 Flutter must **never** contain Bitrix/webhooks, DB credentials, or `APP_KEY`. Only the API.
 
@@ -27,6 +27,7 @@ Flutter must **never** contain Bitrix/webhooks, DB credentials, or `APP_KEY`. On
 4. Do not duplicate installed generic CRM/admin behaviour; extend it.
 5. AUB is a **core + interfaces** system, not “the admin panel”.
 6. Mobile work may proceed in parallel; **features** need an API contract. A stable API comes **after** Core Data Model refactor + Identity.
+7. Any `AUB_admin` change is deployed to production immediately. No exceptions.
 
 ## Before adding a module
 
@@ -79,7 +80,7 @@ php artisan route:cache      # production
 php artisan storage:link     # student/teacher uploads (public disk today)
 ```
 
-Production deploy is currently **file copy**, not `git pull`.
+Production deploy is **file copy immediately after push**, not `git pull`. Target: `deploy@178.156.234.23:/var/www/aub`.
 
 ## Documentation
 
@@ -98,11 +99,12 @@ After every Cursor task:
 4. **Fully overwrite** `docs/Development/Cursor_Work_Report.md`
 5. Commit
 6. Push to `main`
-7. Reply to the user **only**: `готово`
+7. **Immediately copy changed AUB_admin files to production** `deploy@178.156.234.23:/var/www/aub` (no exceptions, including docs)
+8. Reply to the user **only**: `готово`
 
 Tech Lead then reviews the report + GitHub diff.
 
-Do not change PHP/JS/migrations/routes/config/`.env`/`vendor` in a docs-only task.
+An `AUB_admin` task is **not finished** until the files are on the server. Never upload `.env`, `vendor`, `node_modules`, storage runtime, or Flutter. In a docs-only task do not change PHP/JS/migrations/routes/config/`.env`/`vendor`, but docs **must** still be copied to production.
 
 ## Host customizations to preserve
 

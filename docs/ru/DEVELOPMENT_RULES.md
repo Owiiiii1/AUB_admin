@@ -15,7 +15,7 @@
 | AUB_admin | `Owiiiii1/AUB_admin` | Ядро: CRM, БД, логика, web-workplaces, API |
 | AUB_app | `Owiiiii1/AUB_app` | Только Flutter; клиент HTTPS API |
 
-Production `/var/www/aub` **не** git-репозиторий (2026-09-07). Не выдумывать git-pull деплой, пока Tech Lead его не задаст.
+Production `/var/www/aub` **не** git-репозиторий. Деплой — **копирование файлов** на `deploy@178.156.234.23:/var/www/aub` сразу после push. Не `git pull` на сервере.
 
 Во Flutter **нельзя** класть Bitrix/webhook, учётные данные БД или `APP_KEY`. Только API.
 
@@ -27,6 +27,7 @@ Production `/var/www/aub` **не** git-репозиторий (2026-09-07). Не
 4. Не дублировать уже установленное generic CRM/admin — расширять.
 5. AUB — система **ядро + интерфейсы**, не «админ-панель».
 6. Mobile можно вести параллельно; **функции** требуют API-контракта. Стабильный API — **после** Core Data Model refactor + Identity.
+7. Любое изменение `AUB_admin` сразу выкладывается на production. Без исключений.
 
 ## Перед добавлением модуля
 
@@ -79,7 +80,7 @@ php artisan route:cache      # production
 php artisan storage:link     # upload студентов/преподавателей (сейчас public disk)
 ```
 
-Деплой на production сейчас — **копирование файлов**, не `git pull`.
+Деплой на production — **копирование файлов сразу после push**, не `git pull`. Путь: `deploy@178.156.234.23:/var/www/aub`.
 
 ## Документация
 
@@ -98,11 +99,12 @@ php artisan storage:link     # upload студентов/преподавате�
 4. **Полностью перезаписывает** `docs/Development/Cursor_Work_Report.md`
 5. Commit
 6. Push в `main`
-7. Отвечает пользователю **только**: `готово`
+7. **Сразу выложить изменённые файлы AUB_admin на production** `deploy@178.156.234.23:/var/www/aub` (без исключений, включая docs)
+8. Отвечает пользователю **только**: `готово`
 
 Tech Lead затем проверяет report + GitHub diff.
 
-В docs-only задаче не менять PHP/JS/миграции/маршруты/конфиг/`.env`/`vendor`.
+Задача по `AUB_admin` **не закончена**, пока файлы не на сервере. Не заливать `.env`, `vendor`, `node_modules`, storage runtime, Flutter. В docs-only задаче не менять PHP/JS/миграции/маршруты/конфиг/`.env`/`vendor`, но docs на production копировать обязательно.
 
 ## Кастомизации хоста — сохранять
 

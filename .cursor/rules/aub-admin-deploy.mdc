@@ -1,0 +1,17 @@
+---
+description: AUB_admin changes must be deployed to production immediately
+alwaysApply: true
+---
+
+# AUB Admin Deploy (mandatory)
+
+Any change in `AUB_admin` is not finished until it is on production. No exceptions: docs, PHP, JS, migrations, config in git — all go to the server in the same task.
+
+- Production: `deploy@178.156.234.23:/var/www/aub`
+- Domain: `https://aub.owlsolutions.net`
+- After GitHub `git push origin main`, copy the changed files to `/var/www/aub` immediately.
+- Production is a file tree, not a git repo. Do not `git pull` on the server. Do not init git there.
+- Deploy only required files. Never upload Flutter apps, `.env`, `vendor`, `node_modules`, or storage runtime files. Never overwrite production `.env`.
+- After file copy: `optimize:clear` when PHP/config/routes/views changed; `php artisan migrate --force` when schema changed; `npm run build` when frontend changed. Docs-only copy does not need migrate or npm build.
+- Verify with HTTP checks and/or that the copied files exist on the server.
+- Flutter (`AUB_app`) is a separate repo and is not deployed to `/var/www/aub`.
