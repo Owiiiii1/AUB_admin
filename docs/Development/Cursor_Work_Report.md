@@ -39,6 +39,7 @@ Exact production suite after `optimize:clear`:
 | Passed | 65 |
 | Failed | 0 |
 | Errors | 0 |
+| Assertions | 401 |
 
 (`60` previous + `4` unit + `1` feature.)
 
@@ -49,8 +50,9 @@ No migration. `.env` not overwritten — only `APP_TIMEZONE` set. Files copied t
 ## Smoke
 
 - `config('app.timezone')` = `Europe/Rome`
-- Student `GET /api/v1/schedule` without `week` → current Monday–Sunday in Rome
-- Same endpoint with `?week=YYYY-MM-DD` still returns that week’s Monday–Sunday
+- Student `GET /api/v1/schedule` without `week` → `200`, `starts_on=2026-09-07`, `ends_on=2026-09-13` (current Rome week; unpublished)
+- `?week=2026-09-09` → same Monday–Sunday bounds
+- `?week=2026-12-28` → `2026-12-28`…`2027-01-03`, `published=true` (isolated test week)
 - Unauthenticated `/schedule` → 401
 - `/health` → 200
 
