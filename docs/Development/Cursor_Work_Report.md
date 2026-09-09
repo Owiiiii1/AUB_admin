@@ -2,69 +2,85 @@
 
 ## Task
 
-Set the AUB application timezone to **Europe/Rome** so Student/Parent schedule current-week bounds follow Italian local time. `AUB_admin` only. No schema change. No bulk datetime conversion.
+Add **Teacher Schedule** mobile API in `AUB_admin`. Reuse `ScheduleWeek` / `ScheduledLesson`. Do not change the Student/Parent contract. No new tables.
 
-## Before
+## Endpoint
 
-- `config/app.php` hardcoded `'timezone' => 'UTC'`
-- `APP_TIMEZONE` was not read
-- Mobile `GET /schedule` without `?week=` used UTC `now()`
-- Sunday 22:30 UTC (already Monday 00:30 in Rome) still belonged to the previous Monday–Sunday week
+```text
+GET /api/v1/teacher/schedule
+```
 
-## After
+`auth:sanctum` + `mobile.actor` + `throttle:api-mobile`. Query: `?week=YYYY-MM-DD` (any day → Monday–Sunday). Omitted = current week in `Europe/Rome`.
 
-- `config/app.php`: `'timezone' => env('APP_TIMEZONE', 'Europe/Rome')`
-- `.env.example` / `.env.testing.example`: `APP_TIMEZONE=Europe/Rome`
-- `phpunit.xml` force-sets `APP_TIMEZONE=Europe/Rome`
-- Production `.env` has `APP_TIMEZONE=Europe/Rome` (other keys untouched)
-- `MobileScheduleService::resolveWeekBounds()` uses `config('app.timezone')` (`Europe/Rome`)
-- Date-only `week_start_date` / `lesson_date` and existing DATETIME values were **not** rewritten
+Existing:
+
+```text
+GET /api/v1/schedule
+GET /api/v1/children/{student}/schedule
+```
+
+unchanged.
+
+## Authorization
+
+- Teacher identity only from `request.user.teacherProfile`. No client `teacher_id`.
+- Extra `teacher_id` query is ignored.
+- Missing teacher profile → `403` (does not 500).
+- Student / parent → `403`.
+- Staff cannot hold a mobile session → `401`.
+
+## Query rules
+
+`scheduled_lessons.teacher_id = current teacher`. All academy classes. Eager load `lesson`, `academyClass`, `building`, `room`. Sort: `lesson_date`, `starts_at`, `ends_at`, `id`. Week bounds reuse `MobileScheduleService::resolveWeekBounds()`.
+
+## Publication rules
+
+Same as student/parent: official week `published`/`locked`; visible lessons `published`/`cancelled`/`moved`; hidden `draft`/`scheduled`.
+
+## Payload
+
+Root: `teacher {id, display_name}`, `week`, `days` (7), `empty_reason`. Each lesson includes `academy_class` and omits the teacher object.
+
+Empty HTTP 200: `unpublished` / `no_lessons`.
+
+## Privacy
+
+No students, parent data, emails, phones, tax codes, notes, AI metadata, conflicts, RBAC fields.
 
 ## Tests
-
-New unit tests in `MobileScheduleWeekBoundsTest`:
-
-- config timezone is `Europe/Rome`
-- Sunday 22:30 UTC → week Monday 2026-09-14 … Sunday 2026-09-20
-- Monday 00:15 Europe/Rome → same new week
-- DST spring-forward Sunday 2026-03-29 03:30 Rome stays on week starting 2026-03-23; Monday 00:15 starts 2026-03-30
-
-New feature test: omitted `?week=` on `GET /api/v1/schedule` uses Rome, not UTC.
 
 Exact production suite after `optimize:clear`:
 
 | Metric | Count |
 |--------|-------|
-| Total | 65 |
-| Passed | 65 |
+| Total | 71 |
+| Passed | 71 |
 | Failed | 0 |
 | Errors | 0 |
-| Assertions | 401 |
 
-(`60` previous + `4` unit + `1` feature.)
+(`65` previous + `6` teacher feature tests.) `composer validate` PASS.
 
 ## Deploy
 
-No migration. `.env` not overwritten — only `APP_TIMEZONE` set. Files copied to `/var/www/aub`. `php artisan optimize:clear`. `php artisan route:list --path=api` still **7** routes. `php artisan test` green.
+No migration. Files copied to `/var/www/aub`. `.env` not touched. `php artisan optimize:clear`. `route:list --path=api` shows **8** routes.
 
-## Smoke
+## Production smoke
 
-- `config('app.timezone')` = `Europe/Rome`
-- Student `GET /api/v1/schedule` without `week` → `200`, `starts_on=2026-09-07`, `ends_on=2026-09-13` (current Rome week; unpublished)
-- `?week=2026-09-09` → same Monday–Sunday bounds
-- `?week=2026-12-28` → `2026-12-28`…`2027-01-03`, `published=true` (isolated test week)
-- Unauthenticated `/schedule` → 401
-- `/health` → 200
+Temporary Sanctum token `smoke-teacher-schedule` (deleted after):
 
-Temporary Sanctum tokens named `smoke-timezone` are deleted after the check. No plaintext tokens in this report.
+- Teacher `GET /teacher/schedule` and `?week=YYYY-MM-DD` → 200
+- Student token on `/teacher/schedule` → 403
+- Isolated test week only; real academy published weeks not changed
 
-## Files changed
+No plaintext tokens in this report.
 
-Modified: `config/app.php`, `.env.example`, `.env.testing.example`, `phpunit.xml`, `MobileScheduleService`, `ScheduleApiTest`, bilingual API / architecture / current-state / roadmap / next-steps / weekly-schedule / development-rules docs.
+## Files
 
-Created: `tests/Unit/MobileScheduleWeekBoundsTest.php`.
+Created: `TeacherScheduleResource`.
+
+Modified: `MobileScheduleService`, `ScheduleController`, `routes/api.php`, `ScheduleApiTest`, bilingual API / architecture / current-state / roadmap / next-steps / weekly-schedule docs.
 
 ## Technical debt / OPEN
 
-- Naive MySQL DATETIME values stored while the app was UTC are not shifted. New `now()` writes use Rome wall clock.
-- Teacher schedule still out of scope.
+- Teacher Flutter Orario is the paired client task.
+- Attendance, roster, check-in remain out of scope.

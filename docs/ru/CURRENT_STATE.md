@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-09** (часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-09** (Teacher schedule API + часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -36,13 +36,13 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
-| Последний suite на production-хосте | **65 passed**, 0 failed, 0 errors (401 assertions) |
+| Последний suite на production-хосте | **71 passed**, 0 failed, 0 errors |
 
 `php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 
 ## Маршруты (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **7** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
+`php artisan route:list --path=api`: **8** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
 
 ### Mobile API
 
@@ -55,8 +55,9 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | GET | `/api/v1/me` | `api.v1.me` |
 | GET | `/api/v1/schedule` | `api.v1.schedule.student` |
 | GET | `/api/v1/children/{student}/schedule` | `api.v1.schedule.child` |
+| GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
 
-Только `student` / `parent` / `teacher`. `staff` через этот login не допускается. Student видит только свой класс; parent — только своих детей через `student_parent`. Подробности: [API.md](API.md).
+Только `student` / `parent` / `teacher`. `staff` через этот login не допускается. Student видит только свой класс; parent — только своих детей через `student_parent`; teacher — свои `ScheduledLesson.teacher_id` по всем классам. Подробности: [API.md](API.md).
 
 ### Auth
 

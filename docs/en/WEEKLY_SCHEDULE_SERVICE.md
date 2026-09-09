@@ -140,7 +140,7 @@ On an official week, lessons with status `published`, `cancelled`, and `moved` a
 
 Current week (no `?week=`) uses `config('app.timezone')` = `Europe/Rome` (`APP_TIMEZONE`). Date-only `week_start_date` / `lesson_date` values are not bulk-converted.
 
-Endpoints: `GET /api/v1/schedule` (student, own class) and `GET /api/v1/children/{student}/schedule` (parent, `student_parent` only). See [API.md](API.md).
+Endpoints: `GET /api/v1/schedule` (student, own class), `GET /api/v1/children/{student}/schedule` (parent, `student_parent` only), and `GET /api/v1/teacher/schedule` (teacher, own `ScheduledLesson.teacher_id` across classes; includes `academy_class`, never a student roster). See [API.md](API.md).
 
 ## Routes
 

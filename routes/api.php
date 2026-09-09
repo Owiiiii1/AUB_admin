@@ -19,5 +19,6 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::post('/auth/logout-all', [AuthController::class, 'logoutAll'])->name('auth.logout-all');
         Route::get('/schedule', [ScheduleController::class, 'student'])->name('schedule.student');
         Route::get('/children/{student}/schedule', [ScheduleController::class, 'child'])->name('schedule.child');
+        Route::get('/teacher/schedule', [ScheduleController::class, 'teacher'])->name('schedule.teacher');
     });
 });

@@ -115,6 +115,27 @@ Actor-aware whitelist. Никогда не включает password hash, `reme
 
 Teacher и staff эти эндпоинты не используют (`403` для валидного teacher token; staff не получает mobile-сессию).
 
+### GET `/teacher/schedule`
+
+Только teacher (`account_type = teacher`). Преподаватель берётся из `request.user.teacherProfile`. Никакого `teacher_id` в query/body. Лишние ключи вроде `teacher_id` игнорируются.
+
+Student и parent получают `403`. Staff не получает mobile-сессию (`401`).
+
+Тот же контракт `?week=YYYY-MM-DD`, те же правила публикации, текущая неделя `Europe/Rome`, HTTP 200 для пустых состояний.
+
+Отдаются все официальные `ScheduledLesson` этого преподавателя (`teacher_id`), по всем классам. Сортировка: `lesson_date`, `starts_at`, `ends_at`, `id`.
+
+В каждом уроке есть `academy_class {id,name}`. Нет объекта teacher (вызывающий и есть этот преподаватель), нет roster класса, имён/ID учеников, данных родителей, email/phone, tax_code, notes, AI metadata, conflicts.
+
+Пустые состояния:
+
+| Случай | `week.published` | `days` | `empty_reason` |
+|--------|------------------|--------|----------------|
+| Нет официальной недели | `false` | 7 пустых дней | `unpublished` |
+| Официальная неделя, нет уроков этого преподавателя | `true` | 7 пустых дней | `no_lessons` |
+
+Whitelist корня: `teacher {id, display_name}`, `week`, `days`, `empty_reason`.
+
 Query:
 
 ```text

@@ -328,6 +328,12 @@ class ScheduleApiTest extends TestCase
         $this->withToken($token)
             ->getJson('/api/v1/children/'.$child->id.'/schedule?week=2026-09-07')
             ->assertUnauthorized();
+
+        $this->forgetAuthGuards();
+
+        $this->withToken($token)
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-07')
+            ->assertUnauthorized();
     }
 
     public function test_parent_cannot_use_student_schedule_endpoint(): void
@@ -372,6 +378,158 @@ class ScheduleApiTest extends TestCase
             ->assertJsonPath('data.days.0.lessons.0.title', 'Locked lesson');
     }
 
+    public function test_teacher_sees_own_lessons_across_classes_only(): void
+    {
+        $classA = $this->makeClass('Classe A');
+        $classB = $this->makeClass('Classe B');
+        $teacherA = $this->makeTeacher('Anna', 'Verdi');
+        $teacherB = $this->makeTeacher('Bruno', 'Neri');
+        $userA = $this->linkTeacher($teacherA, 'teacher-a@example.test');
+        $this->linkTeacher($teacherB, 'teacher-b@example.test');
+        $week = $this->makePublishedWeek('2026-09-07');
+        $ownEarly = $this->makeLesson($week, $classB, '2026-09-07', '16:00:00', '17:00:00', 'Repertorio', ScheduledLesson::STATUS_PUBLISHED, ['teacher_id' => $teacherA->id]);
+        $ownLate = $this->makeLesson($week, $classA, '2026-09-07', '18:00:00', '19:00:00', 'Danza classica', ScheduledLesson::STATUS_PUBLISHED, ['teacher_id' => $teacherA->id]);
+        $this->makeLesson($week, $classA, '2026-09-07', '17:00:00', '18:00:00', 'Other teacher', ScheduledLesson::STATUS_PUBLISHED, ['teacher_id' => $teacherB->id]);
+
+        $json = $this->withToken($this->loginToken($userA))
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-09&teacher_id='.$teacherB->id)
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.teacher.id', $teacherA->id)
+            ->assertJsonPath('data.teacher.display_name', 'Anna Verdi')
+            ->assertJsonPath('data.week.starts_on', '2026-09-07')
+            ->assertJsonPath('data.week.ends_on', '2026-09-13')
+            ->assertJsonPath('data.week.published', true)
+            ->assertJsonPath('data.empty_reason', null)
+            ->json('data');
+
+        $this->assertArrayNotHasKey('student', $json);
+        $monday = $json['days'][0]['lessons'];
+        $this->assertCount(2, $monday);
+        $this->assertSame($ownEarly->id, $monday[0]['id']);
+        $this->assertSame($ownLate->id, $monday[1]['id']);
+        $this->assertSame('Classe B', $monday[0]['academy_class']['name']);
+        $this->assertSame('Classe A', $monday[1]['academy_class']['name']);
+        $this->assertArrayNotHasKey('teacher', $monday[0]);
+        $this->assertSensitiveSchedulePayload(json_encode($json, JSON_THROW_ON_ERROR));
+    }
+
+    public function test_teacher_draft_week_is_hidden(): void
+    {
+        $class = $this->makeClass('Classe A');
+        $teacher = $this->makeTeacher('Anna', 'Verdi');
+        $user = $this->linkTeacher($teacher, 'teacher-draft@example.test');
+        $week = $this->makeWeek('2026-09-07', ScheduleWeek::STATUS_DRAFT);
+        $this->makeLesson($week, $class, '2026-09-07', '16:00:00', '17:00:00', 'Hidden', ScheduledLesson::STATUS_PUBLISHED, ['teacher_id' => $teacher->id]);
+
+        $this->withToken($this->loginToken($user))
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-07')
+            ->assertOk()
+            ->assertJsonPath('data.week.published', false)
+            ->assertJsonPath('data.empty_reason', 'unpublished')
+            ->assertJsonPath('data.days.0.lessons', []);
+    }
+
+    public function test_teacher_locked_week_and_visible_statuses(): void
+    {
+        $class = $this->makeClass('Classe A');
+        $teacher = $this->makeTeacher('Anna', 'Verdi');
+        $user = $this->linkTeacher($teacher, 'teacher-status@example.test');
+        $week = $this->makeWeek('2026-09-07', ScheduleWeek::STATUS_LOCKED);
+        $this->makeLesson($week, $class, '2026-09-07', '09:00:00', '10:00:00', 'Draft hidden', ScheduledLesson::STATUS_DRAFT, ['teacher_id' => $teacher->id]);
+        $this->makeLesson($week, $class, '2026-09-07', '10:00:00', '11:00:00', 'Scheduled hidden', ScheduledLesson::STATUS_SCHEDULED, ['teacher_id' => $teacher->id]);
+        $this->makeLesson($week, $class, '2026-09-07', '11:00:00', '12:00:00', 'Visible published', ScheduledLesson::STATUS_PUBLISHED, ['teacher_id' => $teacher->id]);
+        $this->makeLesson($week, $class, '2026-09-07', '12:00:00', '13:00:00', 'Visible cancelled', ScheduledLesson::STATUS_CANCELLED, ['teacher_id' => $teacher->id]);
+        $this->makeLesson($week, $class, '2026-09-07', '13:00:00', '14:00:00', 'Visible moved', ScheduledLesson::STATUS_MOVED, ['teacher_id' => $teacher->id]);
+
+        $lessons = $this->withToken($this->loginToken($user))
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-07')
+            ->assertOk()
+            ->assertJsonPath('data.week.published', true)
+            ->json('data.days.0.lessons');
+
+        $titles = array_column($lessons, 'title');
+        $this->assertSame(['Visible published', 'Visible cancelled', 'Visible moved'], $titles);
+        $this->assertSame(['published', 'cancelled', 'moved'], array_column($lessons, 'status'));
+    }
+
+    public function test_teacher_published_week_without_own_lessons(): void
+    {
+        $class = $this->makeClass('Classe A');
+        $teacher = $this->makeTeacher('Anna', 'Verdi');
+        $other = $this->makeTeacher('Bruno', 'Neri');
+        $user = $this->linkTeacher($teacher, 'teacher-empty@example.test');
+        $week = $this->makePublishedWeek('2026-09-07');
+        $this->makeLesson($week, $class, '2026-09-07', '16:00:00', '17:00:00', 'Other', ScheduledLesson::STATUS_PUBLISHED, ['teacher_id' => $other->id]);
+
+        $json = $this->withToken($this->loginToken($user))
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-07')
+            ->assertOk()
+            ->assertJsonPath('data.week.published', true)
+            ->assertJsonPath('data.empty_reason', 'no_lessons')
+            ->assertJsonPath('data.days.0.lessons', [])
+            ->json('data');
+
+        $this->assertCount(7, $json['days']);
+    }
+
+    public function test_student_and_parent_cannot_use_teacher_schedule(): void
+    {
+        $class = $this->makeClass('Classe A');
+        $student = $this->makeStudentInClass('Mario', 'Rossi', $class);
+        $studentUser = $this->linkStudent($student, 'student-teacher-ep@example.test');
+        $parentUser = $this->linkParentWithChildren('parent-teacher-ep@example.test', [$student]);
+
+        $this->withToken($this->loginToken($studentUser))
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-07')
+            ->assertForbidden()
+            ->assertJsonPath('error.code', 'forbidden');
+
+        $this->forgetAuthGuards();
+
+        $this->withToken($this->loginToken($parentUser))
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-07')
+            ->assertForbidden()
+            ->assertJsonPath('error.code', 'forbidden');
+    }
+
+    public function test_teacher_schedule_does_not_leak_private_fields(): void
+    {
+        $class = $this->makeClass('Classe A');
+        $student = $this->makeStudentInClass('Sofia', 'Verdi', $class, [
+            'tax_code' => 'VRDSFO10A01H501X',
+            'notes' => 'internal-student-note',
+        ]);
+        $teacher = $this->makeTeacher('Anna', 'Verdi');
+        $user = $this->linkTeacher($teacher, 'teacher-privacy@example.test');
+        $week = $this->makePublishedWeek('2026-09-07');
+        $this->makeLesson(
+            $week,
+            $class,
+            '2026-09-07',
+            '16:00:00',
+            '17:00:00',
+            'Public title',
+            ScheduledLesson::STATUS_PUBLISHED,
+            ['teacher_id' => $teacher->id, 'notes' => 'internal-schedule-note'],
+        );
+
+        $payload = $this->withToken($this->loginToken($user))
+            ->getJson('/api/v1/teacher/schedule?week=2026-09-07')
+            ->assertOk()
+            ->json();
+
+        $encoded = json_encode($payload, JSON_THROW_ON_ERROR);
+        $this->assertSensitiveSchedulePayload($encoded);
+        $this->assertStringNotContainsString('internal-student-note', $encoded);
+        $this->assertStringNotContainsString('internal-schedule-note', $encoded);
+        $this->assertStringNotContainsString('VRDSFO10A01H501X', $encoded);
+        $this->assertStringNotContainsString('BNCLNE80A01H501X', $encoded);
+        $this->assertStringNotContainsString('Sofia', $encoded);
+        $this->assertStringNotContainsString('"students"', $encoded);
+        $this->assertStringNotContainsString('"parent"', $encoded);
+    }
+
     private function forgetAuthGuards(): void
     {
         $this->app['auth']->forgetGuards();
@@ -394,6 +552,15 @@ class ScheduleApiTest extends TestCase
     {
         return $this->identity->createAndLink($student, [
             'name' => $student->displayName(),
+            'email' => $email,
+            'password' => 'password',
+        ]);
+    }
+
+    private function linkTeacher(Teacher $teacher, string $email): User
+    {
+        return $this->identity->createAndLink($teacher, [
+            'name' => $teacher->displayName(),
             'email' => $email,
             'password' => 'password',
         ]);

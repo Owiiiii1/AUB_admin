@@ -140,7 +140,7 @@
 
 Текущая неделя (без `?week=`) считается в `config('app.timezone')` = `Europe/Rome` (`APP_TIMEZONE`). Date-only поля `week_start_date` / `lesson_date` массово не конвертируются.
 
-Эндпоинты: `GET /api/v1/schedule` (student, свой класс) и `GET /api/v1/children/{student}/schedule` (parent, только `student_parent`). См. [API.md](API.md).
+Эндпоинты: `GET /api/v1/schedule` (student, свой класс), `GET /api/v1/children/{student}/schedule` (parent, только `student_parent`) и `GET /api/v1/teacher/schedule` (teacher, свои `ScheduledLesson.teacher_id` по всем классам; есть `academy_class`, roster учеников нет). См. [API.md](API.md).
 
 ## Маршруты
 

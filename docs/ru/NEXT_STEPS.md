@@ -2,7 +2,7 @@
 
 Что построено: [CURRENT_STATE.md](CURRENT_STATE.md). Полный список вопросов: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Статус (2026-09-09):** Web-ядро в работе. **API Foundation `/api/v1` сделан** (Sanctum). **Student/parent schedule API сделан**. Часовой пояс приложения — **`Europe/Rome`**. Auth foundation есть в `AUB_app`. Core Data Model **сделан**. Identity Layer **сделан**. PHPUnit на `aub_test` **зелёный**.
+**Статус (2026-09-09):** Web-ядро в работе. **API Foundation `/api/v1` сделан** (Sanctum). **Student/parent/teacher schedule API сделан**. Часовой пояс приложения — **`Europe/Rome`**. В Flutter есть auth + student/parent schedule. Core Data Model **сделан**. Identity Layer **сделан**. PHPUnit на `aub_test` **зелёный**.
 
 **DECIDED:** ядро `AUB_admin`; Flutter `AUB_app`; только HTTPS API; раздельные GitHub-репо; параллельный backend/Flutter; один активный `Class`; один User = один actor type; `customers` — kit leftover.
 
@@ -15,10 +15,11 @@
 5. **Инфраструктура тестов** — **сделана** (MySQL `aub_test`, hard guard против production `aub`; без SQLite).
 6. **API Foundation** — **сделан** (`/api/v1`, Sanctum v4.3.3, login/logout/me/health). Контракт: [API.md](API.md).
 7. **Flutter Authentication Foundation** — **сделан** в `AUB_app`.
-8. **Student / Parent schedule API** — **сделан** (`GET /schedule`, `GET /children/{student}/schedule`). Flutter UI расписания — парная клиентская задача.
+8. **Student / Parent schedule API** — **сделан** (`GET /schedule`, `GET /children/{student}/schedule`).
 9. **Часовой пояс академии** — **сделан** (`APP_TIMEZONE=Europe/Rome`).
+10. **Teacher schedule API** — **сделан** (`GET /teacher/schedule`).
 
-Flutter **можно** развивать параллельно. Расписание преподавателя, attendance и check-in — отдельные задачи.
+Flutter **можно** развивать параллельно. Attendance и check-in — отдельные задачи.
 
 ## Зафиксированные продуктовые правила (не OPEN)
 

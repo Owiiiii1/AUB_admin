@@ -113,7 +113,28 @@ Student only (`account_type = student`). The student is taken from `request.user
 
 Parent only. The child must be linked via `student_parent`. Unrelated or unknown children return `404 not_found` (same body), so client code cannot probe whether a student id exists.
 
-Teacher and staff cannot use either schedule endpoint (`403` for a valid teacher token; staff never gets a mobile session).
+Teacher and staff cannot use either student/parent schedule endpoint (`403` for a valid teacher token; staff never gets a mobile session).
+
+### GET `/teacher/schedule`
+
+Teacher only (`account_type = teacher`). The teacher is taken from `request.user.teacherProfile`. There is no `teacher_id` query/body. Extra query keys such as `teacher_id` are ignored.
+
+Student and parent tokens receive `403`. Staff cannot obtain a mobile session (`401`).
+
+Same `?week=YYYY-MM-DD` contract, publication rules, Europe/Rome current week, and empty-state HTTP 200 as student/parent schedule.
+
+Lessons are all official `ScheduledLesson` rows for that teacher (`teacher_id`), across classes. Sorted by `lesson_date`, `starts_at`, `ends_at`, `id`.
+
+Each lesson includes `academy_class {id,name}`. The lesson object does **not** include the teacher (the caller is that teacher) and does **not** include a class roster, student names/IDs, parent data, emails, phones, tax codes, notes, AI metadata, or conflicts.
+
+Empty states:
+
+| Case | `week.published` | `days` | `empty_reason` |
+|------|------------------|--------|----------------|
+| No official week | `false` | 7 empty days | `unpublished` |
+| Official week, no lessons for this teacher | `true` | 7 empty days | `no_lessons` |
+
+Root whitelist: `teacher {id, display_name}`, `week`, `days`, `empty_reason`.
 
 Query:
 

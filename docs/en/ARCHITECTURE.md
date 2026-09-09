@@ -10,7 +10,7 @@ The CRM/backend is the **core**. Interfaces attach to that core:
 |-----------|----------|---------------------|
 | Admin / superadmin web | Administrators | Implemented (Inertia web) |
 | Staff web workplaces | Secretariat, teachers, other staff | Phase 1 implemented; teacher login not linked to `teachers` |
-| Flutter — students / parents / teachers | Non-admin actors | Repository exists; **API Foundation + student/parent schedule API**; Flutter has auth foundation |
+| Flutter — students / parents / teachers | Non-admin actors | Repository exists; **API Foundation + student/parent/teacher schedule API**; Flutter has auth + student/parent schedule |
 
 Do not design the product around a single admin panel.
 
@@ -51,8 +51,8 @@ Separate mobile application. It must call `AUB_admin` **only over HTTPS API**.
 | GitHub | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) |
 | Dart package | `aub` |
 | Bundle / application id | `com.owlsolutions.aub` |
-| Current code | Auth foundation in `AUB_app`; student/parent schedule API on `/api/v1` |
-| API | **`/api/v1`** (Sanctum PAT; schedule read for student/parent) |
+| Current code | Auth foundation in `AUB_app`; student/parent/teacher schedule API on `/api/v1` |
+| API | **`/api/v1`** (Sanctum PAT; student/parent/teacher schedule read) |
 
 Flutter work may proceed in parallel with backend. Contract: [API.md](API.md).
 
@@ -172,7 +172,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. Mobile API: Laravel Sanctum **v4.
 | `routes/owl-admin-auth.php` | `/login` redirect, `POST /logout` |
 | `routes/owl-admin-pages.php` | All protected Inertia/web CRM routes |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
 Production `php artisan route:list --path=api`: **5** routes. Web CRM unchanged. Details: [API.md](API.md).

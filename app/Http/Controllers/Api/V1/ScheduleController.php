@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\ShowScheduleRequest;
 use App\Http\Resources\Api\ScheduleResource;
+use App\Http\Resources\Api\TeacherScheduleResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Student;
 use App\Models\User;
@@ -50,6 +51,20 @@ class ScheduleController extends Controller
         $payload = $this->schedule->forStudent($student, $request->validated('week'));
 
         return ApiResponse::success((new ScheduleResource($payload))->resolve());
+    }
+
+    public function teacher(ShowScheduleRequest $request): JsonResponse
+    {
+        $this->assertAccountType($request->user(), User::TYPE_TEACHER);
+
+        $teacher = $request->user()?->teacherProfile;
+        if ($teacher === null) {
+            throw new AccessDeniedHttpException('Forbidden.');
+        }
+
+        $payload = $this->schedule->forTeacher($teacher, $request->validated('week'));
+
+        return ApiResponse::success((new TeacherScheduleResource($payload))->resolve());
     }
 
     private function assertAccountType(?User $user, string $type): void

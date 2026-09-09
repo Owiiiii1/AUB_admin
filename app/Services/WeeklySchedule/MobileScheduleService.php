@@ -6,6 +6,7 @@ use App\Models\AcademyClass;
 use App\Models\ScheduledLesson;
 use App\Models\ScheduleWeek;
 use App\Models\Student;
+use App\Models\Teacher;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -49,6 +50,23 @@ class MobileScheduleService
         $emptyReason = $lessons->isEmpty() ? 'no_lessons' : null;
 
         return $this->payload($student, $class, $startsOn, $endsOn, true, $emptyReason, $lessons);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function forTeacher(Teacher $teacher, ?string $weekParam): array
+    {
+        [$startsOn, $endsOn] = $this->resolveWeekBounds($weekParam);
+        $week = $this->findOfficialWeek($startsOn);
+        if ($week === null) {
+            return $this->teacherPayload($teacher, $startsOn, $endsOn, false, 'unpublished', collect());
+        }
+
+        $lessons = $this->visibleLessonsForTeacher($week, $teacher->id);
+        $emptyReason = $lessons->isEmpty() ? 'no_lessons' : null;
+
+        return $this->teacherPayload($teacher, $startsOn, $endsOn, true, $emptyReason, $lessons);
     }
 
     /**
@@ -96,6 +114,30 @@ class MobileScheduleService
             ])
             ->orderBy('lesson_date')
             ->orderBy('starts_at')
+            ->orderBy('ends_at')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * @return Collection<int, ScheduledLesson>
+     */
+    public function visibleLessonsForTeacher(ScheduleWeek $week, int $teacherId): Collection
+    {
+        return ScheduledLesson::query()
+            ->where('schedule_week_id', $week->id)
+            ->where('teacher_id', $teacherId)
+            ->whereIn('status', self::VISIBLE_LESSON_STATUSES)
+            ->with([
+                'lesson:id,name',
+                'academyClass:id,name',
+                'building:id,name',
+                'room:id,name',
+            ])
+            ->orderBy('lesson_date')
+            ->orderBy('starts_at')
+            ->orderBy('ends_at')
+            ->orderBy('id')
             ->get();
     }
 
@@ -112,32 +154,6 @@ class MobileScheduleService
         ?string $emptyReason,
         Collection $lessons,
     ): array {
-        $byDate = $lessons->groupBy(
-            static fn (ScheduledLesson $lesson): string => $lesson->lesson_date?->format('Y-m-d') ?? '',
-        );
-
-        $days = [];
-        for ($offset = 0; $offset < 7; $offset++) {
-            $date = $startsOn->copy()->addDays($offset);
-            $key = $date->format('Y-m-d');
-            $dayLessons = $class === null
-                ? collect()
-                : ($byDate->get($key) ?? collect());
-
-            $days[] = [
-                'date' => $key,
-                'weekday' => $date->dayOfWeekIso,
-                'lessons' => $dayLessons
-                    ->values()
-                    ->map(fn (ScheduledLesson $lesson): array => $this->lessonArray($lesson))
-                    ->all(),
-            ];
-        }
-
-        if ($class === null) {
-            $days = [];
-        }
-
         return [
             'student' => [
                 'id' => $student->id,
@@ -152,22 +168,80 @@ class MobileScheduleService
                 'ends_on' => $endsOn->format('Y-m-d'),
                 'published' => $published,
             ],
-            'days' => $days,
+            'days' => $class === null
+                ? []
+                : $this->days($startsOn, $lessons, forTeacher: false),
             'empty_reason' => $emptyReason,
         ];
     }
 
     /**
+     * @param  Collection<int, ScheduledLesson>  $lessons
      * @return array<string, mixed>
      */
-    private function lessonArray(ScheduledLesson $lesson): array
+    private function teacherPayload(
+        Teacher $teacher,
+        Carbon $startsOn,
+        Carbon $endsOn,
+        bool $published,
+        ?string $emptyReason,
+        Collection $lessons,
+    ): array {
+        return [
+            'teacher' => [
+                'id' => $teacher->id,
+                'display_name' => $teacher->displayName(),
+            ],
+            'week' => [
+                'starts_on' => $startsOn->format('Y-m-d'),
+                'ends_on' => $endsOn->format('Y-m-d'),
+                'published' => $published,
+            ],
+            'days' => $this->days($startsOn, $lessons, forTeacher: true),
+            'empty_reason' => $emptyReason,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, ScheduledLesson>  $lessons
+     * @return list<array<string, mixed>>
+     */
+    private function days(Carbon $startsOn, Collection $lessons, bool $forTeacher): array
+    {
+        $byDate = $lessons->groupBy(
+            static fn (ScheduledLesson $lesson): string => $lesson->lesson_date?->format('Y-m-d') ?? '',
+        );
+
+        $days = [];
+        for ($offset = 0; $offset < 7; $offset++) {
+            $date = $startsOn->copy()->addDays($offset);
+            $key = $date->format('Y-m-d');
+            $dayLessons = $byDate->get($key) ?? collect();
+
+            $days[] = [
+                'date' => $key,
+                'weekday' => $date->dayOfWeekIso,
+                'lessons' => $dayLessons
+                    ->values()
+                    ->map(fn (ScheduledLesson $lesson): array => $this->lessonArray($lesson, $forTeacher))
+                    ->all(),
+            ];
+        }
+
+        return $days;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function lessonArray(ScheduledLesson $lesson, bool $forTeacher = false): array
     {
         $title = trim((string) ($lesson->title ?? ''));
         if ($title === '') {
             $title = (string) ($lesson->lesson?->name ?? '');
         }
 
-        return [
+        $row = [
             'id' => $lesson->id,
             'starts_at' => $this->formatTime($lesson->starts_at),
             'ends_at' => $this->formatTime($lesson->ends_at),
@@ -175,10 +249,6 @@ class MobileScheduleService
             'lesson' => $lesson->lesson === null ? null : [
                 'id' => $lesson->lesson->id,
                 'name' => $lesson->lesson->name,
-            ],
-            'teacher' => $lesson->teacher === null ? null : [
-                'id' => $lesson->teacher->id,
-                'display_name' => $lesson->teacher->displayName(),
             ],
             'location' => [
                 'building' => $lesson->building === null ? null : [
@@ -192,6 +262,22 @@ class MobileScheduleService
             ],
             'status' => $lesson->status,
         ];
+
+        if ($forTeacher) {
+            $row['academy_class'] = $lesson->academyClass === null ? null : [
+                'id' => $lesson->academyClass->id,
+                'name' => $lesson->academyClass->name,
+            ];
+
+            return $row;
+        }
+
+        $row['teacher'] = $lesson->teacher === null ? null : [
+            'id' => $lesson->teacher->id,
+            'display_name' => $lesson->teacher->displayName(),
+        ];
+
+        return $row;
     }
 
     private function formatTime(mixed $value): string

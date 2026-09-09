@@ -10,7 +10,7 @@ CRM/backend — **ядро**. К ядру подключаются интерф�
 |-----------|-----------|---------------------|
 | Admin / superadmin web | Администраторы | Реализовано (Inertia web) |
 | Web-workplaces персонала | Секретариат, преподаватели, другой персонал | Фаза 1 реализована; логин преподавателя не связан с `teachers` |
-| Flutter — студенты / родители / преподаватели | Не-админ акторы | Репозиторий есть; **API Foundation + student/parent schedule API**; в Flutter есть auth foundation |
+| Flutter — студенты / родители / преподаватели | Не-админ акторы | Репозиторий есть; **API Foundation + student/parent/teacher schedule API**; в Flutter есть auth + student/parent schedule |
 
 Не проектировать продукт вокруг одной admin panel.
 
@@ -51,8 +51,8 @@ CRM/backend — **ядро**. К ядру подключаются интерф�
 | GitHub | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) |
 | Dart package | `aub` |
 | Bundle / application id | `com.owlsolutions.aub` |
-| Текущий код | Auth foundation в `AUB_app`; student/parent schedule API на `/api/v1` |
-| API | **`/api/v1`** (Sanctum PAT; чтение расписания для student/parent) |
+| Текущий код | Auth foundation в `AUB_app`; student/parent/teacher schedule API на `/api/v1` |
+| API | **`/api/v1`** (Sanctum PAT; чтение расписания student/parent/teacher) |
 
 Flutter можно разрабатывать параллельно с backend. Контракт: [API.md](API.md).
 
@@ -172,7 +172,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. Mobile API: Laravel Sanctum *
 | `routes/owl-admin-auth.php` | редирект `/login`, `POST /logout` |
 | `routes/owl-admin-pages.php` | Все защищённые Inertia/web CRM-маршруты |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
 Production `php artisan route:list --path=api`: **5** маршрутов. Web CRM без изменений. Подробности: [API.md](API.md).

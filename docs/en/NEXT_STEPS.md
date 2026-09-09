@@ -2,7 +2,7 @@
 
 What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Status (2026-09-09):** Web core in use. **API Foundation `/api/v1` is done** (Sanctum). **Student/parent schedule API is done**. Application timezone is **`Europe/Rome`**. Flutter auth foundation is in `AUB_app`. Core Data Model is **done**. Identity Layer is **done**. PHPUnit on `aub_test` is **green**.
+**Status (2026-09-09):** Web core in use. **API Foundation `/api/v1` is done** (Sanctum). **Student/parent/teacher schedule API is done**. Application timezone is **`Europe/Rome`**. Flutter has auth + student/parent schedule. Core Data Model is **done**. Identity Layer is **done**. PHPUnit on `aub_test` is **green**.
 
 **DECIDED:** `AUB_admin` core; `AUB_app` Flutter; HTTPS API only; separate GitHub repos; parallel backend/Flutter; one active `Class`; one User = one actor type; `customers` is a kit leftover.
 
@@ -15,10 +15,11 @@ What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_Q
 5. **Test infrastructure** — **done** (MySQL `aub_test`, hard guard against production `aub`; no SQLite).
 6. **API Foundation** — **done** (`/api/v1`, Sanctum v4.3.3, login/logout/me/health). Contract: [API.md](API.md).
 7. **Flutter Authentication Foundation** — **done** in `AUB_app`.
-8. **Student / Parent schedule API** — **done** (`GET /schedule`, `GET /children/{student}/schedule`). Flutter schedule UI is the paired client task.
+8. **Student / Parent schedule API** — **done** (`GET /schedule`, `GET /children/{student}/schedule`).
 9. **Academy timezone** — **done** (`APP_TIMEZONE=Europe/Rome`).
+10. **Teacher schedule API** — **done** (`GET /teacher/schedule`).
 
-Flutter **may** be developed in parallel. Teacher schedule, attendance, and check-in wait for dedicated tasks.
+Flutter **may** be developed in parallel. Attendance and check-in wait for dedicated tasks.
 
 ## Locked product rules (not OPEN)
 

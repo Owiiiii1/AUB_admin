@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-09** (application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-09** (Teacher schedule API + application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -36,13 +36,13 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **65 passed**, 0 failed, 0 errors (401 assertions) |
+| Last suite on production host | **71 passed**, 0 failed, 0 errors |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 
 ## Routes (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **7** routes. Web CRM unchanged. No Passport/JWT.
+`php artisan route:list --path=api`: **8** routes. Web CRM unchanged. No Passport/JWT.
 
 ### Mobile API
 
@@ -55,8 +55,9 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | GET | `/api/v1/me` | `api.v1.me` |
 | GET | `/api/v1/schedule` | `api.v1.schedule.student` |
 | GET | `/api/v1/children/{student}/schedule` | `api.v1.schedule.child` |
+| GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
 
-Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student schedule is own class only; parent schedule is own children via `student_parent`. Details: [API.md](API.md).
+Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student schedule is own class only; parent schedule is own children via `student_parent`; teacher schedule is own `ScheduledLesson.teacher_id` across classes. Details: [API.md](API.md).
 
 ### Auth
 
