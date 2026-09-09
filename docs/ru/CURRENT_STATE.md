@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-09** (Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-09** (часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -24,6 +24,8 @@ Production-сборка есть **на сервере** (`public/build/manifest
 
 На production есть `storage:link`.
 
+Часовой пояс приложения: **`Europe/Rome`** (`APP_TIMEZONE` в `.env`, `config('app.timezone')`). Границы текущей недели расписания считаются в этой timezone. Существующие DATETIME-колонки массово не конвертировались.
+
 В хост-приложении установлен `laravel/sanctum` **v4.3.3**. Passport / JWT нет. Контракт: [API.md](API.md).
 
 ## Автотесты
@@ -34,7 +36,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
-| Последний suite на production-хосте | **60 passed**, 0 failed, 0 errors (387 assertions) |
+| Последний suite на production-хосте | **65 passed**, 0 failed, 0 errors |
 
 `php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 

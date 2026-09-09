@@ -14,6 +14,7 @@
 - `ClassLesson` + назначения преподавателей; недельное расписание на `academy_class_id`
 - CRUD-журнал; вкладки settings
 - Репозиторий Flutter есть; **API Foundation `/api/v1` сделан**; **student/parent schedule API сделан**; в клиенте есть auth foundation
+- Часовой пояс приложения `Europe/Rome` (`APP_TIMEZONE`)
 
 ---
 

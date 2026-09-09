@@ -121,9 +121,9 @@ Query:
 ?week=YYYY-MM-DD
 ```
 
-Any day of the week is accepted. The backend converts it to Monday–Sunday using Laravel `now()` / `config('app.timezone')`. **Current timezone in `config/app.php` is `UTC` (not read from `APP_TIMEZONE`).** Flutter must not compute the week as source of truth.
+Any day of the week is accepted. The backend converts it to Monday–Sunday using Laravel `now()` / `config('app.timezone')` (`APP_TIMEZONE`, default `Europe/Rome`). Flutter must not compute the week as source of truth.
 
-If `week` is omitted, the current week in that timezone is used. Invalid `week` → `422 validation_error`.
+If `week` is omitted, the current week in `Europe/Rome` is used. Invalid `week` → `422 validation_error`.
 
 #### Publication rules (same as admin Publish)
 

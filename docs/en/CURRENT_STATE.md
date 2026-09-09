@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-09** (Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-09** (application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -24,6 +24,8 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 
 `storage:link` exists on production.
 
+Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.timezone')`). Schedule current-week bounds use this timezone. Existing DATETIME columns were not bulk-converted.
+
 `laravel/sanctum` **v4.3.3** is installed. No Passport or JWT. Contract: [API.md](API.md).
 
 ## Automated tests
@@ -34,7 +36,7 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **60 passed**, 0 failed, 0 errors (387 assertions) |
+| Last suite on production host | **65 passed**, 0 failed, 0 errors |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 

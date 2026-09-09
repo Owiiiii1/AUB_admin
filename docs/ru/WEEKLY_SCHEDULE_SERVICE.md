@@ -138,6 +138,8 @@
 
 На официальной неделе отдаются уроки со статусами `published`, `cancelled`, `moved`. `draft` и `scheduled` скрыты (`scheduled` — статус размещения по умолчанию, в том числе для уроков, добавленных после Publish без повторной публикации).
 
+Текущая неделя (без `?week=`) считается в `config('app.timezone')` = `Europe/Rome` (`APP_TIMEZONE`). Date-only поля `week_start_date` / `lesson_date` массово не конвертируются.
+
 Эндпоинты: `GET /api/v1/schedule` (student, свой класс) и `GET /api/v1/children/{student}/schedule` (parent, только `student_parent`). См. [API.md](API.md).
 
 ## Маршруты

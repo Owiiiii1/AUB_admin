@@ -121,9 +121,9 @@ Query:
 ?week=YYYY-MM-DD
 ```
 
-Дата может быть любым днём недели. Backend приводит её к Monday–Sunday через Laravel `now()` / `config('app.timezone')`. **Сейчас в `config/app.php` timezone = `UTC` (не читается из `APP_TIMEZONE`).** Flutter не является source of truth для недели.
+Дата может быть любым днём недели. Backend приводит её к Monday–Sunday через Laravel `now()` / `config('app.timezone')` (`APP_TIMEZONE`, по умолчанию `Europe/Rome`). Flutter не является source of truth для недели.
 
-Без `week` — текущая неделя в этой timezone. Невалидный `week` → `422 validation_error`.
+Без `week` — текущая неделя в `Europe/Rome`. Невалидный `week` → `422 validation_error`.
 
 #### Правила публикации (как admin Publish)
 

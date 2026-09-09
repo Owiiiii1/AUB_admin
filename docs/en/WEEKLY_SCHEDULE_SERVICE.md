@@ -138,6 +138,8 @@ Mobile clients never see admin drafts.
 
 On an official week, lessons with status `published`, `cancelled`, and `moved` are returned. `draft` and `scheduled` stay hidden (`scheduled` is the default placement status and is also used for lessons added after Publish without re-publishing).
 
+Current week (no `?week=`) uses `config('app.timezone')` = `Europe/Rome` (`APP_TIMEZONE`). Date-only `week_start_date` / `lesson_date` values are not bulk-converted.
+
 Endpoints: `GET /api/v1/schedule` (student, own class) and `GET /api/v1/children/{student}/schedule` (parent, `student_parent` only). See [API.md](API.md).
 
 ## Routes

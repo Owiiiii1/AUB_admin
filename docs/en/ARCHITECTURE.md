@@ -35,6 +35,7 @@ Central academy kernel:
 | GitHub | [`Owiiiii1/AUB_admin`](https://github.com/Owiiiii1/AUB_admin) |
 | Production path | `/var/www/aub` |
 | Domain | `https://aub.owlsolutions.net` |
+| Application timezone | `Europe/Rome` via `APP_TIMEZONE` (`config/app.php`) |
 | Git on production | **No** `.git` as of 2026-09-07 — do not change that in docs-only tasks |
 
 Tech Lead treats **GitHub** as the source of truth. Production is a deployed file tree that can drift until a git-deploy workflow is introduced.

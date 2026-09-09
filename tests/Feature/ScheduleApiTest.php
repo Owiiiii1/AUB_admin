@@ -15,6 +15,7 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\AccountIdentityService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,6 +29,12 @@ class ScheduleApiTest extends TestCase
     {
         parent::setUp();
         $this->identity = $this->app->make(AccountIdentityService::class);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     public function test_student_sees_own_class_schedule_only(): void
@@ -333,6 +340,21 @@ class ScheduleApiTest extends TestCase
             ->getJson('/api/v1/schedule?week=2026-09-07')
             ->assertForbidden()
             ->assertJsonPath('error.code', 'forbidden');
+    }
+
+    public function test_omitted_week_uses_europe_rome_not_utc(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-13 22:30:00', 'UTC'));
+
+        $class = $this->makeClass('Classe A');
+        $student = $this->makeStudentInClass('Mario', 'Rossi', $class);
+        $user = $this->linkStudent($student, 'rome-week@example.test');
+
+        $this->withToken($this->loginToken($user))
+            ->getJson('/api/v1/schedule')
+            ->assertOk()
+            ->assertJsonPath('data.week.starts_on', '2026-09-14')
+            ->assertJsonPath('data.week.ends_on', '2026-09-20');
     }
 
     public function test_locked_week_is_visible_like_published(): void

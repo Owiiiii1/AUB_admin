@@ -35,6 +35,7 @@ CRM/backend — **ядро**. К ядру подключаются интерф�
 | GitHub | [`Owiiiii1/AUB_admin`](https://github.com/Owiiiii1/AUB_admin) |
 | Production path | `/var/www/aub` |
 | Домен | `https://aub.owlsolutions.net` |
+| Часовой пояс приложения | `Europe/Rome` через `APP_TIMEZONE` (`config/app.php`) |
 | Git на production | **Нет** `.git` на 2026-09-07 — в docs-only задачах это не менять |
 
 Для Tech Lead источник истины — **GitHub**. Production — развёрнутое файловое дерево; оно может расходиться с GitHub, пока нет git-deploy.

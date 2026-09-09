@@ -73,7 +73,7 @@ AUB_app lib/                            ← Flutter only
 Production database name: **`aub`**. Test database name: **`aub_test`**. Tests must never use `aub`.
 
 - Do **not** use SQLite / `:memory:`. PHPUnit is MySQL.
-- `phpunit.xml` force-sets `APP_ENV=testing`, `DB_CONNECTION=mysql`, `DB_DATABASE=aub_test` (no credentials).
+- `phpunit.xml` force-sets `APP_ENV=testing`, `APP_TIMEZONE=Europe/Rome`, `DB_CONNECTION=mysql`, `DB_DATABASE=aub_test` (no credentials).
 - Server/local secrets live in `.env.testing` (not in git). Copy from `.env.testing.example`.
 - Hard guard: `App\Testing\TestDatabaseGuard` — if `testing` and the connection/database is not MySQL `aub_test`, abort with `Refusing to run tests against non-test database.` before migrations. Wired in `AppServiceProvider` and `tests/TestCase`.
 - Always `php artisan optimize:clear` **before** `php artisan test`. Never run the suite while `config:cache` is active: cached config ignores phpunit / `.env.testing` and historically pointed at production.

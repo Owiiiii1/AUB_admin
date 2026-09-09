@@ -56,7 +56,7 @@ class MobileScheduleService
      */
     public function resolveWeekBounds(?string $weekParam): array
     {
-        $timezone = (string) config('app.timezone', 'UTC');
+        $timezone = (string) config('app.timezone', 'Europe/Rome');
         $start = $weekParam
             ? Carbon::parse($weekParam, $timezone)->startOfWeek(Carbon::MONDAY)
             : Carbon::now($timezone)->startOfWeek(Carbon::MONDAY);

@@ -14,6 +14,7 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 - `ClassLesson` + teacher assignments; weekly schedule on `academy_class_id`
 - CRUD activity log; settings tabs
 - Flutter repo exists; **API Foundation `/api/v1` is done**; **student/parent schedule API is done**; Flutter client has auth foundation
+- Application timezone `Europe/Rome` (`APP_TIMEZONE`)
 
 ---
 
