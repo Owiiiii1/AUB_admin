@@ -51,7 +51,16 @@ Migration `2026_09_09_200000_create_attendance_records_table`. Files copied to `
 
 ## Production smoke
 
-Isolated week `2026-12-28` / class `Mobile Test` / teacher `teacher@admin.com`. Temporary Sanctum token deleted after. Cleanup attendance rows. No plaintext tokens in this report.
+Isolated week `2026-12-28`, lesson id **2** (`LEZIONE CLASSICO`), class `Mobile Test`, student id **8**, teacher `teacher@admin.com`. Temporary Sanctum token `smoke-teacher-attendance` (deleted after):
+
+- GET roster → 200, `attendance_editable=true`, 1 student
+- PUT present → 200; GET → `present`
+- PUT absent → 200; GET → `absent`
+- PUT `null` → 200; GET → unmarked
+- Student token GET → 403
+- Smoke attendance row deleted (`remaining_rows=0`)
+
+No second official teacher lesson on that week (foreign 404 not exercised). `.env` not touched. No plaintext tokens in this report.
 
 ## Files
 
