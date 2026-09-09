@@ -34,7 +34,7 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **44 passed**, 0 failed, 0 errors (252 assertions) |
+| Last suite on production host | **60 passed**, 0 failed, 0 errors (387 assertions) |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 

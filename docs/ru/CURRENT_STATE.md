@@ -34,7 +34,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
-| Последний suite на production-хосте | **44 passed**, 0 failed, 0 errors (252 assertions) |
+| Последний suite на production-хосте | **60 passed**, 0 failed, 0 errors (387 assertions) |
 
 `php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 

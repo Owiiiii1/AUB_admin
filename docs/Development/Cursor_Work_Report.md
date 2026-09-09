@@ -35,11 +35,30 @@ Timezone: `config/app.php` is hardcoded **`UTC`** (not `APP_TIMEZONE`). Document
 
 ## Tests
 
-`tests/Feature/ScheduleApiTest.php` plus the existing suite. Full `php artisan test` on production `aub_test` after deploy (see below).
+Production host, `php artisan test` after `optimize:clear`:
+
+| Metric | Count |
+|--------|-------|
+| Total | 60 |
+| Passed | 60 |
+| Failed | 0 |
+| Errors | 0 |
+| Assertions | 387 |
+
+`ScheduleApiTest` covers own-class isolation, draft hidden, published/locked visible, cancelled/moved, sort, empty class, unpublished week, parent own/two children/unrelated 404, privacy whitelist, teacher 403, staff 401.
 
 ## Deploy
 
-No migration. Files copied to `/var/www/aub`. `.env` not touched. `optimize:clear`. `route:list --path=api`. `php artisan test`. Production smoke against `/api/v1/health` and schedule endpoints with existing test actors (no plaintext tokens in this report).
+No migration. Files copied to `/var/www/aub`. `.env` not touched. `optimize:clear`. `route:list --path=api` shows **7** routes. `php artisan test` green.
+
+## Smoke tests
+
+Public:
+
+- `GET /api/v1/health` → 200
+- `GET /api/v1/schedule` without token → 401
+
+Existing test actors (`student@admin.com`, `parent@admin.com`): student assigned to isolated class `Mobile Test`; published week `2026-12-28` with one lesson. Kernel smoke (temporary tokens, then deleted): student 200 published, parent own child 200, unrelated child 404, prev/next week 200. No plaintext tokens in this report. Real academy weeks were not published or overwritten.
 
 ## Files changed
 
