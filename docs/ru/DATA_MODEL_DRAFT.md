@@ -110,6 +110,7 @@ hasMany `RoleMenuItem`, hasMany `User`.
 `academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **Колонок lat/lng/radius сейчас нет.**  
 `schedule_weeks`: понедельник `week_start_date`, пятница `week_end_date`, `work_starts_at` / `work_ends_at`, `draft`/`published`/`locked`.  
 `scheduled_lessons`: неделя, здание, зал, **`academy_class_id`**, преподаватель, урок, дата/время, цвет, статус.  
+`attendance_records`: **Student + ScheduledLesson**; `status` `present`/`absent`/`excused`; unique `(scheduled_lesson_id, student_id)`; `marked_by` nullable `nullOnDelete`. Unmarked = нет строки. См. [ATTENDANCE.md](ATTENDANCE.md).  
 `schedule_ai_runs`: промпт, preferences JSON, метрики, отчёт, предупреждения.
 
 UI: визуал 30 мин, планирование 5 мин. См. [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHEDULE_SERVICE.md).  
@@ -170,7 +171,7 @@ Student + Class + AcademicYear → ReportCard
 |------|------------|--------|
 | `students` / `parents` / `student_parent` | Реализовано 2026-09-08 | DECIDED / implemented |
 | Enrollment workflow вокруг `Class` | Статусы, история, переводы | OPEN |
-| **Student Attendance** | Присутствие на **session**. Не GPS преподавателя | OPEN |
+| **Student Attendance** | Teacher MVP: Student + ScheduledLesson (`attendance_records`). Текущий roster класса. История/финализация OPEN | Teacher write MVP реализован / история OPEN |
 | **Teacher Check-in** | Daily geofence check-in. Детали radius/accuracy OPEN | DECIDED semantics / не реализовано |
 | Final Assessment | `StudentFinalResult` / `ReportCard`. Шкала OPEN | DECIDED core / детали OPEN |
 | Единый календарь | Variant A vs B. Tech Lead не решил. **`scheduled_lessons` сейчас не менять** | OPEN |

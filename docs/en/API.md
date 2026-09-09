@@ -37,6 +37,9 @@ Each user must be `is_active` and have the matching linked profile (`students.us
 | POST | `/auth/logout-all` | Bearer |
 | GET | `/schedule` | Bearer, `student` only |
 | GET | `/children/{student}/schedule` | Bearer, `parent` only |
+| GET | `/teacher/schedule` | Bearer, `teacher` only |
+| GET | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, `teacher` only |
+| PUT | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, `teacher` only |
 
 ### GET `/health`
 
@@ -176,6 +179,51 @@ Whitelist: student `{id, display_name, academy_class}`, lesson `{id, starts_at, 
 
 Lessons are grouped by day and sorted by `starts_at`.
 
+### GET `/teacher/lessons/{scheduledLesson}/attendance`
+
+Teacher only. See [ATTENDANCE.md](ATTENDANCE.md).
+
+The lesson must belong to `request.user.teacherProfile` and be mobile-visible (`schedule_weeks.status` in `published`/`locked`, lesson `published`/`moved`/`cancelled`). Otherwise **404** `not_found` (including another teacher’s lesson).
+
+Roster is the **current** `academy_class_student` membership of `scheduled_lesson.academy_class_id`, sorted by `last_name`, `first_name`, `id`. Missing `AttendanceRecord` → `attendance: null` (unmarked). No pre-created rows.
+
+Student whitelist: `id`, `display_name`, `photo_url` (public disk URL or `null`). No email, phone, address, parents, medical, tax_code, notes, documents.
+
+Cancelled lesson: HTTP 200, roster shown, `attendance_editable: false`, `reason: cancelled`.
+
+### PUT `/teacher/lessons/{scheduledLesson}/attendance`
+
+Same visibility/ownership as GET. Body:
+
+```json
+{
+  "attendance": [
+    { "student_id": 100, "status": "present" },
+    { "student_id": 101, "status": "absent" },
+    { "student_id": 102, "status": "excused" },
+    { "student_id": 103, "status": null }
+  ]
+}
+```
+
+Statuses: `present`, `absent`, `excused`. `null` deletes the record. Semantics: **bulk partial upsert** — supplied rows change; omitted roster students are unchanged.
+
+Every `student_id` must be in that lesson’s class roster; otherwise **422** `validation_error` and **no** writes (atomic). Duplicate `student_id` in the payload → 422.
+
+Cancelled (or otherwise non-editable) lesson → **409**:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "attendance_not_editable",
+    "message": "Attendance cannot be edited for this lesson."
+  }
+}
+```
+
+Success **200** returns the same `data` shape as GET. `marked_by` is the current User; `marked_at` is `now()` in `Europe/Rome` when the status actually changes.
+
 ### POST `/auth/logout`
 
 Revokes **only** the current token.
@@ -204,6 +252,7 @@ Revokes **all** Sanctum tokens for that user.
 | 401 | `unauthenticated` or `invalid_credentials` |
 | 403 | `forbidden` |
 | 404 | `not_found` |
+| 409 | `attendance_not_editable` |
 | 422 | `validation_error` |
 | 429 | `too_many_requests` |
 | 500 | `server_error` (no stack/SQL/paths on production) |
@@ -227,4 +276,4 @@ Native Flutter does not use browser CORS. Allowed origins are empty. Do not set 
 
 ## Out of scope (not in this contract)
 
-Registration, forgot/reset password, email verification, refresh tokens, push tokens, **teacher schedule**, attendance, check-in, grades, documents, messages, payments, productions, timetable editing from mobile.
+Registration, forgot/reset password, email verification, refresh tokens, push tokens, Student/Parent attendance history, check-in, grades, documents, messages, payments, productions, timetable editing from mobile.

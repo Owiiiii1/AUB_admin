@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-09** (Teacher schedule API + часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-09** (Teacher Attendance API + Teacher schedule API + часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -36,13 +36,13 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
-| Последний suite на production-хосте | **71 passed**, 0 failed, 0 errors (490 assertions) |
+| Последний suite на production-хосте | **82 passed**, 0 failed, 0 errors (588 assertions) |
 
 `php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 
 ## Маршруты (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **8** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
+`php artisan route:list --path=api`: **10** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
 
 ### Mobile API
 
@@ -56,8 +56,10 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | GET | `/api/v1/schedule` | `api.v1.schedule.student` |
 | GET | `/api/v1/children/{student}/schedule` | `api.v1.schedule.child` |
 | GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
+| GET | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.show` |
+| PUT | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.update` |
 
-Только `student` / `parent` / `teacher`. `staff` через этот login не допускается. Student видит только свой класс; parent — только своих детей через `student_parent`; teacher — свои `ScheduledLesson.teacher_id` по всем классам. Подробности: [API.md](API.md).
+Только `student` / `parent` / `teacher`. `staff` через этот login не допускается. Student видит только свой класс; parent — только своих детей через `student_parent`; teacher — свои `ScheduledLesson.teacher_id` по всем классам. Teacher attendance — своё официальное занятие + текущий roster класса. Подробности: [API.md](API.md), [ATTENDANCE.md](ATTENDANCE.md).
 
 ### Auth
 
@@ -143,6 +145,7 @@ AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_p
 | `lesson_teacher`, `lesson_course` | Каталог: кто может вести урок / связь с курсом |
 | `academy_buildings`, `academy_rooms` | Локации (колонок geofence lat/lng/radius нет) |
 | `schedule_weeks`, `scheduled_lessons` | Недельное расписание; `scheduled_lessons.academy_class_id` |
+| `attendance_records` | Teacher attendance; unique `(scheduled_lesson_id, student_id)` |
 | `schedule_ai_runs` | Журнал ИИ |
 | `activity_logs` | CRUD (+ login/logout); `student_id` + legacy `customer_id` |
 | `ai_provider_settings` | Encrypted ключи провайдеров |
@@ -252,7 +255,7 @@ Field-level ограничений нет: роль с доступом к `cust
 | 2 | Каталог уроков | Готово (Настройки → Академия) |
 | 3 | Недельное расписание | Готово + гибридный ИИ (2026-07-20) |
 | 3 | Загрузка файлов студента | Частично — public disk, нет модуля документов |
-| 3 | **Student Attendance** | Не начато (ребёнок на session) |
+| 3 | **Student Attendance** | Teacher mobile MVP **сделан** 2026-09-09 (`attendance_records`, GET/PUT teacher lesson). История Student/Parent **не** начата |
 | 3 | **Teacher Check-in** | Не начато (**DECIDED**: daily GPS snapshot + geofence; не per lesson) |
 | 3 | Документы / коммуникации в меню | Заглушки |
 | 4+ | Платежи | Не начато |
@@ -267,13 +270,13 @@ Field-level ограничений нет: роль с доступом к `cust
 - Отдельный login identifier помимо unique email
 - Полноценный UI AcademicYear
 - Полный workflow зачислений (статусы, переводы, история). Правило «один активный `Class`» — DECIDED
-- **Student Attendance** (уровень session) и **Teacher Check-in** (daily presence — семантика DECIDED, код нет)
+- **История посещаемости Student / Parent** (read-only по `attendance_records`) и **Teacher Check-in** (daily presence — семантика DECIDED, кода нет)
 - Final Assessment / `StudentFinalResult` / `ReportCard` (ядро DECIDED; не реализовано; текущих оценок нет)
 - Productions / activity groups / репетиции / спектакли (поздний future; web `/events` — только заглушка)
 - Платежи / счета
 - Отдельные модули документов и коммуникаций
 - Архив, костюмы (заглушки меню; костюмы могут остаться отдельным сервисом)
-- Feature API: schedule, attendance, check-in, documents, messages, payments
+- Оставшийся feature API: история attendance Student/Parent, check-in, documents, messages, payments
 - Функции Flutter сверх шаблона; одно приложение vs flavors **OPEN**
 - PDF-экспорт расписания (кнопка-заглушка)
 - Исполняемые рекомендации ИИ (только re-prompt)

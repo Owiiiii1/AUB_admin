@@ -114,10 +114,18 @@ Security items below are **mandatory foundation before a wide mobile rollout** (
 
 ## Student Attendance
 
-- **Question:** How is a child’s presence marked on a **specific lesson / rehearsal / session**? Who marks it? Which statuses (present / absent / late / excused)?
-- **Why it matters:** This is **not** Teacher Check-in. Mixing the two domains will produce the wrong product.
-- **Current assumption:** None. Module not built.
-- **Status:** OPEN
+Teacher write MVP is **implemented** 2026-09-09. Identity: **Student + ScheduledLesson** (`attendance_records`). Statuses: `present` / `absent` / `excused`. Unmarked = no row. Roster = current `academy_class_student`. See [ATTENDANCE.md](ATTENDANCE.md).
+
+This is **not** Teacher Check-in.
+
+### Remaining OPEN
+
+| Question | Why it matters | Status |
+|----------|----------------|--------|
+| Attendance finalization / edit window (lock after N days) | Accidental late edits vs operational corrections | OPEN |
+| Historical roster / enrollment snapshot at lesson date | Current membership may differ from who belonged on that day | OPEN (debt; not built) |
+| Student / Parent attendance history UI | Next product slice; table already exists | OPEN (not this stage) |
+| Extra statuses (`late`, sick, remote, comments) | Product scope | OPEN (not in MVP) |
 
 ---
 

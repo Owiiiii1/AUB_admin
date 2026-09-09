@@ -114,10 +114,18 @@
 
 ## Student Attendance
 
-- **Question:** Как отмечается присутствие **ребёнка** на **конкретном занятии / репетиции / session**? Кто ставит? Какие статусы?
-- **Why it matters:** Это **не** Teacher Check-in. Смешение доменов даст неверный продукт.
-- **Current assumption:** Нет. Модуль не построен.
-- **Status:** OPEN
+Teacher write MVP **реализован** 2026-09-09. Идентичность: **Student + ScheduledLesson** (`attendance_records`). Статусы: `present` / `absent` / `excused`. Unmarked = нет строки. Roster = текущий `academy_class_student`. См. [ATTENDANCE.md](ATTENDANCE.md).
+
+Это **не** Teacher Check-in.
+
+### Осталось OPEN
+
+| Question | Why it matters | Status |
+|----------|----------------|--------|
+| Финализация attendance / окно редактирования (lock через N дней) | Случайные поздние правки vs рабочие исправления | OPEN |
+| Исторический roster / snapshot состава на дату занятия | Текущий состав может отличаться от состава в день урока | OPEN (долг; не строится сейчас) |
+| UI истории Student / Parent | Следующий product slice; таблица уже есть | OPEN (не этот этап) |
+| Доп. статусы (`late`, sick, remote, комментарии) | Product scope | OPEN (нет в MVP) |
 
 ---
 

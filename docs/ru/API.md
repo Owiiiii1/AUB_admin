@@ -37,6 +37,9 @@ Authorization: Bearer <token>
 | POST | `/auth/logout-all` | Bearer |
 | GET | `/schedule` | Bearer, только `student` |
 | GET | `/children/{student}/schedule` | Bearer, только `parent` |
+| GET | `/teacher/schedule` | Bearer, только `teacher` |
+| GET | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, только `teacher` |
+| PUT | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, только `teacher` |
 
 ### GET `/health`
 
@@ -176,6 +179,51 @@ Whitelist: student `{id, display_name, academy_class}`, урок `{id, starts_at
 
 Уроки группируются по дню и сортируются по `starts_at`.
 
+### GET `/teacher/lessons/{scheduledLesson}/attendance`
+
+Только teacher. См. [ATTENDANCE.md](ATTENDANCE.md).
+
+Занятие должно принадлежать `request.user.teacherProfile` и быть mobile-visible (`schedule_weeks.status` в `published`/`locked`, урок `published`/`moved`/`cancelled`). Иначе **404** `not_found` (включая занятие другого преподавателя).
+
+Roster — **текущий** состав `academy_class_student` класса `scheduled_lesson.academy_class_id`, сортировка `last_name`, `first_name`, `id`. Нет `AttendanceRecord` → `attendance: null` (не отмечен). Строки заранее не создаются.
+
+Whitelist ученика: `id`, `display_name`, `photo_url` (URL public disk или `null`). Без email, phone, address, parents, medical, tax_code, notes, documents.
+
+Cancelled: HTTP 200, roster показан, `attendance_editable: false`, `reason: cancelled`.
+
+### PUT `/teacher/lessons/{scheduledLesson}/attendance`
+
+Те же visibility/ownership, что у GET. Тело:
+
+```json
+{
+  "attendance": [
+    { "student_id": 100, "status": "present" },
+    { "student_id": 101, "status": "absent" },
+    { "student_id": 102, "status": "excused" },
+    { "student_id": 103, "status": null }
+  ]
+}
+```
+
+Статусы: `present`, `absent`, `excused`. `null` удаляет запись. Семантика: **bulk partial upsert** — переданные строки меняются; ученики вне payload не трогаются.
+
+Каждый `student_id` должен быть в roster класса этого занятия; иначе **422** `validation_error` и **никаких** записей (атомарно). Дубликат `student_id` в payload → 422.
+
+Cancelled (или иначе нередактируемое занятие) → **409**:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "attendance_not_editable",
+    "message": "Attendance cannot be edited for this lesson."
+  }
+}
+```
+
+Успех **200** возвращает ту же форму `data`, что GET. `marked_by` — текущий User; `marked_at` — `now()` в `Europe/Rome` при реальной смене статуса.
+
 ### POST `/auth/logout`
 
 Отзывает **только** текущий token.
@@ -204,6 +252,7 @@ Whitelist: student `{id, display_name, academy_class}`, урок `{id, starts_at
 | 401 | `unauthenticated` или `invalid_credentials` |
 | 403 | `forbidden` |
 | 404 | `not_found` |
+| 409 | `attendance_not_editable` |
 | 422 | `validation_error` |
 | 429 | `too_many_requests` |
 | 500 | `server_error` (без stack/SQL/путей на production) |
@@ -227,4 +276,4 @@ Whitelist: student `{id, display_name, academy_class}`, урок `{id, starts_at
 
 ## Вне scope (нет в этом контракте)
 
-Регистрация, forgot/reset password, email verification, refresh tokens, push tokens, **расписание преподавателя**, attendance, check-in, оценки, документы, сообщения, платежи, постановки, редактирование сетки с телефона.
+Регистрация, forgot/reset password, email verification, refresh tokens, push tokens, история посещаемости Student/Parent, check-in, оценки, документы, сообщения, платежи, постановки, редактирование сетки с телефона.

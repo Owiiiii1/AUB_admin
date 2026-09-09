@@ -13,7 +13,7 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 - Courses / `AcademyClass`; lessons catalog in Settings → Academy
 - `ClassLesson` + teacher assignments; weekly schedule on `academy_class_id`
 - CRUD activity log; settings tabs
-- Flutter repo exists; **API Foundation `/api/v1` is done**; **student/parent/teacher schedule API is done**; Flutter client has auth + student/parent schedule
+- Flutter repo exists; **API Foundation `/api/v1` is done**; **student/parent/teacher schedule API is done**; **Teacher Attendance API is done**; Flutter client has auth + student/parent schedule
 - Application timezone `Europe/Rome` (`APP_TIMEZONE`)
 
 ---
@@ -29,8 +29,8 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 | 4 | **API Foundation** | **Done** 2026-09-08. `/api/v1`, Sanctum v4.3.3, login/logout/me/health. See [API.md](API.md). |
 | 5 | **Flutter Foundation** | Auth foundation is in `AUB_app`. Store distribution model OPEN |
 | 6 | Student + Parent mobile MVP | **Schedule API done** 2026-09-09 (`GET /schedule`, `GET /children/{student}/schedule`). Flutter schedule UI is in `AUB_app`. |
-| 7 | Teacher App / Teacher Workplace | **Teacher schedule API done** 2026-09-09 (`GET /teacher/schedule`). Flutter teacher Orario follows. Identity/app foundation **before** check-in |
-| 8 | **Student Attendance** | Child present on a **specific lesson / rehearsal / session**. **Not** teacher geofence |
+| 7 | Teacher App / Teacher Workplace | **Teacher schedule API done** 2026-09-09 (`GET /teacher/schedule`). **Teacher Attendance API done** 2026-09-09. Flutter teacher Orario + attendance follows. Identity/app foundation **before** check-in |
+| 8 | **Student Attendance** | Teacher write MVP **done** (`attendance_records`, Student + ScheduledLesson). Next: Student/Parent history (read-only). **Not** teacher geofence |
 | 9 | **Teacher Check-in / Staff Presence** | Separate module **after** Teacher identity/app foundation. Daily presence, not per-lesson. Button «Пришёл» + one-shot GPS + geofence. QR = optional fallback |
 | 10 | **Final Assessment / Report Cards** | **Separate product module.** No running grades; only `StudentFinalResult` + `ReportCard`; Administrator generates the PDF |
 | 11 | Secretariat / Enrollment Workflow | Statuses, transfers, history around one `Class` |

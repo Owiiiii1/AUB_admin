@@ -172,10 +172,10 @@ Web auth: Laravel `web` guard, sessions, CSRF. Mobile API: Laravel Sanctum **v4.
 | `routes/owl-admin-auth.php` | `/login` redirect, `POST /logout` |
 | `routes/owl-admin-pages.php` | All protected Inertia/web CRM routes |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule, teacher attendance |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
-Production `php artisan route:list --path=api`: **5** routes. Web CRM unchanged. Details: [API.md](API.md).
+Production `php artisan route:list --path=api`: **10** routes. Web CRM unchanged. Details: [API.md](API.md).
 
 ## Where to add work
 
@@ -190,7 +190,7 @@ Production `php artisan route:list --path=api`: **5** routes. Web CRM unchanged.
 
 Done: `/api/v1` routing, Sanctum PAT, login / logout / logout-all / `/me` / health, JSON envelope, rate limits, `EnsureMobileActorIsValid`, API Resources (whitelist), tests on `aub_test`.
 
-`staff` cannot log in through the mobile API. Schedule, attendance, and other feature endpoints are out of this stage. Contract: [API.md](API.md). Next client stage: **Flutter Authentication Foundation**.
+`staff` cannot log in through the mobile API. Student/parent/teacher schedule and Teacher Attendance are implemented. Other feature endpoints remain out of this foundation. Contract: [API.md](API.md), [ATTENDANCE.md](ATTENDANCE.md).
 
 ## Identity vs administrative RBAC (implemented 2026-09-08)
 

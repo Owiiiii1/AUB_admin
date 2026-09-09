@@ -2,7 +2,7 @@
 
 What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Status (2026-09-09):** Web core in use. **API Foundation `/api/v1` is done** (Sanctum). **Student/parent/teacher schedule API is done**. Application timezone is **`Europe/Rome`**. Flutter has auth + student/parent schedule. Core Data Model is **done**. Identity Layer is **done**. PHPUnit on `aub_test` is **green**.
+**Status (2026-09-09):** Web core in use. **API Foundation `/api/v1` is done** (Sanctum). **Student/parent/teacher schedule API is done**. **Teacher Attendance API is done**. Application timezone is **`Europe/Rome`**. Flutter has auth + student/parent schedule. Core Data Model is **done**. Identity Layer is **done**. PHPUnit on `aub_test` is **green**.
 
 **DECIDED:** `AUB_admin` core; `AUB_app` Flutter; HTTPS API only; separate GitHub repos; parallel backend/Flutter; one active `Class`; one User = one actor type; `customers` is a kit leftover.
 
@@ -18,8 +18,9 @@ What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_Q
 8. **Student / Parent schedule API** — **done** (`GET /schedule`, `GET /children/{student}/schedule`).
 9. **Academy timezone** — **done** (`APP_TIMEZONE=Europe/Rome`).
 10. **Teacher schedule API** — **done** (`GET /teacher/schedule`).
+11. **Teacher Attendance API** — **done** (`GET`/`PUT /teacher/lessons/{scheduledLesson}/attendance`). Contract: [ATTENDANCE.md](ATTENDANCE.md).
 
-Flutter **may** be developed in parallel. Attendance and check-in wait for dedicated tasks.
+Next client slice: **Student/Parent Attendance History** (read-only). Teacher check-in remains a separate module.
 
 ## Locked product rules (not OPEN)
 
@@ -59,5 +60,5 @@ Actionable AI, PDF, 5-min UI snap, room capacity vs study windows.
 - Do not expose secrets
 - Do not lock refresh-token / JWT
 - Do not implement Flutter login in this task (API Foundation is already done)
-- Do not implement teacher schedule, attendance, check-in, report cards, or productions here
+- Do not implement check-in, report cards, or productions here
 - Do not hardcode a consent age threshold

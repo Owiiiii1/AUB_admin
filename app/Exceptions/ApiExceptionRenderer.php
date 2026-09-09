@@ -39,6 +39,14 @@ final class ApiExceptionRenderer
             return ApiResponse::error('not_found', 'Not found.', 404);
         }
 
+        if ($exception instanceof AttendanceNotEditableException) {
+            return ApiResponse::error(
+                'attendance_not_editable',
+                $exception->getMessage(),
+                409,
+            );
+        }
+
         if ($exception instanceof TooManyRequestsHttpException) {
             return ApiResponse::error('too_many_requests', 'Too many requests.', 429)
                 ->withHeaders($exception->getHeaders());

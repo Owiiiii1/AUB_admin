@@ -172,10 +172,10 @@ Web-auth: guard Laravel `web`, сессии, CSRF. Mobile API: Laravel Sanctum *
 | `routes/owl-admin-auth.php` | редирект `/login`, `POST /logout` |
 | `routes/owl-admin-pages.php` | Все защищённые Inertia/web CRM-маршруты |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule, teacher attendance |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
-Production `php artisan route:list --path=api`: **5** маршрутов. Web CRM без изменений. Подробности: [API.md](API.md).
+Production `php artisan route:list --path=api`: **10** маршрутов. Web CRM без изменений. Подробности: [API.md](API.md).
 
 ## Куда добавлять работу
 
@@ -190,7 +190,7 @@ Production `php artisan route:list --path=api`: **5** маршрутов. Web CR
 
 Сделано: маршруты `/api/v1`, Sanctum PAT, login / logout / logout-all / `/me` / health, JSON envelope, rate limits, `EnsureMobileActorIsValid`, API Resources (whitelist), тесты на `aub_test`.
 
-`staff` через mobile login не допускается. Расписание, attendance и прочие feature endpoints не входят в этот этап. Контракт: [API.md](API.md). Следующий клиентский этап: **Flutter Authentication Foundation**.
+`staff` через mobile login не допускается. Student/parent/teacher schedule и Teacher Attendance реализованы. Прочие feature endpoints вне этого foundation. Контракт: [API.md](API.md), [ATTENDANCE.md](ATTENDANCE.md).
 
 ## Identity vs административный RBAC (implemented 2026-09-08)
 

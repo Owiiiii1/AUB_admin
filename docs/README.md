@@ -25,6 +25,7 @@ Source of truth for implemented behaviour: **code + migrations + routes** in Git
 | Server deployment | [SERVER_DEPLOYMENT.md](en/SERVER_DEPLOYMENT.md) | [SERVER_DEPLOYMENT.md](ru/SERVER_DEPLOYMENT.md) |
 | Privacy and data protection | [PRIVACY_AND_DATA_PROTECTION.md](en/PRIVACY_AND_DATA_PROTECTION.md) | [PRIVACY_AND_DATA_PROTECTION.md](ru/PRIVACY_AND_DATA_PROTECTION.md) |
 | API | [API.md](en/API.md) | [API.md](ru/API.md) |
+| Attendance | [ATTENDANCE.md](en/ATTENDANCE.md) | [ATTENDANCE.md](ru/ATTENDANCE.md) |
 | Next steps | [NEXT_STEPS.md](en/NEXT_STEPS.md) | [NEXT_STEPS.md](ru/NEXT_STEPS.md) |
 | Weekly schedule service | [WEEKLY_SCHEDULE_SERVICE.md](en/WEEKLY_SCHEDULE_SERVICE.md) | [WEEKLY_SCHEDULE_SERVICE.md](ru/WEEKLY_SCHEDULE_SERVICE.md) |
 
@@ -52,6 +53,6 @@ Flutter talks to the core **only** through HTTPS API (`/api/v1`, Sanctum Bearer 
 - **Flutter package:** `aub` — bundle / application id `com.owlsolutions.aub`
 - **Phase 1 (roles):** Complete (2026-07-06)
 - **Web modules:** Phase 2–3 in use (students partial; weekly schedule + hybrid AI)
-- **Next major technical stage:** Flutter Authentication Foundation (do not mix with schedule/attendance)
+- **Next major technical stage:** Student/Parent attendance history (read-only on `attendance_records`)
 
 Last updated: 2026-09-08

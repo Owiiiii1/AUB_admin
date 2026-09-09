@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -20,5 +21,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('/schedule', [ScheduleController::class, 'student'])->name('schedule.student');
         Route::get('/children/{student}/schedule', [ScheduleController::class, 'child'])->name('schedule.child');
         Route::get('/teacher/schedule', [ScheduleController::class, 'teacher'])->name('schedule.teacher');
+        Route::get('/teacher/lessons/{scheduledLesson}/attendance', [AttendanceController::class, 'show'])->name('attendance.show');
+        Route::put('/teacher/lessons/{scheduledLesson}/attendance', [AttendanceController::class, 'update'])->name('attendance.update');
     });
 });

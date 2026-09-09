@@ -2,7 +2,7 @@
 
 Что построено: [CURRENT_STATE.md](CURRENT_STATE.md). Полный список вопросов: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Направления: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Статус (2026-09-09):** Web-ядро в работе. **API Foundation `/api/v1` сделан** (Sanctum). **Student/parent/teacher schedule API сделан**. Часовой пояс приложения — **`Europe/Rome`**. В Flutter есть auth + student/parent schedule. Core Data Model **сделан**. Identity Layer **сделан**. PHPUnit на `aub_test` **зелёный**.
+**Статус (2026-09-09):** Web-ядро в работе. **API Foundation `/api/v1` сделан** (Sanctum). **Student/parent/teacher schedule API сделан**. **Teacher Attendance API сделан**. Часовой пояс приложения — **`Europe/Rome`**. В Flutter есть auth + student/parent schedule. Core Data Model **сделан**. Identity Layer **сделан**. PHPUnit на `aub_test` **зелёный**.
 
 **DECIDED:** ядро `AUB_admin`; Flutter `AUB_app`; только HTTPS API; раздельные GitHub-репо; параллельный backend/Flutter; один активный `Class`; один User = один actor type; `customers` — kit leftover.
 
@@ -18,8 +18,9 @@
 8. **Student / Parent schedule API** — **сделан** (`GET /schedule`, `GET /children/{student}/schedule`).
 9. **Часовой пояс академии** — **сделан** (`APP_TIMEZONE=Europe/Rome`).
 10. **Teacher schedule API** — **сделан** (`GET /teacher/schedule`).
+11. **Teacher Attendance API** — **сделан** (`GET`/`PUT /teacher/lessons/{scheduledLesson}/attendance`). Контракт: [ATTENDANCE.md](ATTENDANCE.md).
 
-Flutter **можно** развивать параллельно. Attendance и check-in — отдельные задачи.
+Следующий клиентский slice: **история посещаемости Student/Parent** (read-only). Teacher check-in — отдельный модуль.
 
 ## Зафиксированные продуктовые правила (не OPEN)
 
@@ -59,5 +60,5 @@ Flutter **можно** развивать параллельно. Attendance и 
 - Не раскрывать секреты
 - Не фиксировать refresh-token / JWT
 - Не реализовывать Flutter login в этой задаче (API Foundation уже сделан)
-- Не реализовывать teacher schedule, attendance, check-in, табели и постановки здесь
+- Не реализовывать check-in, табели и постановки здесь
 - Не хардкодить возрастной порог consent
