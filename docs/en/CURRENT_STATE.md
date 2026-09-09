@@ -36,7 +36,7 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **71 passed**, 0 failed, 0 errors |
+| Last suite on production host | **71 passed**, 0 failed, 0 errors (490 assertions) |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 

@@ -57,6 +57,7 @@ Exact production suite after `optimize:clear`:
 | Passed | 71 |
 | Failed | 0 |
 | Errors | 0 |
+| Assertions | 490 |
 
 (`65` previous + `6` teacher feature tests.) `composer validate` PASS.
 
@@ -68,9 +69,11 @@ No migration. Files copied to `/var/www/aub`. `.env` not touched. `php artisan o
 
 Temporary Sanctum token `smoke-teacher-schedule` (deleted after):
 
-- Teacher `GET /teacher/schedule` and `?week=YYYY-MM-DD` → 200
-- Student token on `/teacher/schedule` → 403
-- Isolated test week only; real academy published weeks not changed
+- Teacher `GET /teacher/schedule` → 200, current Rome week `2026-09-07`…`2026-09-13`, unpublished
+- Teacher `GET /teacher/schedule?week=2026-12-28` → 200, published, one isolated lesson `LEZIONE CLASSICO` / class `Mobile Test`
+- Student token on `/teacher/schedule` → 403 `forbidden`
+
+Isolated week/class only; real academy published weeks not changed.
 
 No plaintext tokens in this report.
 
