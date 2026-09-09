@@ -13,7 +13,7 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 - Courses / `AcademyClass`; lessons catalog in Settings → Academy
 - `ClassLesson` + teacher assignments; weekly schedule on `academy_class_id`
 - CRUD activity log; settings tabs
-- Flutter repo exists; **API Foundation `/api/v1` is done**; Flutter client not wired
+- Flutter repo exists; **API Foundation `/api/v1` is done**; **student/parent schedule API is done**; Flutter client has auth foundation
 
 ---
 
@@ -26,13 +26,8 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 | 2 | **Core Data Model refactor** | **Done** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
 | 3 | **Identity model implementation** | **Done** 2026-09-08. One User = one actor type (`staff` / `student` / `parent` / `teacher`). Identity ≠ admin web RBAC. |
 | 4 | **API Foundation** | **Done** 2026-09-08. `/api/v1`, Sanctum v4.3.3, login/logout/me/health. See [API.md](API.md). |
-| 5 | **Flutter Foundation** | App shell, env, HTTPS client, auth against API — **next stage**. Store distribution model OPEN |
-
-## Product modules (after foundation)
-
-| # | Direction | Notes |
-|---|-----------|--------|
-| 6 | Student + Parent mobile MVP | Depends on 3–5 |
+| 5 | **Flutter Foundation** | Auth foundation is in `AUB_app`. Store distribution model OPEN |
+| 6 | Student + Parent mobile MVP | **Schedule API done** 2026-09-09 (`GET /schedule`, `GET /children/{student}/schedule`). Flutter schedule UI follows. |
 | 7 | Teacher App / Teacher Workplace | Flutter + web workplace; Teacher↔User link. Identity/app foundation **before** check-in |
 | 8 | **Student Attendance** | Child present on a **specific lesson / rehearsal / session**. **Not** teacher geofence |
 | 9 | **Teacher Check-in / Staff Presence** | Separate module **after** Teacher identity/app foundation. Daily presence, not per-lesson. Button «Пришёл» + one-shot GPS + geofence. QR = optional fallback |

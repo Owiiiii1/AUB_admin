@@ -10,7 +10,7 @@ CRM/backend — **ядро**. К ядру подключаются интерф�
 |-----------|-----------|---------------------|
 | Admin / superadmin web | Администраторы | Реализовано (Inertia web) |
 | Web-workplaces персонала | Секретариат, преподаватели, другой персонал | Фаза 1 реализована; логин преподавателя не связан с `teachers` |
-| Flutter — студенты / родители / преподаватели | Не-админ акторы | Репозиторий есть; **API Foundation `/api/v1` реализован** (Sanctum). Flutter-клиент ещё не подключён. Одно Store-приложение vs flavors — **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)) |
+| Flutter — студенты / родители / преподаватели | Не-админ акторы | Репозиторий есть; **API Foundation + student/parent schedule API**; в Flutter есть auth foundation |
 
 Не проектировать продукт вокруг одной admin panel.
 
@@ -50,10 +50,10 @@ CRM/backend — **ядро**. К ядру подключаются интерф�
 | GitHub | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) |
 | Dart package | `aub` |
 | Bundle / application id | `com.owlsolutions.aub` |
-| Текущий код | Шаблон Flutter (`lib/main.dart`); HTTP-клиента нет |
-| API | **`/api/v1`** (Sanctum PAT; Flutter Foundation ещё не подключал клиент) |
+| Текущий код | Auth foundation в `AUB_app`; student/parent schedule API на `/api/v1` |
+| API | **`/api/v1`** (Sanctum PAT; чтение расписания для student/parent) |
 
-Flutter можно разрабатывать параллельно с backend. Мобильная **функциональность** зависит от стабильного API-контракта. Контракт auth/`/me` опубликован в [API.md](API.md). Дальше: **Flutter Authentication Foundation**.
+Flutter можно разрабатывать параллельно с backend. Контракт: [API.md](API.md).
 
 ```
 ┌──────────────────────────────────────────────────────────┐

@@ -10,7 +10,7 @@ The CRM/backend is the **core**. Interfaces attach to that core:
 |-----------|----------|---------------------|
 | Admin / superadmin web | Administrators | Implemented (Inertia web) |
 | Staff web workplaces | Secretariat, teachers, other staff | Phase 1 implemented; teacher login not linked to `teachers` |
-| Flutter — students / parents / teachers | Non-admin actors | Repository exists; **API Foundation `/api/v1` is implemented** (Sanctum). Flutter client not wired yet. One Store app vs flavors is **OPEN** ([OPEN_QUESTIONS.md](OPEN_QUESTIONS.md)) |
+| Flutter — students / parents / teachers | Non-admin actors | Repository exists; **API Foundation + student/parent schedule API**; Flutter has auth foundation |
 
 Do not design the product around a single admin panel.
 
@@ -50,10 +50,10 @@ Separate mobile application. It must call `AUB_admin` **only over HTTPS API**.
 | GitHub | [`Owiiiii1/AUB_app`](https://github.com/Owiiiii1/AUB_app) |
 | Dart package | `aub` |
 | Bundle / application id | `com.owlsolutions.aub` |
-| Current code | Default Flutter template (`lib/main.dart`); no HTTP client |
-| API | **`/api/v1`** (Sanctum PAT; Flutter Foundation has not wired the client yet) |
+| Current code | Auth foundation in `AUB_app`; student/parent schedule API on `/api/v1` |
+| API | **`/api/v1`** (Sanctum PAT; schedule read for student/parent) |
 
-Flutter work may proceed in parallel with backend. Mobile **functionality** depends on a stable API contract. The auth/`/me` contract is published in [API.md](API.md). Next: **Flutter Authentication Foundation**.
+Flutter work may proceed in parallel with backend. Contract: [API.md](API.md).
 
 ```
 ┌──────────────────────────────────────────────────────────┐

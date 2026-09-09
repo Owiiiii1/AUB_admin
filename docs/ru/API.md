@@ -35,6 +35,8 @@ Authorization: Bearer <token>
 | GET | `/me` | Bearer |
 | POST | `/auth/logout` | Bearer |
 | POST | `/auth/logout-all` | Bearer |
+| GET | `/schedule` | Bearer, только `student` |
+| GET | `/children/{student}/schedule` | Bearer, только `parent` |
 
 ### GET `/health`
 
@@ -103,6 +105,56 @@ Actor-aware whitelist. Никогда не включает password hash, `reme
 
 **Профиль teacher:** `id`, `first_name`, `last_name`, `display_name`.
 
+### GET `/schedule`
+
+Только student (`account_type = student`). Студент берётся из `request.user.studentProfile`. Никакого `student_id` в query/body.
+
+### GET `/children/{student}/schedule`
+
+Только parent. Ребёнок должен быть связан через `student_parent`. Чужой или неизвестный id → `404 not_found` (одинаковое тело), без раскрытия существования student.
+
+Teacher и staff эти эндпоинты не используют (`403` для валидного teacher token; staff не получает mobile-сессию).
+
+Query:
+
+```text
+?week=YYYY-MM-DD
+```
+
+Дата может быть любым днём недели. Backend приводит её к Monday–Sunday через Laravel `now()` / `config('app.timezone')`. **Сейчас в `config/app.php` timezone = `UTC` (не читается из `APP_TIMEZONE`).** Flutter не является source of truth для недели.
+
+Без `week` — текущая неделя в этой timezone. Невалидный `week` → `422 validation_error`.
+
+#### Правила публикации (как admin Publish)
+
+`WeeklyScheduleController::publish` ставит `schedule_weeks.status = published` и переписывает все уроки недели в `scheduled_lessons.status = published`. `locked` есть в схеме как зафиксированная официальная неделя; UI его пока не выставляет. Mobile считает официальными **`published` и `locked`**.
+
+Draft-недели не отдаются.
+
+Статусы уроков на официальной неделе:
+
+| Статус урока | Mobile |
+|--------------|--------|
+| `draft` | Скрыт |
+| `scheduled` | Скрыт (черновик размещения; в том числе уроки, добавленные после Publish без повторной публикации) |
+| `published` | Показывается |
+| `cancelled` | Показывается со `status: cancelled` |
+| `moved` | Показывается с актуальными датой/временем и `status: moved` (истории old/new в модели нет) |
+
+#### Пустые состояния (всегда HTTP 200)
+
+| Случай | `academy_class` | `week.published` | `days` | `empty_reason` |
+|--------|-----------------|------------------|--------|----------------|
+| Нет класса | `null` | `false` | `[]` | `no_class` |
+| Нет официальной недели | объект класса | `false` | 7 пустых дней | `unpublished` |
+| Официальная неделя, нет видимых уроков | объект класса | `true` | 7 пустых дней | `no_lessons` |
+
+`week.starts_on` — понедельник; `week.ends_on` — воскресенье (календарная неделя для приложения). Admin `week_end_date` по-прежнему пятница для доски Пн–Пт.
+
+Whitelist: student `{id, display_name, academy_class}`, урок `{id, starts_at, ends_at, title, lesson{id,name}, teacher{id,display_name}, location.building/room {id,name}, status}`. Без notes, AI metadata, conflicts, email/phone, tax codes, medical/document.
+
+Уроки группируются по дню и сортируются по `starts_at`.
+
 ### POST `/auth/logout`
 
 Отзывает **только** текущий token.
@@ -152,6 +204,6 @@ Actor-aware whitelist. Никогда не включает password hash, `reme
 
 Нативный Flutter не использует browser CORS. Allowed origins пустые. Не ставить `*`, пока отдельно не согласован Flutter Web.
 
-## Вне scope (нет в v1)
+## Вне scope (нет в этом контракте)
 
-Регистрация, forgot/reset password, email verification, refresh tokens, push tokens, расписания, attendance, check-in, оценки, документы, сообщения, платежи, постановки.
+Регистрация, forgot/reset password, email verification, refresh tokens, push tokens, **расписание преподавателя**, attendance, check-in, оценки, документы, сообщения, платежи, постановки, редактирование сетки с телефона.

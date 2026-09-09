@@ -2,7 +2,7 @@
 
 What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md). Directions: [MODULE_ROADMAP.md](MODULE_ROADMAP.md).
 
-**Status (2026-09-08):** Web core in use. **API Foundation `/api/v1` is done** (Sanctum). Flutter repo exists; client not wired. Core Data Model is **done**. Identity Layer is **done**. PHPUnit on `aub_test` is **green**. Next stage is **Flutter Authentication Foundation**.
+**Status (2026-09-09):** Web core in use. **API Foundation `/api/v1` is done** (Sanctum). **Student/parent schedule API is done**. Flutter auth foundation is in `AUB_app`. Core Data Model is **done**. Identity Layer is **done**. PHPUnit on `aub_test` is **green**.
 
 **DECIDED:** `AUB_admin` core; `AUB_app` Flutter; HTTPS API only; separate GitHub repos; parallel backend/Flutter; one active `Class`; one User = one actor type; `customers` is a kit leftover.
 
@@ -14,9 +14,10 @@ What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_Q
 4. **Identity model implementation** — **done** (`account_type`, profile `user_id`, `AccountIdentityService`, admin UI).
 5. **Test infrastructure** — **done** (MySQL `aub_test`, hard guard against production `aub`; no SQLite).
 6. **API Foundation** — **done** (`/api/v1`, Sanctum v4.3.3, login/logout/me/health). Contract: [API.md](API.md).
-7. **Flutter Authentication Foundation** — **next stage**. Do not start in this task.
+7. **Flutter Authentication Foundation** — **done** in `AUB_app`.
+8. **Student / Parent schedule API** — **done** (`GET /schedule`, `GET /children/{student}/schedule`). Flutter schedule UI is the paired client task.
 
-Flutter **may** be developed in parallel (shell, navigation). Real academy features wait on the API. Do not publish a stable contract before Identity.
+Flutter **may** be developed in parallel. Teacher schedule, attendance, and check-in wait for dedicated tasks.
 
 ## Locked product rules (not OPEN)
 
@@ -56,6 +57,5 @@ Actionable AI, PDF, 5-min UI snap, room capacity vs study windows.
 - Do not expose secrets
 - Do not lock refresh-token / JWT
 - Do not implement Flutter login in this task (API Foundation is already done)
-- Do not publish feature API (schedule/attendance) until dedicated tasks
-- Do not implement check-in, report cards, or productions here
+- Do not implement teacher schedule, attendance, check-in, report cards, or productions here
 - Do not hardcode a consent age threshold

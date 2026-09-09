@@ -86,4 +86,15 @@ class ScheduleWeek extends Model
     {
         return $this->status !== self::STATUS_LOCKED;
     }
+
+    /**
+     * Official timetable visible to mobile clients.
+     *
+     * Admin Publish sets `published`. `locked` exists in schema as a frozen
+     * official week (UI does not set it yet). Draft weeks stay internal.
+     */
+    public function isOfficiallyPublished(): bool
+    {
+        return in_array($this->status, [self::STATUS_PUBLISHED, self::STATUS_LOCKED], true);
+    }
 }

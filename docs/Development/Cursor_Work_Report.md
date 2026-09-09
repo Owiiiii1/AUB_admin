@@ -2,121 +2,58 @@
 
 ## Task
 
-Establish the mobile API Foundation in `AUB_admin`: `/api/v1` health, login, logout, logout-all, and `/me` for student / parent / teacher. No Flutter changes. No schedule, attendance, registration, or refresh-token work.
+Add the first academy mobile feature API: **Student / Parent Schedule**. `AUB_admin` only for this backend slice. No new tables. Flutter follows in `AUB_app`.
 
-## Architecture decision
+## Endpoints
 
-Laravel Sanctum **v4.3.3** (`laravel/sanctum`, compatible with Laravel 13). Official personal access tokens, hashed at rest. Not JWT, not Passport, not a custom token table.
+| Method | Path | Authz |
+|--------|------|--------|
+| GET | `/api/v1/schedule` | `auth:sanctum` + `mobile.actor`, `account_type=student` |
+| GET | `/api/v1/children/{student}/schedule` | same, `account_type=parent` + `student_parent` |
 
-Flutter will send `Authorization: Bearer <token>`. Token ability is `mobile`. Actor type is always read from `users.account_type`, never from the token.
+Query: `?week=YYYY-MM-DD` (any day → Monday–Sunday). Omitted = current week via `now()` / `config('app.timezone')`.
 
-## API routes
+## Authorization
 
-| Method | Path | Auth |
-|--------|------|------|
-| GET | `/api/v1/health` | none |
-| POST | `/api/v1/auth/login` | none, 5/min email+IP |
-| GET | `/api/v1/me` | `auth:sanctum` + `mobile.actor` |
-| POST | `/api/v1/auth/logout` | same |
-| POST | `/api/v1/auth/logout-all` | same |
+- Student identity comes only from `request.user.studentProfile`. No client-supplied student id.
+- Parent must own the requested student (`student_parent`). Unrelated/missing → `404`.
+- Teacher with a valid mobile token → `403`.
+- Staff cannot hold a mobile session (`401` via existing `mobile.actor`).
 
-`routes/api.php` is registered from `bootstrap/app.php`. Not mixed with Inertia/session web routes.
+## Publication rules
 
-## Authentication
+Taken from `WeeklyScheduleController::publish`:
 
-`POST /api/v1/auth/login` requires `email`, `password`, `device_name`. Checks password, `is_active`, account_type ∈ student/parent/teacher, and matching linked profile. Failures share `401 invalid_credentials`. Success issues a Sanctum PAT named with `device_name`, expiration **43200 minutes** (`AUB_API_TOKEN_EXPIRATION_MINUTES`). Multiple devices allowed. Logout deletes the current token; logout-all deletes all of the user's tokens. Plaintext token is returned only on login.
+- Official weeks: `schedule_weeks.status` ∈ `published`, `locked` (`locked` is schema-only today; treated as frozen official).
+- Draft weeks are never returned.
+- Visible lessons: `published`, `cancelled`, `moved`.
+- Hidden lessons: `draft`, `scheduled` (unpublished placement, including lessons added after Publish without re-publishing).
 
-`staff` is rejected with the same public 401 as a bad password.
+`empty_reason`: `no_class` | `unpublished` | `no_lessons` | `null`. Always HTTP 200 for empty states.
 
-## Runtime identity protection
-
-`EnsureMobileActorIsValid` reloads the User from the database on every protected request. Inactive users have all tokens revoked. Staff or missing matching profile revokes the current token. `AccountIdentityService::setActive(false)` and `unlink()` also delete tokens. User `updated` observer deletes tokens when `is_active` becomes false.
-
-## JSON contract
-
-Success: `{ success: true, data }`. Errors: `{ success: false, error: { code, message, fields? } }`. `/api/*` always JSON (validation 422, unauthenticated 401, not found 404, 429, generic 500 without internals). Web HTML rendering is unchanged.
-
-## Rate limits
-
-- Login: 5 / minute / (normalized email + IP)
-- Authenticated API: 120 / minute / user
-- CORS origins empty (native Flutter does not need browser CORS)
-
-## API Resources
-
-Whitelist only (`UserResource`, `StudentProfileResource`, `ParentProfileResource`, `TeacherProfileResource`, `MeResource`).
-
-**Student:** id, first_name, last_name, display_name, photo_url, academy_class `{id,name}`, academic_year `{id,name}`.
-
-**Parent:** id, first_name, last_name, display_name, children[] (id, names, display_name, academy_class). Only `student_parent` children.
-
-**Teacher:** id, first_name, last_name, display_name.
-
-Not returned: tax_code, medical fields, notes, documents, password, remember_token, role_id, can_write, can_delete, AI settings.
-
-## Database changes
-
-Migration `2026_09_08_230000_create_personal_access_tokens_table` (Sanctum). Production batch 3 Ran. Production database remains `aub`. Tests remain on `aub_test`. `TestDatabaseGuard` unchanged.
+Timezone: `config/app.php` is hardcoded **`UTC`** (not `APP_TIMEZONE`). Documented; not changed in this task.
 
 ## Tests
 
-Production host, `php artisan test` after `optimize:clear`:
+`tests/Feature/ScheduleApiTest.php` plus the existing suite. Full `php artisan test` on production `aub_test` after deploy (see below).
 
-| Metric | Count |
-|--------|-------|
-| Total | 44 |
-| Passed | 44 |
-| Failed | 0 |
-| Errors | 0 |
-| Assertions | 252 |
+## Deploy
 
-`ApiFoundationTest` covers health, actor logins, anti-enumeration, validation, rate limit, hashed token, multi-device, logout, logout-all, `/me` whitelist, parent isolation, disable/unlink, JSON 401/404.
-
-## Security checks
-
-- Staff cannot obtain a mobile token
-- Inactive / missing profile cannot obtain a token
-- Disabled or unlinked users lose protected API access
-- `/me` whitelist tested against tax_code, medical, notes, documents, password, RBAC flags
-- Tokens stored as 64-char hashes
-- Failed login logs a reason code without password or token
-- `ActivityLogger` redacts `token` / `authorization`
-
-## Production deploy
-
-Files copied to `/var/www/aub`. `composer update laravel/sanctum` → **v4.3.3**. `php artisan migrate --force` created `personal_access_tokens`. `AUB_API_TOKEN_EXPIRATION_MINUTES=43200` appended to server `.env` / `.env.testing` without publishing secrets. `.env` was not overwritten. `optimize:clear`. No `npm run build` (no frontend change). No `config:cache` before tests.
-
-## Smoke tests
-
-Public:
-
-- `GET /api/v1/health` → 200, `{success:true, data.status=ok}`
-- `GET /` → 200 (web login unchanged)
-- `GET /owl-admin/health` → 200
-
-Temporary student actor created only for HTTP login/me/logout, then deleted. Statuses only (no plaintext token in this report): login 200, me 200, logout 200. Production admin still present; teacher count unchanged after cleanup.
+No migration. Files copied to `/var/www/aub`. `.env` not touched. `optimize:clear`. `route:list --path=api`. `php artisan test`. Production smoke against `/api/v1/health` and schedule endpoints with existing test actors (no plaintext tokens in this report).
 
 ## Files changed
 
-Created: `routes/api.php`, `config/aub.php`, `config/sanctum.php`, `config/cors.php`, API controllers/resources/requests/middleware/exception renderer, `MobileAuthService`, Sanctum migration, `tests/Feature/ApiFoundationTest.php`, `docs/en/API.md`, `docs/ru/API.md`.
+Created: `MobileScheduleService`, `ScheduleController`, `ShowScheduleRequest`, `ScheduleResource`, `ScheduleApiTest`.
 
-Modified: `composer.json`, `composer.lock`, `bootstrap/app.php`, `User`, `Teacher`, `AccountIdentityService`, `ActivityLogger`, `AppServiceProvider`, env examples, bilingual docs listed in the task.
-
-Not committed: `.env`, `.env.testing`, passwords, tokens, `vendor`.
+Modified: `routes/api.php`, `ScheduleWeek`, bilingual API/architecture/current-state/roadmap/next-steps/weekly-schedule docs.
 
 ## Technical debt / OPEN
 
-- Refresh / re-auth strategy for mobile UX
-- Password reset / invitation / activation
-- Device management UI
-- Flutter Authentication Foundation (next)
-- Staff mobile API (not in this contract)
-- Feature endpoints (schedule, attendance, …)
-- Security Foundation still required before wide rollout (private storage, field-level ACL, 2FA, …)
-- CORS for Flutter Web later, if ever
+- App timezone is UTC; academy is Italy — Sunday-night week boundary may not match Rome.
+- `locked` is unused by admin UI.
+- Teacher schedule not in this API.
+- No old/new time history for `moved`.
 
 ## Next recommended step
 
-**Flutter Authentication Foundation**
-
-Do **not** implement it in this task.
+Flutter student/parent schedule screens in `AUB_app` (paired task in the same PM request).

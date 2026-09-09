@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-08** (Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-09** (Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -40,7 +40,7 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 
 ## Routes (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **5** routes. Web CRM unchanged. No Passport/JWT.
+`php artisan route:list --path=api`: **7** routes. Web CRM unchanged. No Passport/JWT.
 
 ### Mobile API
 
@@ -51,8 +51,10 @@ Production build exists **on the server** (`public/build/manifest.json`). The di
 | POST | `/api/v1/auth/logout` | `api.v1.auth.logout` |
 | POST | `/api/v1/auth/logout-all` | `api.v1.auth.logout-all` |
 | GET | `/api/v1/me` | `api.v1.me` |
+| GET | `/api/v1/schedule` | `api.v1.schedule.student` |
+| GET | `/api/v1/children/{student}/schedule` | `api.v1.schedule.child` |
 
-Only `student` / `parent` / `teacher`. `staff` cannot use this login. Details: [API.md](API.md).
+Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student schedule is own class only; parent schedule is own children via `student_parent`. Details: [API.md](API.md).
 
 ### Auth
 

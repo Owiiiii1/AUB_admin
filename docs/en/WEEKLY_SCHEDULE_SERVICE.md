@@ -126,6 +126,20 @@ Overlap on `[starts_at, ends_at)` for same room, teacher, or group; plus invalid
 
 Publishing is blocked while conflicts exist.
 
+## Mobile API visibility
+
+Mobile clients never see admin drafts.
+
+| Week `status` | Mobile |
+|---------------|--------|
+| `draft` | Hidden |
+| `published` | Official timetable |
+| `locked` | Treated as official (frozen; UI does not set this yet) |
+
+On an official week, lessons with status `published`, `cancelled`, and `moved` are returned. `draft` and `scheduled` stay hidden (`scheduled` is the default placement status and is also used for lessons added after Publish without re-publishing).
+
+Endpoints: `GET /api/v1/schedule` (student, own class) and `GET /api/v1/children/{student}/schedule` (parent, `student_parent` only). See [API.md](API.md).
+
 ## Routes
 
 | Method | URI | Name |

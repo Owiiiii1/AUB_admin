@@ -13,7 +13,7 @@
 - Курсы / `AcademyClass`; каталог уроков в Настройки → Академия
 - `ClassLesson` + назначения преподавателей; недельное расписание на `academy_class_id`
 - CRUD-журнал; вкладки settings
-- Репозиторий Flutter есть; **API Foundation `/api/v1` сделан**; Flutter-клиент не подключён
+- Репозиторий Flutter есть; **API Foundation `/api/v1` сделан**; **student/parent schedule API сделан**; в клиенте есть auth foundation
 
 ---
 
@@ -26,13 +26,8 @@
 | 2 | **Core Data Model refactor** | **Сделан** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
 | 3 | **Identity model implementation** | **Сделан** 2026-09-08. Один User = один actor type (`staff` / `student` / `parent` / `teacher`). Identity ≠ admin web RBAC. |
 | 4 | **API Foundation** | **Сделан** 2026-09-08. `/api/v1`, Sanctum v4.3.3, login/logout/me/health. См. [API.md](API.md). |
-| 5 | **Flutter Foundation** | Оболочка app, env, HTTPS-клиент, auth к API — **следующий этап**. Модель дистрибуции Store OPEN |
-
-## Продуктовые модули (после foundation)
-
-| # | Направление | Примечание |
-|---|-------------|------------|
-| 6 | Student + Parent mobile MVP | Зависит от 3–5 |
+| 5 | **Flutter Foundation** | Auth foundation в `AUB_app`. Модель дистрибуции Store OPEN |
+| 6 | Student + Parent mobile MVP | **Schedule API сделан** 2026-09-09 (`GET /schedule`, `GET /children/{student}/schedule`). Дальше Flutter UI расписания. |
 | 7 | Teacher App / Teacher Workplace | Flutter + web workplace; связь Teacher↔User. Identity/app foundation **до** check-in |
 | 8 | **Student Attendance** | Присутствие ребёнка на **конкретном занятии / репетиции / session**. **Не** geofence преподавателя |
 | 9 | **Teacher Check-in / Staff Presence** | Отдельный модуль **после** Teacher identity/app foundation. Daily presence, не per-lesson. Кнопка «Пришёл» + разовый GPS + geofence. QR = optional fallback |

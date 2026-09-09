@@ -35,6 +35,8 @@ Each user must be `is_active` and have the matching linked profile (`students.us
 | GET | `/me` | Bearer |
 | POST | `/auth/logout` | Bearer |
 | POST | `/auth/logout-all` | Bearer |
+| GET | `/schedule` | Bearer, `student` only |
+| GET | `/children/{student}/schedule` | Bearer, `parent` only |
 
 ### GET `/health`
 
@@ -103,6 +105,56 @@ Actor-aware whitelist. Never includes password hashes, `remember_token`, web `ro
 
 **Teacher profile:** `id`, `first_name`, `last_name`, `display_name`.
 
+### GET `/schedule`
+
+Student only (`account_type = student`). The student is taken from `request.user.studentProfile`. There is no `student_id` query/body.
+
+### GET `/children/{student}/schedule`
+
+Parent only. The child must be linked via `student_parent`. Unrelated or unknown children return `404 not_found` (same body), so client code cannot probe whether a student id exists.
+
+Teacher and staff cannot use either schedule endpoint (`403` for a valid teacher token; staff never gets a mobile session).
+
+Query:
+
+```text
+?week=YYYY-MM-DD
+```
+
+Any day of the week is accepted. The backend converts it to Monday–Sunday using Laravel `now()` / `config('app.timezone')`. **Current timezone in `config/app.php` is `UTC` (not read from `APP_TIMEZONE`).** Flutter must not compute the week as source of truth.
+
+If `week` is omitted, the current week in that timezone is used. Invalid `week` → `422 validation_error`.
+
+#### Publication rules (same as admin Publish)
+
+Admin `WeeklyScheduleController::publish` sets `schedule_weeks.status = published` and rewrites every lesson on that week to `scheduled_lessons.status = published`. `locked` exists in schema as a frozen official week; the admin UI does not set it yet. Mobile treats **`published` and `locked`** as official.
+
+Draft weeks are never returned.
+
+Visible lesson statuses on an official week:
+
+| Lesson status | Mobile |
+|---------------|--------|
+| `draft` | Hidden (admin work) |
+| `scheduled` | Hidden (default placement; also used for lessons added after Publish without re-publishing) |
+| `published` | Shown |
+| `cancelled` | Shown with `status: cancelled` |
+| `moved` | Shown with current date/time and `status: moved` (no old/new history in the model) |
+
+#### Empty states (always HTTP 200)
+
+| Case | `academy_class` | `week.published` | `days` | `empty_reason` |
+|------|-----------------|------------------|--------|----------------|
+| Student has no class | `null` | `false` | `[]` | `no_class` |
+| No official week | class object | `false` | 7 empty days | `unpublished` |
+| Official week, no visible lessons | class object | `true` | 7 empty days | `no_lessons` |
+
+`week.starts_on` is Monday; `week.ends_on` is Sunday (calendar week for the app). Admin `week_end_date` remains Friday for the Mon–Fri board.
+
+Whitelist: student `{id, display_name, academy_class}`, lesson `{id, starts_at, ends_at, title, lesson{id,name}, teacher{id,display_name}, location.building/room {id,name}, status}`. No notes, AI metadata, conflicts, emails, phones, tax codes, medical/document fields.
+
+Lessons are grouped by day and sorted by `starts_at`.
+
 ### POST `/auth/logout`
 
 Revokes **only** the current token.
@@ -152,6 +204,6 @@ Authenticated API rate limit: **120 / minute / user**.
 
 Native Flutter does not use browser CORS. Allowed origins are empty. Do not set `*` unless Flutter Web is a separate, approved task.
 
-## Out of scope (not in v1)
+## Out of scope (not in this contract)
 
-Registration, forgot/reset password, email verification, refresh tokens, push tokens, schedules, attendance, check-in, grades, documents, messages, payments, productions.
+Registration, forgot/reset password, email verification, refresh tokens, push tokens, **teacher schedule**, attendance, check-in, grades, documents, messages, payments, productions, timetable editing from mobile.
