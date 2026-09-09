@@ -2,74 +2,60 @@
 
 ## Task
 
-Add **Teacher Attendance MVP** API in `AUB_admin`. Identity is Student + ScheduledLesson (`attendance_records`). Flutter Teacher Attendance is the paired client task after this deploy.
-
-## Schema
-
-Table `attendance_records`:
-
-- `scheduled_lesson_id` FK `scheduled_lessons` `cascadeOnDelete`
-- `student_id` FK `students` `cascadeOnDelete`
-- `status` `present` / `absent` / `excused`
-- `marked_by` FK `users` nullable `nullOnDelete`
-- `marked_at`
-- timestamps
-- **UNIQUE (`scheduled_lesson_id`, `student_id`)**
-
-Unmarked = no row. PUT `status=null` deletes the row. Roster is current `academy_class_student` (historical snapshot is OPEN debt).
+Add **Student / Parent Attendance History** read-only API in `AUB_admin`. Identity stays Student + ScheduledLesson (`attendance_records`). No new migration. Teacher marking contract unchanged. Flutter history is a paired follow-up in `AUB_app`.
 
 ## Endpoints
 
 ```text
-GET /api/v1/teacher/lessons/{scheduledLesson}/attendance
-PUT /api/v1/teacher/lessons/{scheduledLesson}/attendance
+GET /api/v1/attendance
+GET /api/v1/children/{student}/attendance
 ```
 
-Ownership: `scheduled_lesson.teacher_id == current teacher profile`. Other teacher → 404. Student/parent → 403. Staff mobile → 401.
+`auth:sanctum` + `mobile.actor` + `throttle:api-mobile`.
 
-Publication: official week `published`/`locked`; lesson `published`/`moved` editable; `cancelled` GET read-only (`attendance_editable=false`); PUT 409 `attendance_not_editable`. Draft/scheduled → 404.
+## Authorization
 
-PUT = bulk partial upsert; invalid roster student rejects the whole request. Success returns the GET payload. Audit: `marked_by` / `marked_at`; activity `attendance.updated` with `scheduled_lesson_id` + `changed_count` only.
+- Student `/attendance`: `account_type=student`, student from `studentProfile` only (no client `student_id`).
+- Parent `/children/{student}/attendance`: `account_type=parent`, ownership via `parentProfile.students`. Stranger → **404**.
+- Teacher → **403** on both. Staff mobile → **401**. Wrong actor on the other endpoint → **403**.
+
+## Period
+
+`?month=YYYY-MM`. Omitted → current month in `Europe/Rome`. Backend computes `starts_on` / `ends_on`. Invalid month → **422** `validation_error`.
+
+## Filtering
+
+A row is history only if an `AttendanceRecord` exists **and** the lesson is official:
+
+- week `published` / `locked`
+- lesson `published` / `moved`
+
+Cancelled / draft / scheduled / other month excluded. Leftover records on cancelled lessons are not visits.
+
+**`no AttendanceRecord` ≠ `absent`.** Unmarked lessons are not history and are not counted.
+
+## Summary
+
+Absolute counts only: `marked = present + absent + excused`. No percentages.
+
+Sort: `lesson_date DESC`, `starts_at DESC`, `attendance_records.id DESC`.
+
+## Privacy
+
+Whitelist Resource `AttendanceHistoryResource`. No `marked_by`, `marked_at`, tax_code, medical, notes, documents, parent contacts, teacher email/phone, AI metadata, RBAC.
+
+Read service: `AttendanceHistoryService` (not mixed into `TeacherAttendanceService`).
 
 ## Tests
 
-Exact production suite after `optimize:clear`:
+`AttendanceHistoryApiTest` on production host `aub_test`. Full suite: **95 passed**, 0 failed, 0 errors (718 assertions).
 
-| Metric | Count |
-|--------|-------|
-| Total | 82 |
-| Passed | 82 |
-| Failed | 0 |
-| Errors | 0 |
-| Assertions | 588 |
-
-(`71` previous + `11` attendance tests.) `composer validate` PASS. `aub_test` green **before** production migrate.
+`php artisan route:list --path=api`: **12** routes. No migration.
 
 ## Deploy
 
-Migration `2026_09_09_200000_create_attendance_records_table`. Files copied to `/var/www/aub`. `.env` not touched. `php artisan optimize:clear`. `route:list --path=api` shows **10** routes after migrate.
+Copied PHP + tests + docs to `/var/www/aub`. `optimize:clear`. No schema change.
 
 ## Production smoke
 
-Isolated week `2026-12-28`, lesson id **2** (`LEZIONE CLASSICO`), class `Mobile Test`, student id **8**, teacher `teacher@admin.com`. Temporary Sanctum token `smoke-teacher-attendance` (deleted after):
-
-- GET roster → 200, `attendance_editable=true`, 1 student
-- PUT present → 200; GET → `present`
-- PUT absent → 200; GET → `absent`
-- PUT `null` → 200; GET → unmarked
-- Student token GET → 403
-- Smoke attendance row deleted (`remaining_rows=0`)
-
-No second official teacher lesson on that week (foreign 404 not exercised). `.env` not touched. No plaintext tokens in this report.
-
-## Files
-
-Created: `AttendanceRecord`, `TeacherAttendanceService`, `AttendanceController`, `SaveTeacherAttendanceRequest`, `TeacherAttendanceResource`, `AttendanceNotEditableException`, migration, `AttendanceApiTest`, `docs/en/ATTENDANCE.md`, `docs/ru/ATTENDANCE.md`.
-
-Modified: `ScheduledLesson`, `Student`, `routes/api.php`, `ApiExceptionRenderer`, bilingual API / architecture / current-state / data-model / roadmap / next-steps / open-questions / README.
-
-## Technical debt / OPEN
-
-- Historical roster snapshot.
-- Attendance finalization / edit window.
-- Student/Parent attendance history (next slice).
+Isolated week `2026-12-28`, class `Mobile Test`, student id **8**, lesson id **2**. Temporary extra lessons + records for present/absent/excused; Student GET, Parent GET, stranger 404, Teacher 403; extra rows deleted after.

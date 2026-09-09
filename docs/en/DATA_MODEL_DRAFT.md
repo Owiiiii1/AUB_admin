@@ -110,7 +110,7 @@ Tables `course_groups`, `course_group_customer`, `course_group_lesson` were **dr
 `academy_buildings`, `academy_rooms` (`capacity`, `room_type`). **No lat/lng/radius columns today.**  
 `schedule_weeks`: Monday `week_start_date`, Friday `week_end_date`, `work_starts_at` / `work_ends_at`, `draft`/`published`/`locked`.  
 `scheduled_lessons`: week, building, room, **`academy_class_id`**, teacher, lesson, date/time, color, status.  
-`attendance_records`: **Student + ScheduledLesson**; `status` `present`/`absent`/`excused`; unique `(scheduled_lesson_id, student_id)`; `marked_by` nullable `nullOnDelete`. Unmarked = no row. See [ATTENDANCE.md](ATTENDANCE.md).  
+`attendance_records`: **Student + ScheduledLesson**; `status` `present`/`absent`/`excused`; unique `(scheduled_lesson_id, student_id)`; `marked_by` nullable `nullOnDelete`. Unmarked = no row. **`no AttendanceRecord` ≠ `absent`**. Teacher write + Student/Parent month history. See [ATTENDANCE.md](ATTENDANCE.md).  
 `schedule_ai_runs`: prompt, preferences JSON, metrics, report, warnings.
 
 UI: visual 30 min, planning 5 min. See [WEEKLY_SCHEDULE_SERVICE.md](WEEKLY_SCHEDULE_SERVICE.md).  
@@ -171,7 +171,7 @@ Target entities: `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Possi
 |-------|--------|--------|
 | `students` / `parents` / `student_parent` | Implemented 2026-09-08 | DECIDED / implemented |
 | Enrollment workflow around `Class` | Statuses, history, transfers | OPEN |
-| **Student Attendance** | Teacher MVP: Student + ScheduledLesson (`attendance_records`). Current class roster. History/finalization OPEN | Teacher write MVP implemented / history OPEN |
+| **Student Attendance** | Teacher write + Student/Parent month history (`attendance_records`). Current class roster for marking. `no AttendanceRecord` ≠ `absent`. Finalization OPEN | Teacher write + history implemented / finalization OPEN |
 | **Teacher Check-in** | Daily geofence check-in. Radius/accuracy details OPEN | DECIDED semantics / not implemented |
 | Final Assessment | `StudentFinalResult` / `ReportCard`. Scale OPEN | DECIDED core / details OPEN |
 | Unified calendar | Variant A vs B. Tech Lead not decided. **Do not change `scheduled_lessons` now** | OPEN |

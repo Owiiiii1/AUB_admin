@@ -21,6 +21,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('/schedule', [ScheduleController::class, 'student'])->name('schedule.student');
         Route::get('/children/{student}/schedule', [ScheduleController::class, 'child'])->name('schedule.child');
         Route::get('/teacher/schedule', [ScheduleController::class, 'teacher'])->name('schedule.teacher');
+        Route::get('/attendance', [AttendanceController::class, 'student'])->name('attendance.student');
+        Route::get('/children/{student}/attendance', [AttendanceController::class, 'child'])->name('attendance.child');
         Route::get('/teacher/lessons/{scheduledLesson}/attendance', [AttendanceController::class, 'show'])->name('attendance.show');
         Route::put('/teacher/lessons/{scheduledLesson}/attendance', [AttendanceController::class, 'update'])->name('attendance.update');
     });

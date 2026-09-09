@@ -38,6 +38,8 @@ Each user must be `is_active` and have the matching linked profile (`students.us
 | GET | `/schedule` | Bearer, `student` only |
 | GET | `/children/{student}/schedule` | Bearer, `parent` only |
 | GET | `/teacher/schedule` | Bearer, `teacher` only |
+| GET | `/attendance` | Bearer, `student` only |
+| GET | `/children/{student}/attendance` | Bearer, `parent` only |
 | GET | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, `teacher` only |
 | PUT | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, `teacher` only |
 
@@ -224,6 +226,28 @@ Cancelled (or otherwise non-editable) lesson → **409**:
 
 Success **200** returns the same `data` shape as GET. `marked_by` is the current User; `marked_at` is `now()` in `Europe/Rome` when the status actually changes.
 
+### GET `/attendance`
+
+Student only. See [ATTENDANCE.md](ATTENDANCE.md).
+
+Student is taken from `request.user.studentProfile`. There is no client `student_id`. Teacher / parent → **403**. Staff mobile → **401**.
+
+Query `month=YYYY-MM` (optional). Omitted → current month in `Europe/Rome`. Backend returns `period.month`, `period.starts_on`, `period.ends_on`. Invalid month → **422** `validation_error`.
+
+Only existing `AttendanceRecord` rows are returned. **`no AttendanceRecord` ≠ `absent`** — unmarked lessons are not history and are not counted.
+
+Included only when the lesson’s week is `published`/`locked` and the lesson is `published`/`moved`. Cancelled / draft / scheduled are excluded even if a leftover row exists.
+
+Sort: `lesson_date DESC`, `starts_at DESC`, `attendance_record.id DESC`.
+
+`summary.marked = present + absent + excused`. Absolute counts only.
+
+Whitelist: student `{id, display_name}`; records `{id, date, starts_at, ends_at, status, lesson{id,name}, title, teacher{id,display_name}, location.building/room}`. No `marked_by`, `marked_at`, contacts, tax_code, medical, notes, documents, parent data, AI metadata.
+
+### GET `/children/{student}/attendance`
+
+Parent only. Same payload as student history. Ownership via `parentProfile.students`. Unrelated child → **404** `not_found` (not 403). Student / teacher → **403**.
+
 ### POST `/auth/logout`
 
 Revokes **only** the current token.
@@ -276,4 +300,4 @@ Native Flutter does not use browser CORS. Allowed origins are empty. Do not set 
 
 ## Out of scope (not in this contract)
 
-Registration, forgot/reset password, email verification, refresh tokens, push tokens, Student/Parent attendance history, check-in, grades, documents, messages, payments, productions, timetable editing from mobile.
+Registration, forgot/reset password, email verification, refresh tokens, push tokens, check-in, grades, documents, messages, payments, productions, timetable editing from mobile.

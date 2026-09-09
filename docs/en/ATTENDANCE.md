@@ -1,8 +1,11 @@
 # AUB — Teacher Attendance
 
-Teacher Attendance MVP: a teacher opens an official lesson from Teacher Schedule, sees the class roster, marks each student, saves, and sees the same marks on reopen.
+Attendance covers two mobile flows on the same `attendance_records` table:
 
-Student / Parent attendance history is **not** in this stage.
+1. **Teacher marking** — open an official lesson, see the class roster, mark each student, save.
+2. **Student / Parent history** — read-only month history of existing marks.
+
+There is **no** second history entity. Identity remains **Student + ScheduledLesson**.
 
 Details also live in [API.md](API.md).
 
@@ -38,7 +41,9 @@ present | absent | excused
 
 Not in this version: `late`, `left_early`, `sick`, `remote`, custom.
 
-There is **no** stored `unmarked` status. If the row is missing, the student is unmarked (`attendance: null` in the API). The backend does **not** pre-create one row per student per lesson.
+There is **no** stored `unmarked` status. If the row is missing, the student is unmarked (`attendance: null` on the teacher API). The backend does **not** pre-create one row per student per lesson.
+
+**`no AttendanceRecord` ≠ `absent`.** An unmarked lesson is not a visit, is not an absence, and must not enter Student/Parent history or summary counts.
 
 `status = null` on PUT **deletes** the row.
 
@@ -104,6 +109,42 @@ PUT success returns the same payload as GET (fresh roster + marks).
 
 Audit: `marked_by` / `marked_at` update on a real status change (`Europe/Rome` `now()`). Activity log `attendance.updated` stores `scheduled_lesson_id` + `changed_count` only (no child list).
 
+## Student / Parent history
+
+Read-only. Service: `AttendanceHistoryService` (not mixed into `TeacherAttendanceService`).
+
+```text
+GET /api/v1/attendance
+GET /api/v1/children/{student}/attendance
+```
+
+| Actor | `/attendance` | `/children/{student}/attendance` |
+|-------|---------------|----------------------------------|
+| Student | own history via `studentProfile` (no client `student_id`) | 403 |
+| Parent | 403 | own children via `student_parent`; stranger → **404** |
+| Teacher | 403 | 403 |
+| Staff mobile | 401 | 401 |
+
+Query: `?month=YYYY-MM`. If omitted, current month in `Europe/Rome`. Backend computes `starts_on` / `ends_on`. Invalid month → **422** `validation_error`.
+
+A row is included only when:
+
+- an `AttendanceRecord` exists;
+- `schedule_weeks.status` is `published` or `locked`;
+- `scheduled_lessons.status` is `published` or `moved`.
+
+Cancelled / draft / scheduled lessons are excluded even if a leftover record exists. Another month is excluded. Unmarked lessons are excluded.
+
+Sort: `lesson_date DESC`, `starts_at DESC`, `attendance_records.id DESC`.
+
+Summary (absolute counts only, no percentages):
+
+```text
+marked = present + absent + excused
+```
+
+Whitelist: student `{id, display_name}`; record `{id, date, starts_at, ends_at, status, lesson{id,name}, title, teacher{id,display_name}, location.building/room {id,name}}`. No `marked_by`, `marked_at`, contacts, tax_code, medical, notes, documents, parent data, AI metadata, RBAC.
+
 ## Out of this stage
 
-Student/parent history, percentages, absence notifications, justification upload, medical reason, late, comments, admin dashboard, teacher check-in/geolocation, lesson completion, roster snapshots, finalization lock.
+Percentages, absence notifications, justification upload, medical reason, late, comments, admin dashboard, teacher check-in/geolocation, lesson completion, roster snapshots, finalization lock.

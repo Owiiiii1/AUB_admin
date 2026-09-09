@@ -53,6 +53,6 @@ Flutter talks to the core **only** through HTTPS API (`/api/v1`, Sanctum Bearer 
 - **Flutter package:** `aub` — bundle / application id `com.owlsolutions.aub`
 - **Phase 1 (roles):** Complete (2026-07-06)
 - **Web modules:** Phase 2–3 in use (students partial; weekly schedule + hybrid AI)
-- **Next major technical stage:** Student/Parent attendance history (read-only on `attendance_records`)
+- **Next major technical stage:** Teacher Daily Check-in or Student/Parent Home dashboard
 
 Last updated: 2026-09-08

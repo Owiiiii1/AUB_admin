@@ -172,7 +172,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. Mobile API: Laravel Sanctum **v4.
 | `routes/owl-admin-auth.php` | `/login` redirect, `POST /logout` |
 | `routes/owl-admin-pages.php` | All protected Inertia/web CRM routes |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule, teacher attendance |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule, teacher attendance, student/parent attendance history |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
 Production `php artisan route:list --path=api`: **10** routes. Web CRM unchanged. Details: [API.md](API.md).

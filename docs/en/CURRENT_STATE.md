@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-09** (Teacher Attendance API + Teacher schedule API + application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-09** (Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -36,13 +36,13 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **82 passed**, 0 failed, 0 errors (588 assertions) |
+| Last suite on production host | **95 passed**, 0 failed, 0 errors (718 assertions) |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 
 ## Routes (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **10** routes. Web CRM unchanged. No Passport/JWT.
+`php artisan route:list --path=api`: **12** routes. Web CRM unchanged. No Passport/JWT.
 
 ### Mobile API
 
@@ -56,10 +56,12 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | GET | `/api/v1/schedule` | `api.v1.schedule.student` |
 | GET | `/api/v1/children/{student}/schedule` | `api.v1.schedule.child` |
 | GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
+| GET | `/api/v1/attendance` | `api.v1.attendance.student` |
+| GET | `/api/v1/children/{student}/attendance` | `api.v1.attendance.child` |
 | GET | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.show` |
 | PUT | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.update` |
 
-Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student schedule is own class only; parent schedule is own children via `student_parent`; teacher schedule is own `ScheduledLesson.teacher_id` across classes. Teacher attendance is own official lesson + current class roster. Details: [API.md](API.md), [ATTENDANCE.md](ATTENDANCE.md).
+Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student schedule is own class only; parent schedule is own children via `student_parent`; teacher schedule is own `ScheduledLesson.teacher_id` across classes. Teacher attendance is own official lesson + current class roster. Student/Parent attendance history is existing `AttendanceRecord` rows for official published/moved lessons in a month (`no AttendanceRecord` ≠ `absent`). Details: [API.md](API.md), [ATTENDANCE.md](ATTENDANCE.md).
 
 ### Auth
 
@@ -255,7 +257,7 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 | 2 | Lessons catalog | Complete (Settings → Academy) |
 | 3 | Weekly schedule | Complete + hybrid AI (2026-07-20) |
 | 3 | Student file uploads | Partial — public disk, no documents module |
-| 3 | **Student Attendance** | Teacher mobile MVP **done** 2026-09-09 (`attendance_records`, GET/PUT teacher lesson). Student/Parent history **not** started |
+| 3 | **Student Attendance** | Teacher write + Student/Parent history **done** 2026-09-09 (`attendance_records`; `no AttendanceRecord` ≠ `absent`) |
 | 3 | **Teacher Check-in** | Not started (**DECIDED**: daily GPS snapshot + geofence; not per lesson) |
 | 3 | Documents / communication menus | Placeholders |
 | 4+ | Payments | Not started |
@@ -270,13 +272,13 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 - Separate login identifier besides unique email
 - Full AcademicYear admin UI
 - Full enrollment workflow (statuses, transfers, history). The “one active `Class`” rule is DECIDED
-- **Student / Parent attendance history** (read-only on `attendance_records`) and **Teacher Check-in** (daily presence — semantics DECIDED, no code)
+- **Teacher Check-in** (daily presence — semantics DECIDED, no code)
 - Final Assessment / `StudentFinalResult` / `ReportCard` (core DECIDED; not implemented; no running grades)
 - Productions / activity groups / rehearsals / performances (late future; web `/events` is only a placeholder)
 - Payments / invoices
 - Standalone documents and communication modules
 - Archive, costume service (menu placeholders; costume may remain a separate service)
-- Feature API remaining: Student/Parent attendance history, check-in, documents, messages, payments
+- Feature API remaining: check-in, documents, messages, payments
 - Flutter features beyond the default template; one-app vs flavors **OPEN**
 - PDF export for schedule (button is a placeholder)
 - Actionable AI recommendations (re-prompt only)

@@ -13,7 +13,7 @@
 - Курсы / `AcademyClass`; каталог уроков в Настройки → Академия
 - `ClassLesson` + назначения преподавателей; недельное расписание на `academy_class_id`
 - CRUD-журнал; вкладки settings
-- Репозиторий Flutter есть; **API Foundation `/api/v1` сделан**; **student/parent/teacher schedule API сделан**; **Teacher Attendance API сделан**; в клиенте есть auth + student/parent schedule
+- Репозиторий Flutter есть; **API Foundation `/api/v1` сделан**; **student/parent/teacher schedule API сделан**; **Teacher Attendance API сделан**; **Student/Parent Attendance History API сделан**; в клиенте есть auth + student/parent schedule
 - Часовой пояс приложения `Europe/Rome` (`APP_TIMEZONE`)
 
 ---
@@ -30,7 +30,7 @@
 | 5 | **Flutter Foundation** | Auth foundation в `AUB_app`. Модель дистрибуции Store OPEN |
 | 6 | Student + Parent mobile MVP | **Schedule API сделан** 2026-09-09 (`GET /schedule`, `GET /children/{student}/schedule`). Flutter UI расписания в `AUB_app`. |
 | 7 | Teacher App / Teacher Workplace | **Teacher schedule API сделан** 2026-09-09 (`GET /teacher/schedule`). **Teacher Attendance API сделан** 2026-09-09. Дальше Flutter Orario + attendance преподавателя. Identity/app foundation **до** check-in |
-| 8 | **Student Attendance** | Teacher write MVP **сделан** (`attendance_records`, Student + ScheduledLesson). Дальше: история Student/Parent (read-only). **Не** geofence преподавателя |
+| 8 | **Student Attendance** | Teacher write + история Student/Parent **сделаны** (`attendance_records`; нет `AttendanceRecord` ≠ `absent`). **Не** geofence преподавателя |
 | 9 | **Teacher Check-in / Staff Presence** | Отдельный модуль **после** Teacher identity/app foundation. Daily presence, не per-lesson. Кнопка «Пришёл» + разовый GPS + geofence. QR = optional fallback |
 | 10 | **Final Assessment / Report Cards** | **Отдельный продуктовый модуль.** Текущих оценок нет; только `StudentFinalResult` + `ReportCard`; PDF генерирует Administrator |
 | 11 | Secretariat / Enrollment Workflow | Статусы, переводы, история вокруг одного `Class` |

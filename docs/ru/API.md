@@ -38,6 +38,8 @@ Authorization: Bearer <token>
 | GET | `/schedule` | Bearer, только `student` |
 | GET | `/children/{student}/schedule` | Bearer, только `parent` |
 | GET | `/teacher/schedule` | Bearer, только `teacher` |
+| GET | `/attendance` | Bearer, только `student` |
+| GET | `/children/{student}/attendance` | Bearer, только `parent` |
 | GET | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, только `teacher` |
 | PUT | `/teacher/lessons/{scheduledLesson}/attendance` | Bearer, только `teacher` |
 
@@ -224,6 +226,28 @@ Cancelled (или иначе нередактируемое занятие) → 
 
 Успех **200** возвращает ту же форму `data`, что GET. `marked_by` — текущий User; `marked_at` — `now()` в `Europe/Rome` при реальной смене статуса.
 
+### GET `/attendance`
+
+Только Student. См. [ATTENDANCE.md](ATTENDANCE.md).
+
+Student берётся из `request.user.studentProfile`. Клиентский `student_id` не принимается. Teacher / parent → **403**. Staff mobile → **401**.
+
+Query `month=YYYY-MM` (опционально). Если нет — текущий месяц в `Europe/Rome`. Backend возвращает `period.month`, `period.starts_on`, `period.ends_on`. Невалидный month → **422** `validation_error`.
+
+Возвращаются только существующие `AttendanceRecord`. **Нет `AttendanceRecord` ≠ `absent`** — неотмеченные занятия не история и не считаются.
+
+Учитываются только занятия официальной недели `published`/`locked` со статусом `published`/`moved`. Cancelled / draft / scheduled исключаются, даже если строка осталась.
+
+Сортировка: `lesson_date DESC`, `starts_at DESC`, `attendance_record.id DESC`.
+
+`summary.marked = present + absent + excused`. Только абсолютные числа.
+
+Whitelist: student `{id, display_name}`; records `{id, date, starts_at, ends_at, status, lesson{id,name}, title, teacher{id,display_name}, location.building/room}`. Без `marked_by`, `marked_at`, контактов, tax_code, medical, notes, documents, parent data, AI metadata.
+
+### GET `/children/{student}/attendance`
+
+Только Parent. Тот же payload, что у student history. Ownership через `parentProfile.students`. Чужой ребёнок → **404** `not_found` (не 403). Student / teacher → **403**.
+
 ### POST `/auth/logout`
 
 Отзывает **только** текущий token.
@@ -276,4 +300,4 @@ Cancelled (или иначе нередактируемое занятие) → 
 
 ## Вне scope (нет в этом контракте)
 
-Регистрация, forgot/reset password, email verification, refresh tokens, push tokens, история посещаемости Student/Parent, check-in, оценки, документы, сообщения, платежи, постановки, редактирование сетки с телефона.
+Регистрация, forgot/reset password, email verification, refresh tokens, push tokens, check-in, оценки, документы, сообщения, платежи, постановки, редактирование сетки с телефона.

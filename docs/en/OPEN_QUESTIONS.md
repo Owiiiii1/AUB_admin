@@ -114,7 +114,7 @@ Security items below are **mandatory foundation before a wide mobile rollout** (
 
 ## Student Attendance
 
-Teacher write MVP is **implemented** 2026-09-09. Identity: **Student + ScheduledLesson** (`attendance_records`). Statuses: `present` / `absent` / `excused`. Unmarked = no row. Roster = current `academy_class_student`. See [ATTENDANCE.md](ATTENDANCE.md).
+Teacher write MVP is **implemented** 2026-09-09. Identity: **Student + ScheduledLesson** (`attendance_records`). Statuses: `present` / `absent` / `excused`. Unmarked = no row. **`no AttendanceRecord` ≠ `absent`**. Roster = current `academy_class_student`. Student/Parent month history is **implemented** (`GET /attendance`, `GET /children/{student}/attendance`). See [ATTENDANCE.md](ATTENDANCE.md).
 
 This is **not** Teacher Check-in.
 
@@ -124,7 +124,7 @@ This is **not** Teacher Check-in.
 |----------|----------------|--------|
 | Attendance finalization / edit window (lock after N days) | Accidental late edits vs operational corrections | OPEN |
 | Historical roster / enrollment snapshot at lesson date | Current membership may differ from who belonged on that day | OPEN (debt; not built) |
-| Student / Parent attendance history UI | Next product slice; table already exists | OPEN (not this stage) |
+| Student / Parent attendance history UI | Flutter month history after this API | OPEN (Flutter follow-up in `AUB_app`) |
 | Extra statuses (`late`, sick, remote, comments) | Product scope | OPEN (not in MVP) |
 
 ---

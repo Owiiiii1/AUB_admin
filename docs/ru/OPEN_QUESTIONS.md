@@ -114,7 +114,7 @@
 
 ## Student Attendance
 
-Teacher write MVP **реализован** 2026-09-09. Идентичность: **Student + ScheduledLesson** (`attendance_records`). Статусы: `present` / `absent` / `excused`. Unmarked = нет строки. Roster = текущий `academy_class_student`. См. [ATTENDANCE.md](ATTENDANCE.md).
+Teacher write MVP **реализован** 2026-09-09. Идентичность: **Student + ScheduledLesson** (`attendance_records`). Статусы: `present` / `absent` / `excused`. Unmarked = нет строки. **Нет `AttendanceRecord` ≠ `absent`**. Roster = текущий `academy_class_student`. История месяца Student/Parent **реализована** (`GET /attendance`, `GET /children/{student}/attendance`). См. [ATTENDANCE.md](ATTENDANCE.md).
 
 Это **не** Teacher Check-in.
 
@@ -124,7 +124,7 @@ Teacher write MVP **реализован** 2026-09-09. Идентичность:
 |----------|----------------|--------|
 | Финализация attendance / окно редактирования (lock через N дней) | Случайные поздние правки vs рабочие исправления | OPEN |
 | Исторический roster / snapshot состава на дату занятия | Текущий состав может отличаться от состава в день урока | OPEN (долг; не строится сейчас) |
-| UI истории Student / Parent | Следующий product slice; таблица уже есть | OPEN (не этот этап) |
+| UI истории Student / Parent | Flutter-история по месяцу после этого API | OPEN (follow-up во `AUB_app`) |
 | Доп. статусы (`late`, sick, remote, комментарии) | Product scope | OPEN (нет в MVP) |
 
 ---
