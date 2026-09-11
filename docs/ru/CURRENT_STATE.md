@@ -42,7 +42,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 
 ## Маршруты (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **12** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
+`php artisan route:list --path=api`: **15** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
 
 ### Mobile API
 
@@ -53,6 +53,9 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | POST | `/api/v1/auth/logout` | `api.v1.auth.logout` |
 | POST | `/api/v1/auth/logout-all` | `api.v1.auth.logout-all` |
 | GET | `/api/v1/me` | `api.v1.me` |
+| PUT | `/api/v1/me/password` | `api.v1.me.password` |
+| GET | `/api/v1/me/devices` | `api.v1.me.devices` |
+| DELETE | `/api/v1/me/devices/{device}` | `api.v1.me.devices.revoke` |
 | GET | `/api/v1/schedule` | `api.v1.schedule.student` |
 | GET | `/api/v1/children/{student}/schedule` | `api.v1.schedule.child` |
 | GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
@@ -65,7 +68,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 
 ### Демо-данные для mobile
 
-`php artisan aub:fill-mobile-demo --force` публикует предыдущую / текущую / следующую недели пн–пт в `Europe/Rome`, ставит демо-занятия на класс Mobile Test (аккаунты `student@admin.com` / `teacher@admin.com` / `parent@admin.com`) и пишет `attendance_records` по уже начавшимся официальным занятиям. Повторный запуск идемпотентен (демо-строки с `notes=__mobile_demo__`). Изолированная неделя `2026-12-28` не трогается. Пароли существующих аккаунтов не меняются. Вне `testing` нужен `--force`.
+`php artisan aub:fill-mobile-demo --force` публикует предыдущую / текущую / следующую недели пн–пт в `Europe/Rome`, ставит демо-занятия на класс Mobile Test (аккаунты `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), пишет `attendance_records` по уже начавшимся официальным занятиям и заполняет демо-контакты студентов (телефон, дата рождения, адрес в Милане) плюс портреты, если файлы есть на public disk. Повторный запуск идемпотентен (демо-строки с `notes=__mobile_demo__`). Изолированная неделя `2026-12-28` не трогается. Пароли существующих аккаунтов не меняются. Вне `testing` нужен `--force`.
 
 ### Auth
 

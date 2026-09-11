@@ -27,6 +27,11 @@ class StudentProfileResource extends JsonResource
             'last_name' => $this->last_name,
             'display_name' => $this->displayName(),
             'photo_url' => $this->safePhotoUrl(),
+            'phone' => $this->nullableString($this->phone),
+            'birth_date' => $this->birth_date?->format('Y-m-d'),
+            'residence_address' => $this->nullableString($this->residence_address),
+            'residence_city_province' => $this->nullableString($this->residence_city_province),
+            'residence_postal_code' => $this->nullableString($this->residence_postal_code),
             'academy_class' => $class !== null ? (new AcademyClassSummaryResource($class))->resolve() : null,
             'academic_year' => $year !== null ? (new AcademicYearSummaryResource($year))->resolve() : null,
         ];
@@ -41,5 +46,16 @@ class StudentProfileResource extends JsonResource
         }
 
         return Storage::disk('public')->url($path);
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 }

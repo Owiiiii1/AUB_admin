@@ -42,7 +42,7 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 
 ## Routes (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **12** routes. Web CRM unchanged. No Passport/JWT.
+`php artisan route:list --path=api`: **15** routes. Web CRM unchanged. No Passport/JWT.
 
 ### Mobile API
 
@@ -53,6 +53,9 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | POST | `/api/v1/auth/logout` | `api.v1.auth.logout` |
 | POST | `/api/v1/auth/logout-all` | `api.v1.auth.logout-all` |
 | GET | `/api/v1/me` | `api.v1.me` |
+| PUT | `/api/v1/me/password` | `api.v1.me.password` |
+| GET | `/api/v1/me/devices` | `api.v1.me.devices` |
+| DELETE | `/api/v1/me/devices/{device}` | `api.v1.me.devices.revoke` |
 | GET | `/api/v1/schedule` | `api.v1.schedule.student` |
 | GET | `/api/v1/children/{student}/schedule` | `api.v1.schedule.child` |
 | GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
@@ -65,7 +68,7 @@ Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student sc
 
 ### Mobile demo data
 
-`php artisan aub:fill-mobile-demo --force` publishes the previous / current / next Monday–Friday weeks in `Europe/Rome`, places demo lessons on the existing Mobile Test class (linked `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), and writes `attendance_records` for past official lessons. Re-run is idempotent (demo rows are tagged `notes=__mobile_demo__`). Isolated week `2026-12-28` is not touched. Existing account passwords are not changed. Requires `--force` outside `testing`.
+`php artisan aub:fill-mobile-demo --force` publishes the previous / current / next Monday–Friday weeks in `Europe/Rome`, places demo lessons on the existing Mobile Test class (linked `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), writes `attendance_records` for past official lessons, and fills demo student contact fields (phone, birth date, Milan address) plus portraits when files exist on the public disk. Re-run is idempotent (demo rows are tagged `notes=__mobile_demo__`). Isolated week `2026-12-28` is not touched. Existing account passwords are not changed. Requires `--force` outside `testing`.
 
 ### Auth
 

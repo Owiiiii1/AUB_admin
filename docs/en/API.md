@@ -33,6 +33,9 @@ Each user must be `is_active` and have the matching linked profile (`students.us
 | GET | `/health` | No |
 | POST | `/auth/login` | No (rate limited) |
 | GET | `/me` | Bearer |
+| PUT | `/me/password` | Bearer |
+| GET | `/me/devices` | Bearer |
+| DELETE | `/me/devices/{id}` | Bearer |
 | POST | `/auth/logout` | Bearer |
 | POST | `/auth/logout-all` | Bearer |
 | GET | `/schedule` | Bearer, `student` only |
@@ -104,11 +107,23 @@ Login rate limit: **5 / minute** per normalized email + IP → `429` `too_many_r
 
 Actor-aware whitelist. Never includes password hashes, `remember_token`, web `role_id`, `can_write`, `can_delete`, tax codes, medical data, notes, documents, or AI settings.
 
-**Student profile:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (public disk URL or `null`), `academy_class` `{id,name}` or `null`, `academic_year` `{id,name}` or `null`.
+**Student profile:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (public disk URL or `null`), `phone`, `birth_date` (`YYYY-MM-DD` or `null`), `residence_address`, `residence_city_province`, `residence_postal_code`, `academy_class` `{id,name}` or `null`, `academic_year` `{id,name}` or `null`. Contact fields are read-only. Still never includes tax codes, medical data, notes, or documents.
 
 **Parent profile:** `id`, `first_name`, `last_name`, `display_name`, `children[]` with `id`, `first_name`, `last_name`, `display_name`, `academy_class`. Only children linked via `student_parent`.
 
 **Teacher profile:** `id`, `first_name`, `last_name`, `display_name`.
+
+### PUT `/me/password`
+
+Any mobile actor (`student`, `parent`, `teacher`). Body: `current_password`, `password`, `password_confirmation`. Minimum 8 characters. Wrong current password is `422` `validation_error` with `fields.current_password`. On success the other devices' tokens are revoked; the current token stays valid.
+
+### GET `/me/devices`
+
+Any mobile actor. Returns `{ devices: [{ id, name, last_used_at, created_at, current }] }`. `name` is the login `device_name`. Token hashes are never returned. `current` is the token used for this request.
+
+### DELETE `/me/devices/{id}`
+
+Revokes that Sanctum token if it belongs to the caller. The current device cannot be revoked here (`422`); use `POST /auth/logout`. Unknown or another user's id → `404 not_found` (same body).
 
 ### GET `/schedule`
 

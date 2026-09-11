@@ -253,7 +253,20 @@ class ApiFoundationTest extends TestCase
 
         $this->assertSame(['id', 'name', 'email', 'account_type'], array_keys($profile['user']));
         $this->assertSame(
-            ['id', 'first_name', 'last_name', 'display_name', 'photo_url', 'academy_class', 'academic_year'],
+            [
+                'id',
+                'first_name',
+                'last_name',
+                'display_name',
+                'photo_url',
+                'phone',
+                'birth_date',
+                'residence_address',
+                'residence_city_province',
+                'residence_postal_code',
+                'academy_class',
+                'academic_year',
+            ],
             array_keys($profile['profile']),
         );
         $this->assertSensitiveKeysAbsent(json_encode($profile, JSON_THROW_ON_ERROR));

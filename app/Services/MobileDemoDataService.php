@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Services\WeeklySchedule\ScheduleConflictService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class MobileDemoDataService
 {
@@ -40,14 +41,14 @@ class MobileDemoDataService
     ];
 
     /**
-     * @var list<array{first: string, last: string, email: string}>
+     * @var list<array{first: string, last: string, email: string, gender: string, birth_date: string, phone: string, address: string, city: string, postal: string}>
      */
     private const CLASSMATES = [
-        ['first' => 'Giulia', 'last' => 'Bianchi', 'email' => 'giulia.bianchi.demo@example.test'],
-        ['first' => 'Luca', 'last' => 'Conti', 'email' => 'luca.conti.demo@example.test'],
-        ['first' => 'Sofia', 'last' => 'Ricci', 'email' => 'sofia.ricci.demo@example.test'],
-        ['first' => 'Elena', 'last' => 'Greco', 'email' => 'elena.greco.demo@example.test'],
-        ['first' => 'Marco', 'last' => 'Neri', 'email' => 'marco.neri.demo@example.test'],
+        ['first' => 'Giulia', 'last' => 'Bianchi', 'email' => 'giulia.bianchi.demo@example.test', 'gender' => 'female', 'birth_date' => '2010-03-14', 'phone' => '+39 333 441 2201', 'address' => 'Via Torino 18', 'city' => 'Milano (MI)', 'postal' => '20123'],
+        ['first' => 'Luca', 'last' => 'Conti', 'email' => 'luca.conti.demo@example.test', 'gender' => 'male', 'birth_date' => '2009-11-02', 'phone' => '+39 347 882 3302', 'address' => 'Via Padova 54', 'city' => 'Milano (MI)', 'postal' => '20127'],
+        ['first' => 'Sofia', 'last' => 'Ricci', 'email' => 'sofia.ricci.demo@example.test', 'gender' => 'female', 'birth_date' => '2010-07-21', 'phone' => '+39 320 554 4403', 'address' => 'Corso Buenos Aires 12', 'city' => 'Milano (MI)', 'postal' => '20124'],
+        ['first' => 'Elena', 'last' => 'Greco', 'email' => 'elena.greco.demo@example.test', 'gender' => 'female', 'birth_date' => '2009-05-09', 'phone' => '+39 328 990 5504', 'address' => 'Via Ripamonti 88', 'city' => 'Milano (MI)', 'postal' => '20141'],
+        ['first' => 'Marco', 'last' => 'Neri', 'email' => 'marco.neri.demo@example.test', 'gender' => 'male', 'birth_date' => '2009-01-30', 'phone' => '+39 331 204 6605', 'address' => 'Viale Monza 41', 'city' => 'Milano (MI)', 'postal' => '20125'],
     ];
 
     /**
@@ -78,11 +79,26 @@ class MobileDemoDataService
             $classmates = [];
             foreach (self::CLASSMATES as $row) {
                 $mate = $this->ensureStudent($row['first'], $row['last'], $row['email']);
+                $this->applyStudentDetails($mate, $row);
                 $this->enroll($mate, $class);
                 $parent->students()->syncWithoutDetaching([
                     $mate->id => ['relation_type' => 'guardian'],
                 ]);
                 $classmates[] = $mate;
+            }
+
+            $this->applyStudentDetails($student, [
+                'gender' => 'male',
+                'birth_date' => '2009-04-18',
+                'phone' => '+39 333 120 8801',
+                'address' => 'Via Padova 128',
+                'city' => 'Milano (MI)',
+                'postal' => '20127',
+            ]);
+            $this->attachPortraitIfPresent($student);
+            $this->attachTeacherPortraitIfPresent($teacher);
+            foreach ($classmates as $mate) {
+                $this->attachPortraitIfPresent($mate);
             }
 
             $roster = collect([$student, ...$classmates]);
@@ -284,6 +300,41 @@ class MobileDemoDataService
                 'status' => 'active',
             ],
         );
+    }
+
+    /**
+     * @param  array{gender: string, birth_date: string, phone: string, address: string, city: string, postal: string}  $row
+     */
+    private function applyStudentDetails(Student $student, array $row): void
+    {
+        $student->forceFill([
+            'gender' => $row['gender'],
+            'birth_date' => $row['birth_date'],
+            'phone' => $row['phone'],
+            'residence_address' => $row['address'],
+            'residence_city_province' => $row['city'],
+            'residence_postal_code' => $row['postal'],
+        ])->save();
+    }
+
+    private function attachPortraitIfPresent(Student $student): void
+    {
+        $path = "students/{$student->id}/portrait.jpg";
+        if (! Storage::disk('public')->exists($path)) {
+            return;
+        }
+
+        $student->forceFill(['student_photo_path' => $path])->save();
+    }
+
+    private function attachTeacherPortraitIfPresent(Teacher $teacher): void
+    {
+        $path = "teachers/{$teacher->id}/photos/avatar.jpg";
+        if (! Storage::disk('public')->exists($path)) {
+            return;
+        }
+
+        $teacher->forceFill(['photo_path' => $path])->save();
     }
 
     private function ensureUser(string $email, string $name, string $type): User

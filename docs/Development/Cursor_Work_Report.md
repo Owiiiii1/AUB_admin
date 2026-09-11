@@ -2,30 +2,21 @@
 
 ## Task
 
-Fill production academy data so Student / Parent / Teacher mobile screens are not empty (no published current week, zero `attendance_records`).
+Student Profilo: centered identity, read-only contact fields, password/devices APIs, local language and push toggles, demo portraits matching gender and age.
 
 ## What changed
 
-Artisan `php artisan aub:fill-mobile-demo --force`:
+- `GET /me` student whitelist adds `phone`, `birth_date`, `residence_address`, `residence_city_province`, `residence_postal_code`. Still no tax code, medical, notes, documents.
+- `PUT /me/password`, `GET /me/devices`, `DELETE /me/devices/{id}` for mobile actors. Password change revokes other devices. Current device cannot be revoked from the list.
+- `aub:fill-mobile-demo` fills demo student contacts and attaches portraits when public-disk files exist.
+- Flutter Student Profilo: centered identity card, read-only personal data, security (password, devices, logout), language + push (local). Push does not send FCM.
 
-- Publishes previous / current / next Monday–Friday weeks in `Europe/Rome`.
-- Places demo lessons on the existing **Mobile Test** class for the linked teacher (`teacher@admin.com` → Martina Barbieri).
-- Marks past official published/moved lessons for the class roster (present / absent / excused).
-- Adds five classmates (no extra logins) and attaches them to the existing parent so Parent children is not a single row.
-- Friday of the current week includes `22:00` so Student Home still has Oggi + Prossima lezione after evening local time.
-- One cancelled + one moved lesson on the current week for Orario status chips.
-- Demo rows tagged `notes=__mobile_demo__` (not exposed on mobile). Re-run deletes and recreates only those rows.
-- Isolated week `2026-12-28` is not touched. Existing account passwords are not changed.
-- `--force` required outside `testing`.
-
-No migration. No API contract change. Flutter not deployed.
+No migration.
 
 ## Tests
 
-`MobileDemoDataTest` on `aub_test`: command fills schedule + attendance; Student/Parent/Teacher GET payloads are non-empty; idempotent re-run; foreign week untouched.
-
-Full suite on production host: **98 passed**, 0 failed, 0 errors (759 assertions).
+`AccountApiTest` plus updated `/me` key list and demo fill `/me` contact assertion.
 
 ## Deploy
 
-Production smoke: weeks `2026-08-31`, `2026-09-07`, `2026-09-14` published; isolated `2026-12-28` kept. Student GET `/schedule` 200, Friday 4 lessons including `22:00`. Student GET `/attendance?month=2026-09` marked 26 (present 17, absent 5, excused 4).
+Copy PHP/docs to production, `optimize:clear`, upload portraits to `storage/app/public`, run `php artisan aub:fill-mobile-demo --force`, verify `/me` contact + `photo_url`.

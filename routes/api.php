@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AttendanceController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -16,6 +17,9 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
 
     Route::middleware(['auth:sanctum', 'mobile.actor', 'throttle:api-mobile'])->group(function (): void {
         Route::get('/me', MeController::class)->name('me');
+        Route::put('/me/password', [AccountController::class, 'updatePassword'])->name('me.password');
+        Route::get('/me/devices', [AccountController::class, 'devices'])->name('me.devices');
+        Route::delete('/me/devices/{device}', [AccountController::class, 'revokeDevice'])->name('me.devices.revoke');
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::post('/auth/logout-all', [AuthController::class, 'logoutAll'])->name('auth.logout-all');
         Route::get('/schedule', [ScheduleController::class, 'student'])->name('schedule.student');

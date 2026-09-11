@@ -33,6 +33,9 @@ Authorization: Bearer <token>
 | GET | `/health` | Нет |
 | POST | `/auth/login` | Нет (rate limit) |
 | GET | `/me` | Bearer |
+| PUT | `/me/password` | Bearer |
+| GET | `/me/devices` | Bearer |
+| DELETE | `/me/devices/{id}` | Bearer |
 | POST | `/auth/logout` | Bearer |
 | POST | `/auth/logout-all` | Bearer |
 | GET | `/schedule` | Bearer, только `student` |
@@ -104,11 +107,23 @@ Authorization: Bearer <token>
 
 Actor-aware whitelist. Никогда не включает password hash, `remember_token`, web `role_id`, `can_write`, `can_delete`, tax code, медицину, notes, документы, AI settings.
 
-**Профиль student:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (URL public disk или `null`), `academy_class` `{id,name}` или `null`, `academic_year` `{id,name}` или `null`.
+**Профиль student:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (URL public disk или `null`), `phone`, `birth_date` (`YYYY-MM-DD` или `null`), `residence_address`, `residence_city_province`, `residence_postal_code`, `academy_class` `{id,name}` или `null`, `academic_year` `{id,name}` или `null`. Контактные поля только для чтения. По-прежнему без tax code, медицины, notes и документов.
 
 **Профиль parent:** `id`, `first_name`, `last_name`, `display_name`, `children[]` с `id`, `first_name`, `last_name`, `display_name`, `academy_class`. Только дети из `student_parent`.
 
 **Профиль teacher:** `id`, `first_name`, `last_name`, `display_name`.
+
+### PUT `/me/password`
+
+Любой mobile-актор (`student`, `parent`, `teacher`). Тело: `current_password`, `password`, `password_confirmation`. Минимум 8 символов. Неверный текущий пароль — `422` `validation_error` с `fields.current_password`. При успехе токены других устройств отзываются; текущий токен остаётся.
+
+### GET `/me/devices`
+
+Любой mobile-актор. Ответ `{ devices: [{ id, name, last_used_at, created_at, current }] }`. `name` — это `device_name` с login. Хеши токенов не возвращаются. `current` — токен этого запроса.
+
+### DELETE `/me/devices/{id}`
+
+Отзывает Sanctum-токен, если он принадлежит вызывающему. Текущее устройство здесь отозвать нельзя (`422`); для этого `POST /auth/logout`. Чужой или неизвестный id → `404 not_found` (то же тело).
 
 ### GET `/schedule`
 

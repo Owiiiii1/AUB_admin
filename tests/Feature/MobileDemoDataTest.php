@@ -94,6 +94,14 @@ class MobileDemoDataTest extends TestCase
             ->getJson('/api/v1/children/'.$student->id.'/attendance?month=2026-09')
             ->assertOk()
             ->assertJsonPath('data.summary.marked', $history['summary']['marked']);
+
+        $this->forgetAuthGuards();
+        $this->withToken($this->loginToken($studentUser))
+            ->getJson('/api/v1/me')
+            ->assertOk()
+            ->assertJsonPath('data.profile.phone', '+39 333 120 8801')
+            ->assertJsonPath('data.profile.birth_date', '2009-04-18')
+            ->assertJsonPath('data.profile.residence_address', 'Via Padova 128');
     }
 
     public function test_rerun_is_idempotent_and_leaves_foreign_weeks_alone(): void
