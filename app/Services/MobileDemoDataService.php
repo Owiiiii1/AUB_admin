@@ -319,12 +319,17 @@ class MobileDemoDataService
 
     private function attachPortraitIfPresent(Student $student): void
     {
-        $path = "students/{$student->id}/portrait.jpg";
-        if (! Storage::disk('public')->exists($path)) {
-            return;
-        }
+        $candidates = [
+            "students/{$student->id}/portrait.jpg",
+            "portraits/students/{$student->id}.jpg",
+        ];
+        foreach ($candidates as $path) {
+            if (Storage::disk('public')->exists($path)) {
+                $student->forceFill(['student_photo_path' => $path])->save();
 
-        $student->forceFill(['student_photo_path' => $path])->save();
+                return;
+            }
+        }
     }
 
     private function attachTeacherPortraitIfPresent(Teacher $teacher): void

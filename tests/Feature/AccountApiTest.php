@@ -127,7 +127,9 @@ class AccountApiTest extends TestCase
         $names = array_column($devices, 'name');
         $this->assertContains('Phone A', $names);
         $this->assertContains('Phone B', $names);
-        $this->assertContainsOnly('int', array_column($devices, 'id'));
+        foreach (array_column($devices, 'id') as $id) {
+            $this->assertIsInt($id);
+        }
 
         $current = collect($devices)->firstWhere('current', true);
         $other = collect($devices)->firstWhere('current', false);
