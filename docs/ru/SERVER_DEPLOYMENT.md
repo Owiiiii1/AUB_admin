@@ -154,7 +154,10 @@ php artisan migrate:status --env=testing
 php artisan owl-admin:make-admin --email=admin@admin.com --password=admin
 php artisan owl-admin:doctor --preset=admin
 php artisan owl-admin:smoke --preset=admin
+php artisan aub:fill-mobile-demo --force
 ```
+
+`aub:fill-mobile-demo --force` заполняет опубликованные недели `Europe/Rome`, занятия и посещаемость, чтобы mobile-приложения не были пустыми. Пароли существующих аккаунтов не меняет. Изолированную неделю `2026-12-28` не трогает.
 
 Тестовый email администратора — только для разработки.
 

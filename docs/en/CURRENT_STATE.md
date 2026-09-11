@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-09** (Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-11** (production mobile demo data for current `Europe/Rome` weeks + Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 / 2026-09-09 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -36,7 +36,7 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **95 passed**, 0 failed, 0 errors (718 assertions) |
+| Last suite on production host | **98 passed**, 0 failed, 0 errors (759 assertions) |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 
@@ -62,6 +62,10 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | PUT | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.update` |
 
 Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student schedule is own class only; parent schedule is own children via `student_parent`; teacher schedule is own `ScheduledLesson.teacher_id` across classes. Teacher attendance is own official lesson + current class roster. Student/Parent attendance history is existing `AttendanceRecord` rows for official published/moved lessons in a month (`no AttendanceRecord` ≠ `absent`). Details: [API.md](API.md), [ATTENDANCE.md](ATTENDANCE.md).
+
+### Mobile demo data
+
+`php artisan aub:fill-mobile-demo --force` publishes the previous / current / next Monday–Friday weeks in `Europe/Rome`, places demo lessons on the existing Mobile Test class (linked `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), and writes `attendance_records` for past official lessons. Re-run is idempotent (demo rows are tagged `notes=__mobile_demo__`). Isolated week `2026-12-28` is not touched. Existing account passwords are not changed. Requires `--force` outside `testing`.
 
 ### Auth
 

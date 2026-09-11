@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-09** (Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-11** (демо-данные для текущих недель `Europe/Rome` в production + Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 / 2026-09-09 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -36,7 +36,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
-| Последний suite на production-хосте | **95 passed**, 0 failed, 0 errors (718 assertions) |
+| Последний suite на production-хосте | **98 passed**, 0 failed, 0 errors (759 assertions) |
 
 `php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 
@@ -62,6 +62,10 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | PUT | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.update` |
 
 Только `student` / `parent` / `teacher`. `staff` через этот login не допускается. Student видит только свой класс; parent — только своих детей через `student_parent`; teacher — свои `ScheduledLesson.teacher_id` по всем классам. Teacher attendance — своё официальное занятие + текущий roster класса. История Student/Parent — существующие `AttendanceRecord` по официальным published/moved занятиям за месяц (`нет AttendanceRecord` ≠ `absent`). Подробности: [API.md](API.md), [ATTENDANCE.md](ATTENDANCE.md).
+
+### Демо-данные для mobile
+
+`php artisan aub:fill-mobile-demo --force` публикует предыдущую / текущую / следующую недели пн–пт в `Europe/Rome`, ставит демо-занятия на класс Mobile Test (аккаунты `student@admin.com` / `teacher@admin.com` / `parent@admin.com`) и пишет `attendance_records` по уже начавшимся официальным занятиям. Повторный запуск идемпотентен (демо-строки с `notes=__mobile_demo__`). Изолированная неделя `2026-12-28` не трогается. Пароли существующих аккаунтов не меняются. Вне `testing` нужен `--force`.
 
 ### Auth
 

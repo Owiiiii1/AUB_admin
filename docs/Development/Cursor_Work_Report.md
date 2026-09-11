@@ -2,60 +2,30 @@
 
 ## Task
 
-Add **Student / Parent Attendance History** read-only API in `AUB_admin`. Identity stays Student + ScheduledLesson (`attendance_records`). No new migration. Teacher marking contract unchanged. Flutter history is a paired follow-up in `AUB_app`.
+Fill production academy data so Student / Parent / Teacher mobile screens are not empty (no published current week, zero `attendance_records`).
 
-## Endpoints
+## What changed
 
-```text
-GET /api/v1/attendance
-GET /api/v1/children/{student}/attendance
-```
+Artisan `php artisan aub:fill-mobile-demo --force`:
 
-`auth:sanctum` + `mobile.actor` + `throttle:api-mobile`.
+- Publishes previous / current / next Monday–Friday weeks in `Europe/Rome`.
+- Places demo lessons on the existing **Mobile Test** class for the linked teacher (`teacher@admin.com` → Martina Barbieri).
+- Marks past official published/moved lessons for the class roster (present / absent / excused).
+- Adds five classmates (no extra logins) and attaches them to the existing parent so Parent children is not a single row.
+- Friday of the current week includes `22:00` so Student Home still has Oggi + Prossima lezione after evening local time.
+- One cancelled + one moved lesson on the current week for Orario status chips.
+- Demo rows tagged `notes=__mobile_demo__` (not exposed on mobile). Re-run deletes and recreates only those rows.
+- Isolated week `2026-12-28` is not touched. Existing account passwords are not changed.
+- `--force` required outside `testing`.
 
-## Authorization
-
-- Student `/attendance`: `account_type=student`, student from `studentProfile` only (no client `student_id`).
-- Parent `/children/{student}/attendance`: `account_type=parent`, ownership via `parentProfile.students`. Stranger → **404**.
-- Teacher → **403** on both. Staff mobile → **401**. Wrong actor on the other endpoint → **403**.
-
-## Period
-
-`?month=YYYY-MM`. Omitted → current month in `Europe/Rome`. Backend computes `starts_on` / `ends_on`. Invalid month → **422** `validation_error`.
-
-## Filtering
-
-A row is history only if an `AttendanceRecord` exists **and** the lesson is official:
-
-- week `published` / `locked`
-- lesson `published` / `moved`
-
-Cancelled / draft / scheduled / other month excluded. Leftover records on cancelled lessons are not visits.
-
-**`no AttendanceRecord` ≠ `absent`.** Unmarked lessons are not history and are not counted.
-
-## Summary
-
-Absolute counts only: `marked = present + absent + excused`. No percentages.
-
-Sort: `lesson_date DESC`, `starts_at DESC`, `attendance_records.id DESC`.
-
-## Privacy
-
-Whitelist Resource `AttendanceHistoryResource`. No `marked_by`, `marked_at`, tax_code, medical, notes, documents, parent contacts, teacher email/phone, AI metadata, RBAC.
-
-Read service: `AttendanceHistoryService` (not mixed into `TeacherAttendanceService`).
+No migration. No API contract change. Flutter not deployed.
 
 ## Tests
 
-`AttendanceHistoryApiTest` on production host `aub_test`. Full suite: **95 passed**, 0 failed, 0 errors (718 assertions).
+`MobileDemoDataTest` on `aub_test`: command fills schedule + attendance; Student/Parent/Teacher GET payloads are non-empty; idempotent re-run; foreign week untouched.
 
-`php artisan route:list --path=api`: **12** routes. No migration.
+Full suite on production host: **98 passed**, 0 failed, 0 errors (759 assertions).
 
 ## Deploy
 
-Copied PHP + tests + docs to `/var/www/aub`. `optimize:clear`. No schema change.
-
-## Production smoke
-
-Isolated week `2026-12-28`, class `Mobile Test`, student id **8**, lesson id **2**. Temporary extra lessons + records for present/absent/excused; Student GET, Parent GET, stranger 404, Teacher 403; extra rows deleted after.
+Production smoke: weeks `2026-08-31`, `2026-09-07`, `2026-09-14` published; isolated `2026-12-28` kept. Student GET `/schedule` 200, Friday 4 lessons including `22:00`. Student GET `/attendance?month=2026-09` marked 26 (present 17, absent 5, excused 4).

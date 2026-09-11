@@ -154,7 +154,10 @@ Do not re-run install unless intentional.
 php artisan owl-admin:make-admin --email=admin@admin.com --password=admin
 php artisan owl-admin:doctor --preset=admin
 php artisan owl-admin:smoke --preset=admin
+php artisan aub:fill-mobile-demo --force
 ```
+
+`aub:fill-mobile-demo --force` fills published `Europe/Rome` weeks, lessons, and attendance so mobile apps are not empty. It does not change existing account passwords. Isolated week `2026-12-28` is left alone.
 
 Test admin email is for development only.
 
