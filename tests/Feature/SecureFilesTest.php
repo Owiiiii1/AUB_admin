@@ -20,7 +20,6 @@ use App\Support\PublicStorageArchitectureGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -152,10 +151,7 @@ class SecureFilesTest extends TestCase
         $this->assertApiFile($teacherUser, $photo, 200);
         $this->assertApiFile($teacherUser, $idDoc, 404);
 
-        Auth::logout();
-        $this->flushSession();
-        $this->app['auth']->forgetGuards();
-        $this->defaultHeaders = [];
+        $this->resetAuth();
 
         $ownToken = $this->loginToken($studentUser);
         $this->withToken($ownToken)->get('/api/v1/files/'.$unknown)->assertNotFound();
@@ -163,10 +159,7 @@ class SecureFilesTest extends TestCase
             ->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff');
 
-        Auth::logout();
-        $this->flushSession();
-        $this->app['auth']->forgetGuards();
-        $this->defaultHeaders = [];
+        $this->resetAuth();
         $this->getJson('/api/v1/files/'.$photo->uuid)->assertUnauthorized();
 
         $inactive = $this->linkStudent($this->makeStudent('Idle', 'User'), 'inactive-files@example.test');
@@ -289,13 +282,18 @@ class SecureFilesTest extends TestCase
 
     private function assertApiFile(User $user, SecureFile $file, int $status): void
     {
-        Auth::logout();
-        $this->flushSession();
-        $this->app['auth']->forgetGuards();
+        $this->resetAuth();
 
         $this->actingAs($user, 'sanctum')
             ->get('/api/v1/files/'.$file->uuid)
             ->assertStatus($status);
+    }
+
+    private function resetAuth(): void
+    {
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+        $this->defaultHeaders = [];
     }
 
     private function jpegUpload(string $name): UploadedFile
