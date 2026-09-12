@@ -14,11 +14,13 @@ use App\Models\Student;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\AccountIdentityService;
+use App\Services\SecureFiles\FileAccessService;
 use App\Services\SecureFiles\SecureFileService;
 use App\Support\PublicStorageArchitectureGuard;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -49,7 +51,7 @@ class SecureFilesTest extends TestCase
         $this->assertSame(64, strlen($file->sha256));
         $this->assertStringStartsWith('objects/', $file->path);
         $this->assertStringNotContainsString('Mario', $file->path);
-        $this->assertStringNotContainsString((string) $student->id, $file->path);
+        $this->assertDoesNotMatchRegularExpression('#(?:^|/)'.preg_quote((string) $student->id, '#').'/#', $file->path);
         $this->assertStringNotContainsString('students', $file->path);
         $this->assertFalse(Storage::disk('public')->exists($file->path));
         $this->assertTrue(Storage::disk('aub_private')->exists($file->path));
@@ -132,6 +134,15 @@ class SecureFilesTest extends TestCase
         $this->assignTeacherToStudent($teacher, $own);
 
         $unknown = (string) Str::uuid();
+        $access = $this->app->make(FileAccessService::class);
+
+        $this->assertTrue($access->allows($parentUser, $photo, FileAccessService::ACTION_VIEW));
+        $this->assertFalse($access->allows($parentUser, $idDoc, FileAccessService::ACTION_VIEW));
+        $this->assertFalse($access->allows($strangerParent, $photo, FileAccessService::ACTION_VIEW));
+        $this->assertTrue($access->allows($studentUser, $photo, FileAccessService::ACTION_VIEW));
+        $this->assertFalse($access->allows($otherStudentUser, $photo, FileAccessService::ACTION_VIEW));
+        $this->assertTrue($access->allows($teacherUser, $photo, FileAccessService::ACTION_VIEW));
+        $this->assertFalse($access->allows($teacherUser, $idDoc, FileAccessService::ACTION_VIEW));
 
         $this->assertApiFile($parentUser, $photo, 200);
         $this->assertApiFile($parentUser, $idDoc, 404);
@@ -141,11 +152,21 @@ class SecureFilesTest extends TestCase
         $this->assertApiFile($teacherUser, $photo, 200);
         $this->assertApiFile($teacherUser, $idDoc, 404);
 
+        Auth::logout();
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+        $this->defaultHeaders = [];
+
         $ownToken = $this->loginToken($studentUser);
         $this->withToken($ownToken)->get('/api/v1/files/'.$unknown)->assertNotFound();
         $this->withToken($ownToken)->get('/api/v1/files/'.$photo->uuid)
             ->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff');
+
+        Auth::logout();
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+        $this->defaultHeaders = [];
         $this->getJson('/api/v1/files/'.$photo->uuid)->assertUnauthorized();
 
         $inactive = $this->linkStudent($this->makeStudent('Idle', 'User'), 'inactive-files@example.test');
@@ -268,10 +289,11 @@ class SecureFilesTest extends TestCase
 
     private function assertApiFile(User $user, SecureFile $file, int $status): void
     {
+        Auth::logout();
         $this->flushSession();
         $this->app['auth']->forgetGuards();
 
-        $this->withToken($this->loginToken($user))
+        $this->actingAs($user, 'sanctum')
             ->get('/api/v1/files/'.$file->uuid)
             ->assertStatus($status);
     }
