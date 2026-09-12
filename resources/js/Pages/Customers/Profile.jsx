@@ -850,8 +850,6 @@ function FileField({ t, form, field, label, existingUrl }) {
                 <a href={existingUrl} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-[#1A2B44] underline">
                     {t.currentFile}
                 </a>
-                    {t.currentFile}
-                </a>
             ) : (
                 <span className="mt-1 block text-xs text-[#75777e]">{t.noFile}</span>
             )}
