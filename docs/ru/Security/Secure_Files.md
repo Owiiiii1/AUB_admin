@@ -23,6 +23,8 @@ Public disk допустим только для действительно пу
 | `aub_private` | `storage/app/aub-private` (override `AUB_PRIVATE_DISK_ROOT`) | Нет. Нет symlink, нет nginx alias |
 | `aub_legacy_quarantine` | `storage/app/aub-legacy-quarantine` | Нет. Phase A для старых public-объектов |
 
+PHP-FPM (`www-data`) должен читать объекты. Каталоги `2770` `deploy:www-data`, файлы `0640`. Дефолты Flysystem private (`0700`/`0600`) переопределены в `config/filesystems.php`. PHPUnit пишет в `/tmp/aub-phpunit-*`, не в production storage.
+
 Опциональные env-ключи имеют безопасные default в config. Секреты в `.env` для этого не нужны.
 
 Физический путь непрозрачный: `objects/{aa}/{uuid}`. Оригинальное имя только в метаданных БД.

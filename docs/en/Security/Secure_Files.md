@@ -23,6 +23,8 @@ Public disk remains valid only for genuine public assets (logo, CSS/JS build, ma
 | `aub_private` | `storage/app/aub-private` (override `AUB_PRIVATE_DISK_ROOT`) | None. No symlink, no nginx alias |
 | `aub_legacy_quarantine` | `storage/app/aub-legacy-quarantine` | None. Phase A home for old public objects |
 
+PHP-FPM (`www-data`) must be able to read objects. Directories `2770` `deploy:www-data`, files `0640`. Flysystem private defaults (`0700`/`0600`) are overridden in `config/filesystems.php`. PHPUnit uses `/tmp/aub-phpunit-*` disks so tests never write production storage.
+
 Optional env keys have safe config defaults. Do not put secrets in `.env` for this.
 
 Physical object path is opaque: `objects/{aa}/{uuid}`. Original filename lives only in DB metadata.

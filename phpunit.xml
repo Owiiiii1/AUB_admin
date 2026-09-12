@@ -35,5 +35,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="AUB_PRIVATE_DISK_ROOT" value="/tmp/aub-phpunit-private" force="true"/>
+        <env name="AUB_LEGACY_QUARANTINE_DISK_ROOT" value="/tmp/aub-phpunit-quarantine" force="true"/>
     </php>
 </phpunit>

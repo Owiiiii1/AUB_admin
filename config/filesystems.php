@@ -53,6 +53,16 @@ return [
             'visibility' => 'private',
             'throw' => true,
             'report' => false,
+            'permissions' => [
+                'file' => [
+                    'public' => 0640,
+                    'private' => 0640,
+                ],
+                'dir' => [
+                    'public' => 0770,
+                    'private' => 0770,
+                ],
+            ],
         ],
 
         'aub_legacy_quarantine' => [
@@ -61,6 +71,16 @@ return [
             'visibility' => 'private',
             'throw' => true,
             'report' => false,
+            'permissions' => [
+                'file' => [
+                    'public' => 0640,
+                    'private' => 0640,
+                ],
+                'dir' => [
+                    'public' => 0770,
+                    'private' => 0770,
+                ],
+            ],
         ],
 
         's3' => [

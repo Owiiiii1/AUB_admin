@@ -79,6 +79,7 @@ class MigrateSecureFilesCommand extends Command
                 $this->quarantine($target['path'], $purgeLegacy);
                 $this->clearLegacyColumn($target);
                 $summary['migrated']++;
+                $summary['quarantined']++;
                 $this->info("Migrated {$target['label']}");
             } catch (\Throwable $e) {
                 $summary['conflicts']++;
