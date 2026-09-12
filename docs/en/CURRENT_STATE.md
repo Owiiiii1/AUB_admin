@@ -36,13 +36,13 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — refuse anything other than MySQL `aub_test` |
-| Last suite on production host | **98 passed**, 0 failed, 0 errors (759 assertions) |
+| Last suite on production host | **118 passed**, 0 failed, 0 errors (924 assertions) |
 
 `php artisan test` uses phpunit.xml + server `.env.testing`. Feature tests use `RefreshDatabase` against `aub_test` only.
 
 ## Routes (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **15** routes. Web CRM unchanged. No Passport/JWT.
+`php artisan route:list --path=api`: **16** routes. Web CRM unchanged. No Passport/JWT.
 
 ### Mobile API
 
@@ -118,20 +118,20 @@ Controllers and tables remain; **routes and menu items removed**: `/orders`, `/s
 |-----|------|
 | `/owl-admin/health` | `owl-admin.health` |
 | `/up` | Laravel health |
-| `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` (Laravel filesystem serve) |
-| `/storage/{path}` via symlink | Public disk files (needs `storage:link`) |
+| `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` (Laravel filesystem serve; not used for person files) |
+| `/storage/{path}` via symlink | Genuine public website assets only. Person files are on `aub_private` via `/secure-files/{uuid}` |
 
 The extra routes versus the old “84” count are 12 actor-account POST routes (student / parent / teacher). Plus 5 `/api/v1` routes. API Foundation is **done**.
 
 ## Migrations
 
-**40 files** in `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`. Sanctum: `2026_09_08_230000_create_personal_access_tokens_table`.
+**42 files** in `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`. Sanctum: `2026_09_08_230000_create_personal_access_tokens_table`. Secure files: `2026_09_12_180000_create_secure_files_table`.
 
 Laravel core: users (incl. sessions / password_reset_tokens), cache, jobs.
 
 Kit: `customers` (legacy; academy no longer uses it), `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
 
-AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id`), Identity (`users.account_type`, `users.is_active`, `students.user_id`, `parents.user_id`), courses, lessons/pivots, `can_write` / `can_delete`, weekly schedule (`academy_class_id`), AI runs, study windows.
+AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id`), Identity (`users.account_type`, `users.is_active`, `students.user_id`, `parents.user_id`), `secure_files`, courses, lessons/pivots, `can_write` / `can_delete`, weekly schedule (`academy_class_id`), AI runs, study windows.
 
 ## Database tables
 
@@ -157,7 +157,8 @@ AUB: roles, menu seeds, activity_logs, `students` / `parents` / `student_parent`
 | `schedule_weeks`, `scheduled_lessons` | Weekly schedule; `scheduled_lessons.academy_class_id` |
 | `attendance_records` | Teacher attendance; unique `(scheduled_lesson_id, student_id)` |
 | `schedule_ai_runs` | AI run log |
-| `activity_logs` | CRUD (+ login/logout); `student_id` + legacy `customer_id` |
+| `activity_logs` | CRUD (+ login/logout) + secure file events; `student_id` + legacy `customer_id` |
+| `secure_files` | Private person/internal files (`aub_private`); polymorphic attachable + category |
 | `ai_provider_settings` | Encrypted provider keys |
 | `customers` | **Kit legacy**; academy logic no longer uses it |
 
@@ -247,7 +248,7 @@ UI locales: **it** (default), en, ru, uk. Validation files exist for those local
 
 ## Students
 
-Implemented on **`students`** + **`parents`** + **`student_parent`**. Father/Mother UI sections remain; the backend writes `AcademyParent` + `relation_type`. `/customers` URLs and Inertia `Customers/*` are kept without a redesign. Files: `storage/app/public/students/{id}/documents` (**public** disk) — security debt; private storage is a separate stage. Teacher photos: `teachers/{id}/photos`.
+Implemented on **`students`** + **`parents`** + **`student_parent`**. Father/Mother UI sections remain; the backend writes `AcademyParent` + `relation_type`. `/customers` URLs and Inertia `Customers/*` are kept without a redesign. Person files live in `secure_files` on disk `aub_private` (`storage/app/aub-private`). Web: `/secure-files/{uuid}`. Mobile: `/api/v1/files/{uuid}`. See [Security/Secure_Files.md](Security/Secure_Files.md).
 
 No field-level restriction: a role that can open `customers.*` sees parent contacts and medical-certificate expiry.
 

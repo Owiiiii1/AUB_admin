@@ -175,7 +175,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. Mobile API: Laravel Sanctum *
 | `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, files, student/parent/teacher schedule, teacher attendance, student/parent attendance history |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
-Production `php artisan route:list --path=api`: **10** маршрутов. Web CRM без изменений. Подробности: [API.md](API.md).
+Production `php artisan route:list --path=api`: **16** маршрутов, включая `GET /api/v1/files/{uuid}`. Web CRM: `GET /secure-files/{uuid}`. Подробности: [API.md](API.md), [Security/Secure_Files.md](Security/Secure_Files.md).
 
 ## Куда добавлять работу
 

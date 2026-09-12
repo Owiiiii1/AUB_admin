@@ -36,13 +36,13 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | Production DB | `aub` |
 | Test DB | `aub_test` |
 | Guard | `App\Testing\TestDatabaseGuard` — отказ от всего, кроме MySQL `aub_test` |
-| Последний suite на production-хосте | **98 passed**, 0 failed, 0 errors (759 assertions) |
+| Последний suite на production-хосте | **118 passed**, 0 failed, 0 errors (924 assertions) |
 
 `php artisan test` использует phpunit.xml + серверный `.env.testing`. Feature-тесты — `RefreshDatabase` только против `aub_test`.
 
 ## Маршруты (web CRM + `/api/v1`)
 
-`php artisan route:list --path=api`: **15** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
+`php artisan route:list --path=api`: **16** маршрутов. Web CRM без изменений. Файла Passport/JWT нет.
 
 ### Mobile API
 
@@ -119,19 +119,19 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | `/owl-admin/health` | `owl-admin.health` |
 | `/up` | Laravel health |
 | `GET/PUT storage/{path}` | `storage.local` / `storage.local.upload` |
-| `/storage/{path}` через symlink | Файлы public disk (нужен `storage:link`) |
+| `/storage/{path}` через symlink | Только публичные website assets. Персональные файлы — `aub_private` через `/secure-files/{uuid}` |
 
 Разница со старым числом «84» — 12 POST маршрутов actor-account (student / parent / teacher). Плюс 5 `/api/v1`. API Foundation **сделан**.
 
 ## Миграции
 
-**40 файлов** в `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`. Sanctum: `2026_09_08_230000_create_personal_access_tokens_table`.
+**42 файла** в `database/migrations/`. Identity Layer: `2026_09_08_220000_add_account_identity_layer`. Sanctum: `2026_09_08_230000_create_personal_access_tokens_table`. Secure files: `2026_09_12_180000_create_secure_files_table`.
 
 Ядро Laravel: users (включая sessions / password_reset_tokens), cache, jobs.
 
 Kit: `customers` (legacy, academy больше не использует), `services`, `staff`, `orders`, `order_staff`, `ai_provider_settings`.
 
-AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id`), Identity (`users.account_type`, `users.is_active`, `students.user_id`, `parents.user_id`), courses, lessons/pivots, `can_write` / `can_delete`, недельное расписание (`academy_class_id`), AI-прогоны, учебные окна.
+AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_parent`, `academic_years`, `academy_classes`, `class_lessons`, `class_lesson_teacher`, teachers (`user_id`), Identity (`users.account_type`, `users.is_active`, `students.user_id`, `parents.user_id`), `secure_files`, courses, lessons/pivots, `can_write` / `can_delete`, недельное расписание (`academy_class_id`), AI-прогоны, учебные окна.
 
 ## Таблицы
 
@@ -157,7 +157,8 @@ AUB: роли, seed меню, activity_logs, `students` / `parents` / `student_p
 | `schedule_weeks`, `scheduled_lessons` | Недельное расписание; `scheduled_lessons.academy_class_id` |
 | `attendance_records` | Teacher attendance; unique `(scheduled_lesson_id, student_id)` |
 | `schedule_ai_runs` | Журнал ИИ |
-| `activity_logs` | CRUD (+ login/logout); `student_id` + legacy `customer_id` |
+| `activity_logs` | CRUD (+ login/logout) + события secure file; `student_id` + legacy `customer_id` |
+| `secure_files` | Приватные персональные/внутренние файлы (`aub_private`); polymorphic attachable + category |
 | `ai_provider_settings` | Encrypted ключи провайдеров |
 | `customers` | **Legacy kit**; academy-логика больше не использует |
 
@@ -247,7 +248,7 @@ Layouts: `AdminLayout.jsx`, `AuthLayout.jsx`.
 
 ## Студенты
 
-Реализовано на **`students`** + **`parents`** + **`student_parent`**. UI Father/Mother сохранён; backend пишет `AcademyParent` + `relation_type`. URL `/customers` и Inertia `Customers/*` оставлены без redesign. Файлы: `storage/app/public/students/{id}/documents` (диск **public**) — security debt, private storage отдельным этапом. Фото преподавателей: `teachers/{id}/photos`.
+Реализовано на **`students`** + **`parents`** + **`student_parent`**. UI Father/Mother сохранён; backend пишет `AcademyParent` + `relation_type`. URL `/customers` и Inertia `Customers/*` оставлены без redesign. Персональные файлы — `secure_files` на диске `aub_private` (`storage/app/aub-private`). Web: `/secure-files/{uuid}`. Mobile: `/api/v1/files/{uuid}`. См. [Security/Secure_Files.md](Security/Secure_Files.md).
 
 Field-level ограничений нет: роль с доступом к `customers.*` видит контакты родителей и срок медсправки.
 
