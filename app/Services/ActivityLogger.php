@@ -111,6 +111,41 @@ class ActivityLogger
         );
     }
 
+    public function logSecureFileEvent(
+        string $action,
+        \App\Models\SecureFile $file,
+        ?\App\Models\User $actor = null,
+        ?Request $request = null,
+    ): void {
+        if ($action === 'secure_file.viewed'
+            && (! $file->auditView() || $file->variant === \App\Models\SecureFile::VARIANT_THUMBNAIL)) {
+            return;
+        }
+
+        $request ??= request();
+        if (! $request instanceof Request) {
+            $request = Request::create('/artisan/secure-files', 'GET');
+        }
+
+        $this->log(
+            $request,
+            $action,
+            'secure_file',
+            $file->id,
+            $file->uuid,
+            null,
+            [
+                'file_uuid' => $file->uuid,
+                'attachable_type' => $file->attachable_type,
+                'attachable_id' => $file->attachable_id,
+                'category' => $file->category,
+                'actor_user_id' => $actor?->id ?? $request->user()?->id,
+                'variant' => $file->variant,
+            ],
+            $file->attachable_type === 'student' ? (int) $file->attachable_id : null,
+        );
+    }
+
     /**
      * @param  array<string, mixed>  $before
      * @param  array<string, mixed>  $after

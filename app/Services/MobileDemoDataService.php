@@ -19,7 +19,6 @@ use App\Models\User;
 use App\Services\WeeklySchedule\ScheduleConflictService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class MobileDemoDataService
 {
@@ -319,27 +318,16 @@ class MobileDemoDataService
 
     private function attachPortraitIfPresent(Student $student): void
     {
-        $candidates = [
-            "students/{$student->id}/portrait.jpg",
-            "portraits/students/{$student->id}.jpg",
-        ];
-        foreach ($candidates as $path) {
-            if (Storage::disk('public')->exists($path)) {
-                $student->forceFill(['student_photo_path' => $path])->save();
-
-                return;
-            }
+        if ($student->profilePhoto() !== null) {
+            return;
         }
     }
 
     private function attachTeacherPortraitIfPresent(Teacher $teacher): void
     {
-        $path = "teachers/{$teacher->id}/photos/avatar.jpg";
-        if (! Storage::disk('public')->exists($path)) {
+        if ($teacher->profilePhoto() !== null) {
             return;
         }
-
-        $teacher->forceFill(['photo_path' => $path])->save();
     }
 
     private function ensureUser(string $email, string $name, string $type): User

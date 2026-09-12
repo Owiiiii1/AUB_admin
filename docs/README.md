@@ -24,6 +24,7 @@ Source of truth for implemented behaviour: **code + migrations + routes** in Git
 | Development rules | [DEVELOPMENT_RULES.md](en/DEVELOPMENT_RULES.md) | [DEVELOPMENT_RULES.md](ru/DEVELOPMENT_RULES.md) |
 | Server deployment | [SERVER_DEPLOYMENT.md](en/SERVER_DEPLOYMENT.md) | [SERVER_DEPLOYMENT.md](ru/SERVER_DEPLOYMENT.md) |
 | Privacy and data protection | [PRIVACY_AND_DATA_PROTECTION.md](en/PRIVACY_AND_DATA_PROTECTION.md) | [PRIVACY_AND_DATA_PROTECTION.md](ru/PRIVACY_AND_DATA_PROTECTION.md) |
+| Secure files | [Security/Secure_Files.md](en/Security/Secure_Files.md) | [Security/Secure_Files.md](ru/Security/Secure_Files.md) |
 | API | [API.md](en/API.md) | [API.md](ru/API.md) |
 | Attendance | [ATTENDANCE.md](en/ATTENDANCE.md) | [ATTENDANCE.md](ru/ATTENDANCE.md) |
 | Next steps | [NEXT_STEPS.md](en/NEXT_STEPS.md) | [NEXT_STEPS.md](ru/NEXT_STEPS.md) |

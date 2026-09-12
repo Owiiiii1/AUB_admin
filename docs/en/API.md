@@ -107,11 +107,15 @@ Login rate limit: **5 / minute** per normalized email + IP → `429` `too_many_r
 
 Actor-aware whitelist. Never includes password hashes, `remember_token`, web `role_id`, `can_write`, `can_delete`, tax codes, medical data, notes, documents, or AI settings.
 
-**Student profile:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (public disk URL or `null`), `phone`, `birth_date` (`YYYY-MM-DD` or `null`), `residence_address`, `residence_city_province`, `residence_postal_code`, `academy_class` `{id,name}` or `null`, `academic_year` `{id,name}` or `null`. Contact fields are read-only. Still never includes tax codes, medical data, notes, or documents.
+**Student profile:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (authenticated `GET /api/v1/files/{uuid}` or `null`), `photo` `{file_uuid, url}` or `null`, `phone`, `birth_date` (`YYYY-MM-DD` or `null`), `residence_address`, `residence_city_province`, `residence_postal_code`, `academy_class` `{id,name}` or `null`, `academic_year` `{id,name}` or `null`. Contact fields are read-only. Still never includes tax codes, medical data, notes, or documents. Never a public `/storage` URL.
 
-**Parent profile:** `id`, `first_name`, `last_name`, `display_name`, `children[]` with `id`, `first_name`, `last_name`, `display_name`, `academy_class`. Only children linked via `student_parent`.
+**Parent profile:** `id`, `first_name`, `last_name`, `display_name`, `children[]` with `id`, `first_name`, `last_name`, `display_name`, `photo_url`, `academy_class`. Only children linked via `student_parent`.
 
-**Teacher profile:** `id`, `first_name`, `last_name`, `display_name`.
+**Teacher profile:** `id`, `first_name`, `last_name`, `display_name`, `photo_url`, `photo`.
+
+### GET `/files/{uuid}`
+
+Authenticated binary. Sanctum + `mobile.actor` + `FileAccessService`. Unauthenticated → `401`. Unauthorized or unknown UUID → `404 not_found` (same body). No query-string tokens. See [Security/Secure_Files.md](Security/Secure_Files.md).
 
 ### PUT `/me/password`
 
@@ -204,7 +208,7 @@ The lesson must belong to `request.user.teacherProfile` and be mobile-visible (`
 
 Roster is the **current** `academy_class_student` membership of `scheduled_lesson.academy_class_id`, sorted by `last_name`, `first_name`, `id`. Missing `AttendanceRecord` → `attendance: null` (unmarked). No pre-created rows.
 
-Student whitelist: `id`, `display_name`, `photo_url` (public disk URL or `null`). No email, phone, address, parents, medical, tax_code, notes, documents.
+Student whitelist: `id`, `display_name`, `photo_url` (authenticated `/api/v1/files/{uuid}` or `null`). No email, phone, address, parents, medical, tax_code, notes, documents.
 
 Cancelled lesson: HTTP 200, roster shown, `attendance_editable: false`, `reason: cancelled`.
 

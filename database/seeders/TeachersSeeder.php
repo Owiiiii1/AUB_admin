@@ -3,9 +3,9 @@
 namespace Database\Seeders;
 
 use App\Models\Teacher;
+use App\Services\SecureFiles\SecureFileService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 class TeachersSeeder extends Seeder
 {
@@ -249,12 +249,15 @@ class TeachersSeeder extends Seeder
             return;
         }
 
-        if ($teacher->photo_path) {
-            Storage::disk('public')->delete($teacher->photo_path);
+        if ($teacher->profilePhoto() !== null) {
+            return;
         }
 
-        $path = "teachers/{$teacher->id}/photos/avatar.jpg";
-        Storage::disk('public')->put($path, $response->body());
-        $teacher->update(['photo_path' => $path]);
+        app(SecureFileService::class)->storeBinary(
+            $teacher,
+            'profile_photo',
+            $response->body(),
+            'avatar.jpg',
+        );
     }
 }

@@ -27,7 +27,7 @@ Kit columns remain. Academy student profiles live in `students`. Production test
 
 Relations in code: `hasMany Order` (legacy).
 
-Files for students: public disk `students/{id}/documents` — **privacy gap**.
+Файлы студентов: private disk `aub_private` через `SecureFileService`. Legacy public paths мигрирует `aub:secure-files:migrate`. См. [Security/Secure_Files.md](Security/Secure_Files.md).
 
 Privacy: Children’s data / Personal data.
 
@@ -86,7 +86,7 @@ hasMany `RoleMenuItem`, hasMany `User`.
 
 `type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`, nullable unique `user_id`.  
 `belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). `belongsTo User`. Identity Layer implemented (create/link from teacher profile).  
-Фото: public disk `teachers/{id}/photos`.
+Фото: `secure_files` category `profile_photo` на `aub_private`.
 
 ### courses / academy_classes / academy_class_student
 
@@ -176,7 +176,7 @@ Student + Class + AcademicYear → ReportCard
 | Final Assessment | `StudentFinalResult` / `ReportCard`. Шкала OPEN | DECIDED core / детали OPEN |
 | Единый календарь | Variant A vs B. Tech Lead не решил. **`scheduled_lessons` сейчас не менять** | OPEN |
 | Additional groups / Productions | ≠ `Class`; поздний future; схему не финализировать | DECIDED split / workflow OPEN |
-| Сущность Document + **private** storage | Сейчас: пути на public disk | OPEN (нужно до широкого mobile) |
+| Сущность Document + **private** storage | `secure_files` + `SecureFileService` | **Сделано** как глобальный foundation |
 | ConsentType / ConsentDocumentVersion / ConsentRecord | Возраст не хардкодить | DECIDED direction / не реализовано |
 | Teacher.user_id + mobile Teacher account | Связь и web create/link есть; mobile API нет | Identity implemented / API OPEN |
 | Payment / Invoice | Не начато | OPEN |

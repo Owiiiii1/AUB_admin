@@ -88,7 +88,9 @@ php artisan optimize:clear
 php artisan view:cache       # production
 php artisan config:cache     # production
 php artisan route:cache      # production
-php artisan storage:link     # student/teacher uploads (public disk today)
+php artisan storage:link     # only for genuine public website assets, never person files
+php artisan aub:secure-files:migrate --dry-run
+php artisan aub:secure-files:migrate
 ```
 
 Production deploy is **file copy immediately after push**, not `git pull`. Target: `deploy@178.156.234.23:/var/www/aub`.

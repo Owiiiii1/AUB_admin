@@ -259,6 +259,7 @@ class ApiFoundationTest extends TestCase
                 'last_name',
                 'display_name',
                 'photo_url',
+                'photo',
                 'phone',
                 'birth_date',
                 'residence_address',
@@ -303,7 +304,7 @@ class ApiFoundationTest extends TestCase
         $this->assertCount(1, $children);
         $this->assertSame($ownChild->id, $children[0]['id']);
         $this->assertSame(
-            ['id', 'first_name', 'last_name', 'display_name', 'academy_class'],
+            ['id', 'first_name', 'last_name', 'display_name', 'photo_url', 'academy_class'],
             array_keys($children[0]),
         );
         $this->assertSensitiveKeysAbsent(json_encode($children, JSON_THROW_ON_ERROR));
@@ -325,7 +326,7 @@ class ApiFoundationTest extends TestCase
             ->json('data.profile');
 
         $this->assertSame(
-            ['id', 'first_name', 'last_name', 'display_name'],
+            ['id', 'first_name', 'last_name', 'display_name', 'photo_url', 'photo'],
             array_keys($profile),
         );
         $this->assertSame('Elena Bianchi', $profile['display_name']);

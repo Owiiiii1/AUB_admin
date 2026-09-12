@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\SecureFileException;
 use App\Models\Teacher;
 use App\Models\User;
 use App\Services\AccountIdentityService;
 use App\Services\ActivityLogger;
+use App\Services\SecureFiles\SecureFileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,11 +34,13 @@ class TeachersController extends Controller
     public function __construct(
         private readonly ActivityLogger $activityLogger,
         private readonly AccountIdentityService $identity,
+        private readonly SecureFileService $secureFiles,
     ) {}
 
     public function index(): Response
     {
         $teachers = Teacher::query()
+            ->with('secureFiles')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get()
@@ -71,12 +75,7 @@ class TeachersController extends Controller
         $validated = validator($this->normalize($request->all()), $this->rules())->validate();
         $payload = $this->buildPayload($validated);
         $teacher = Teacher::query()->create($payload);
-        $fileUpdates = $this->storeUploadedPhoto($request, $teacher);
-
-        if ($fileUpdates !== []) {
-            $teacher->forceFill($fileUpdates)->save();
-            $payload = [...$payload, ...$fileUpdates];
-        }
+        $this->storeUploadedPhoto($request, $teacher);
 
         $this->activityLogger->logForModel(
             $request,
@@ -98,12 +97,7 @@ class TeachersController extends Controller
         $before = $teacher->only(self::LOG_FIELDS);
         $payload = $this->buildPayload($validated);
         $teacher->update($payload);
-        $fileUpdates = $this->storeUploadedPhoto($request, $teacher);
-
-        if ($fileUpdates !== []) {
-            $teacher->forceFill($fileUpdates)->save();
-            $payload = [...$payload, ...$fileUpdates];
-        }
+        $this->storeUploadedPhoto($request, $teacher);
 
         $this->activityLogger->logForModel(
             $request,
@@ -128,10 +122,7 @@ class TeachersController extends Controller
         $teacherId = $teacher->id;
         $label = $teacher->name;
 
-        if ($teacher->photo_path) {
-            Storage::disk('public')->delete($teacher->photo_path);
-        }
-
+        $this->secureFiles->deleteAllFor($teacher, $request->user(), $request);
         $teacher->delete();
 
         $this->activityLogger->logModelChange(
@@ -212,21 +203,21 @@ class TeachersController extends Controller
     }
 
     /**
-     * @return array<string, string>
+     * @return void
      */
-    private function storeUploadedPhoto(Request $request, Teacher $teacher): array
+    private function storeUploadedPhoto(Request $request, Teacher $teacher): void
     {
         if (! $request->hasFile('photo')) {
-            return [];
+            return;
         }
 
-        if ($teacher->photo_path) {
-            Storage::disk('public')->delete($teacher->photo_path);
+        try {
+            $this->secureFiles->replace($teacher, 'profile_photo', $request->file('photo'), $request->user(), $request);
+        } catch (SecureFileException $e) {
+            throw ValidationException::withMessages([
+                'photo' => $e->getMessage(),
+            ]);
         }
-
-        return [
-            'photo_path' => $request->file('photo')->store("teachers/{$teacher->id}/photos", 'public'),
-        ];
     }
 
     /**
@@ -234,7 +225,7 @@ class TeachersController extends Controller
      */
     private function teacherPayload(Teacher $teacher): array
     {
-        $teacher->loadMissing('user.role');
+        $teacher->loadMissing(['user.role', 'secureFiles']);
 
         return [
             'id' => $teacher->id,
@@ -246,7 +237,8 @@ class TeachersController extends Controller
             'phone' => $teacher->phone,
             'tax_code' => $teacher->tax_code,
             'description' => $teacher->description,
-            'photo_path' => $teacher->photo_path,
+            'photo_path' => null,
+            'photo_url' => $teacher->profilePhotoWebUrl(),
             'account' => $teacher->user?->accountPayload(),
         ];
     }

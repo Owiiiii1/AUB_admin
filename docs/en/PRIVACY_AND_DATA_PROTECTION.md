@@ -39,7 +39,7 @@ Consent records are **planned**: target `ConsentType`, `ConsentDocumentVersion`,
 
 Digital channels (web + future Flutter) must record consent where academy policy and applicable law require it. For a minor, consent is linked to a parent/guardian **where required**. Do **not** hardcode a specific age threshold in the domain model until a legal / compliance review. **Not implemented.**
 
-Student files are stored on the Laravel **public** disk (`students/{id}/documents`). Treat as a **privacy gap** (URLs may be guessable/public if the symlink is live). Do not describe this as private storage.
+Student files are stored on the private `aub_private` disk via `SecureFileService`. Legacy public objects are quarantined by `php artisan aub:secure-files:migrate`. See [Security/Secure_Files.md](Security/Secure_Files.md).
 
 ## GDPR principles vs reality
 
@@ -69,7 +69,9 @@ Student files are stored on the Laravel **public** disk (`students/{id}/document
 
 Raise these from “later improvements” to **mandatory foundation**:
 
-- Private storage for children’s documents
+- Private storage for children’s documents — **done** (`aub_private` + `SecureFileService`)
+- Access/view audit of sensitive files — **done** for file categories with `audit_view`
+- API authorization matrix for files — **done** (`FileAccessService`)
 - Field-level ACL
 - Scoped teacher access (assigned children/groups only)
 - Access/view audit of sensitive data

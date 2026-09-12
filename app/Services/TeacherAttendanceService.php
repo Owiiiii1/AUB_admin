@@ -10,7 +10,6 @@ use App\Models\Teacher;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -143,13 +142,12 @@ class TeacherAttendanceService
      */
     public function roster(ScheduledLesson $lesson): Collection
     {
-        return Student::query()
+        $students = Student::query()
             ->select([
                 'students.id',
                 'students.first_name',
                 'students.last_name',
                 'students.name',
-                'students.student_photo_path',
             ])
             ->join('academy_class_student', 'academy_class_student.student_id', '=', 'students.id')
             ->where('academy_class_student.academy_class_id', $lesson->academy_class_id)
@@ -157,6 +155,10 @@ class TeacherAttendanceService
             ->orderBy('students.first_name')
             ->orderBy('students.id')
             ->get();
+
+        $students->load('secureFiles');
+
+        return $students;
     }
 
     /**
@@ -234,11 +236,6 @@ class TeacherAttendanceService
 
     private function photoUrl(Student $student): ?string
     {
-        $path = $student->student_photo_path;
-        if (! is_string($path) || trim($path) === '') {
-            return null;
-        }
-
-        return Storage::disk('public')->url($path);
+        return $student->profilePhotoApiUrl();
     }
 }

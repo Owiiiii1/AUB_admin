@@ -46,6 +46,7 @@ return [
         'lessons.*',
         'placeholder.*',
         'weekly-schedule.*',
+        'secure-files.*',
     ],
 
 ];

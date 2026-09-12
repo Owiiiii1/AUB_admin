@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\SecureFileException;
 use App\Models\AcademyParent;
 use App\Models\Student;
 use App\Models\User;
 use App\Services\AccountIdentityService;
 use App\Services\ActivityLogger;
+use App\Services\SecureFiles\SecureFileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,11 +50,13 @@ class StudentsController extends Controller
     public function __construct(
         private readonly ActivityLogger $activityLogger,
         private readonly AccountIdentityService $identity,
+        private readonly SecureFileService $secureFiles,
     ) {}
 
     public function index(): Response
     {
         $students = Student::query()
+            ->with('secureFiles')
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Student $student): array => $this->studentPayload($student))
@@ -107,11 +111,7 @@ class StudentsController extends Controller
         $validated = validator($this->normalize($request->all()), $this->rules())->validate();
         $payload = $this->buildPayload($validated);
         $student = Student::query()->create($payload);
-        $fileUpdates = $this->storeUploadedFiles($request, $student);
-        if ($fileUpdates !== []) {
-            $student->forceFill($fileUpdates)->save();
-            $payload = [...$payload, ...$fileUpdates];
-        }
+        $this->storeUploadedFiles($request, $student);
 
         $this->syncParents($student, $validated);
 
@@ -135,11 +135,7 @@ class StudentsController extends Controller
         $before = $student->only(self::LOG_FIELDS);
         $payload = $this->buildPayload($validated);
         $student->update($payload);
-        $fileUpdates = $this->storeUploadedFiles($request, $student);
-        if ($fileUpdates !== []) {
-            $student->forceFill($fileUpdates)->save();
-            $payload = [...$payload, ...$fileUpdates];
-        }
+        $this->storeUploadedFiles($request, $student);
 
         $this->syncParents($student, $validated);
 
@@ -166,6 +162,7 @@ class StudentsController extends Controller
         $studentId = $student->id;
         $label = $student->displayName();
 
+        $this->secureFiles->deleteAllFor($student, $request->user(), $request);
         $student->delete();
 
         $this->activityLogger->logModelChange(
@@ -353,33 +350,31 @@ class StudentsController extends Controller
     }
 
     /**
-     * @return array<string, string>
+     * @return void
      */
-    private function storeUploadedFiles(Request $request, Student $student): array
+    private function storeUploadedFiles(Request $request, Student $student): void
     {
         $fileMap = [
-            'student_photo' => 'student_photo_path',
-            'parent_id_document' => 'parent_id_document_path',
-            'general_regulation_form' => 'general_regulation_form_path',
-            'minor_entry_exit_form' => 'minor_entry_exit_form_path',
-            'rights_release_form' => 'rights_release_form_path',
+            'student_photo' => 'profile_photo',
+            'parent_id_document' => 'identity_document',
+            'general_regulation_form' => 'consent_general_regulation',
+            'minor_entry_exit_form' => 'consent_minor_entry_exit',
+            'rights_release_form' => 'consent_rights_release',
         ];
 
-        $updates = [];
-        foreach ($fileMap as $input => $column) {
+        foreach ($fileMap as $input => $category) {
             if (! $request->hasFile($input)) {
                 continue;
             }
 
-            $existing = $student->{$column};
-            if ($existing) {
-                Storage::disk('public')->delete($existing);
+            try {
+                $this->secureFiles->replace($student, $category, $request->file($input), $request->user(), $request);
+            } catch (SecureFileException $e) {
+                throw ValidationException::withMessages([
+                    $input => $e->getMessage(),
+                ]);
             }
-
-            $updates[$column] = $request->file($input)->store("students/{$student->id}/documents", 'public');
         }
-
-        return $updates;
     }
 
     /**
@@ -387,7 +382,7 @@ class StudentsController extends Controller
      */
     private function studentPayload(Student $student): array
     {
-        $student->loadMissing(['user.role', 'parents.user.role']);
+        $student->loadMissing(['user.role', 'parents.user.role', 'secureFiles']);
         $father = $student->parentOfType('father');
         $mother = $student->parentOfType('mother');
 
@@ -412,11 +407,16 @@ class StudentsController extends Controller
             'is_existing_student' => (bool) $student->is_existing_student,
             'form_filled_at' => optional($student->form_filled_at)->toDateString(),
             'medical_certificate_expiry' => optional($student->medical_certificate_expiry)->toDateString(),
-            'student_photo_path' => $student->student_photo_path,
-            'parent_id_document_path' => $student->parent_id_document_path,
-            'general_regulation_form_path' => $student->general_regulation_form_path,
-            'minor_entry_exit_form_path' => $student->minor_entry_exit_form_path,
-            'rights_release_form_path' => $student->rights_release_form_path,
+            'student_photo_path' => null,
+            'student_photo_url' => $student->profilePhotoWebUrl(),
+            'parent_id_document_path' => null,
+            'parent_id_document_url' => $student->secureFileWebDownloadUrl('identity_document'),
+            'general_regulation_form_path' => null,
+            'general_regulation_form_url' => $student->secureFileWebDownloadUrl('consent_general_regulation'),
+            'minor_entry_exit_form_path' => null,
+            'minor_entry_exit_form_url' => $student->secureFileWebDownloadUrl('consent_minor_entry_exit'),
+            'rights_release_form_path' => null,
+            'rights_release_form_url' => $student->secureFileWebDownloadUrl('consent_rights_release'),
             'father_id' => $father?->id,
             'father_first_name' => $father?->first_name,
             'father_last_name' => $father?->last_name,

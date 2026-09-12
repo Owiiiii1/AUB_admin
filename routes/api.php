@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\ScheduleController;
+use App\Http\Controllers\Api\V1\SecureFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function (): void {
@@ -29,5 +30,8 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::get('/children/{student}/attendance', [AttendanceController::class, 'child'])->name('attendance.child');
         Route::get('/teacher/lessons/{scheduledLesson}/attendance', [AttendanceController::class, 'show'])->name('attendance.show');
         Route::put('/teacher/lessons/{scheduledLesson}/attendance', [AttendanceController::class, 'update'])->name('attendance.update');
+        Route::get('/files/{uuid}', [SecureFileController::class, 'show'])
+            ->whereUuid('uuid')
+            ->name('files.show');
     });
 });

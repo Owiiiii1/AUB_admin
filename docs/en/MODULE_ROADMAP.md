@@ -23,7 +23,7 @@ Implemented web snapshot: [CURRENT_STATE.md](CURRENT_STATE.md). Open items: [OPE
 | # | Direction | Notes |
 |---|-----------|--------|
 | 0 | Baseline / GitHub / documentation | In progress as living docs |
-| 1 | **Security Foundation** | **Required before wide mobile rollout.** Private storage for children’s files; field-level ACL; scoped teacher access; access/view audit; API authorization matrix; mobile token security; **2FA for admin staff**; consent/privacy records. **Not implemented.** |
+| 1 | **Security Foundation** | Private storage for person files is **done** (`SecureFileService`, [Security/Secure_Files.md](Security/Secure_Files.md)). Remaining: field-level ACL, admin 2FA, consent product. |
 | 2 | **Core Data Model refactor** | **Done** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
 | 3 | **Identity model implementation** | **Done** 2026-09-08. One User = one actor type (`staff` / `student` / `parent` / `teacher`). Identity ≠ admin web RBAC. |
 | 4 | **API Foundation** | **Done** 2026-09-08. `/api/v1`, Sanctum v4.3.3, login/logout/me/health. See [API.md](API.md). |

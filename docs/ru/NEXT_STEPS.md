@@ -9,7 +9,7 @@
 ## Ближайший технический трек
 
 1. Честные docs (этот поток).
-2. **Security Foundation** до широкого mobile (private storage, field-level ACL, scoped teachers, view audit, матрица API-авторизации, token security, **2FA админов**, consent records) — отдельные задачи.
+2. **Security Foundation** — **private files сделаны** ([Security/Secure_Files.md](Security/Secure_Files.md)). Позже: field-level ACL, 2FA админов, consent records как продукт.
 3. **Core Data Model refactor** — **сделан** (`students` / `parents` / `AcademyClass` / `ClassLesson`).
 4. **Identity model implementation** — **сделан** (`account_type`, profile `user_id`, `AccountIdentityService`, admin UI).
 5. **Инфраструктура тестов** — **сделана** (MySQL `aub_test`, hard guard против production `aub`; без SQLite).

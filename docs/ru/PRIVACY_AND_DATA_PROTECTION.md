@@ -39,7 +39,7 @@ DPA рекомендуется; это не функция системы.
 
 Цифровые каналы (web + будущий Flutter) должны фиксировать согласие там, где это требуется политикой академии и применимым законодательством. Для несовершеннолетнего согласие связывается с parent/guardian **где это требуется**. Конкретный возрастной порог **не хардкодить** в domain model до legal / compliance review. **Не реализовано.**
 
-Файлы студентов лежат на диске Laravel **public** (`students/{id}/documents`). Это **разрыв privacy** (URL могут быть доступны при живом symlink). Не описывать как private storage.
+Файлы студентов лежат на private-диске `aub_private` через `SecureFileService`. Старые public-объекты уводит `php artisan aub:secure-files:migrate`. См. [Security/Secure_Files.md](Security/Secure_Files.md).
 
 ## Принципы GDPR vs факт
 
@@ -69,7 +69,9 @@ DPA рекомендуется; это не функция системы.
 
 Поднять из «будущих улучшений» в **обязательный foundation**:
 
-- Private storage документов детей
+- Private storage документов детей — **сделано** (`aub_private` + `SecureFileService`)
+- Access/view audit чувствительных файлов — **сделано** для категорий с `audit_view`
+- Матрица API-авторизации файлов — **сделана** (`FileAccessService`)
 - Field-level ACL
 - Scoped-доступ преподавателя (только назначенные дети/группы)
 - Access/view audit чувствительных данных

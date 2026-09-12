@@ -160,7 +160,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. Mobile API: Laravel Sanctum *
 
 **Реализовано:** RBAC, `can_write`, `can_delete`, CRUD activity logging, session auth, encrypted AI keys.
 
-**Не реализовано (не описывать как готовое):** field-level ACL; «преподаватель видит только своих студентов»; access/view audit чувствительных записей; сущности согласий; матрица API-авторизации; private disk для документов детей (загрузки на диск **public**); **2FA** админов. Это **Security Foundation** до широкого mobile rollout.
+**Не реализовано (не описывать как готовое):** field-level ACL кроме файлов; «преподаватель видит только своих студентов» для не-фото записей; сущности согласий как продукт; **2FA** админов. Это поздние срезы Security Foundation. **Private files реализованы:** [Security/Secure_Files.md](Security/Secure_Files.md).
 
 `config/aub-menu.php` `always_allowed_route_patterns` даёт любому аутентифицированному пользователю **с ролью** доступ к `courses-groups.*`, `lessons.*`, `weekly-schedule.*`, заглушкам, профилю, workplace — шире, чем `role_menu_items`.
 
@@ -172,7 +172,7 @@ Web-auth: guard Laravel `web`, сессии, CSRF. Mobile API: Laravel Sanctum *
 | `routes/owl-admin-auth.php` | редирект `/login`, `POST /logout` |
 | `routes/owl-admin-pages.php` | Все защищённые Inertia/web CRM-маршруты |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule, teacher attendance, student/parent attendance history |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, files, student/parent/teacher schedule, teacher attendance, student/parent attendance history |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
 Production `php artisan route:list --path=api`: **10** маршрутов. Web CRM без изменений. Подробности: [API.md](API.md).

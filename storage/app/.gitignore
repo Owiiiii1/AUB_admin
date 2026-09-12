@@ -1,4 +1,6 @@
 *
+!aub-private/
+!aub-legacy-quarantine/
 !private/
 !public/
 !.gitignore

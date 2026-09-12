@@ -1,0 +1,28 @@
+---
+description: All user/person/internal files go through SecureFileService on the private disk
+alwaysApply: true
+---
+
+# AUB Secure Files
+
+ALL user/person/internal files are private by default.
+
+DO NOT use the public disk for student, teacher, parent, staff, or any other person-related files.
+DO NOT create direct `/storage` URLs for those files.
+DO NOT create a new file storage path outside `SecureFileService`.
+DO NOT put a bearer token in a file URL.
+DO NOT trust filename extensions or client MIME types.
+DO NOT store raw uploaded child photos without server-side decode/re-encode.
+
+If a new feature needs a file:
+
+1. Register an explicit category in `config/aub-files.php` (unknown category = DENY).
+2. Store and replace only through `App\Services\SecureFiles\SecureFileService`.
+3. Serve only through `/secure-files/{uuid}` (web) or `/api/v1/files/{uuid}` (mobile, Sanctum).
+4. Authorize through `FileAccessService` (actor + attachable + category + action). Unknown relation/category = DENY.
+
+This applies to future report cards, consent, messaging, productions, payments, teacher documents, and anything else with personal or internal data.
+
+Public disk is allowed only for genuine public website assets (logo, CSS/JS, marketing). Never turn private/person content into a public asset.
+
+Details: `docs/en/Security/Secure_Files.md`.

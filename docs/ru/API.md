@@ -107,11 +107,15 @@ Authorization: Bearer <token>
 
 Actor-aware whitelist. Никогда не включает password hash, `remember_token`, web `role_id`, `can_write`, `can_delete`, tax code, медицину, notes, документы, AI settings.
 
-**Профиль student:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (URL public disk или `null`), `phone`, `birth_date` (`YYYY-MM-DD` или `null`), `residence_address`, `residence_city_province`, `residence_postal_code`, `academy_class` `{id,name}` или `null`, `academic_year` `{id,name}` или `null`. Контактные поля только для чтения. По-прежнему без tax code, медицины, notes и документов.
+**Профиль student:** `id`, `first_name`, `last_name`, `display_name`, `photo_url` (аутентифицированный `GET /api/v1/files/{uuid}` или `null`), `photo` `{file_uuid, url}` или `null`, `phone`, `birth_date` (`YYYY-MM-DD` или `null`), `residence_address`, `residence_city_province`, `residence_postal_code`, `academy_class` `{id,name}` или `null`, `academic_year` `{id,name}` или `null`. Контактные поля только для чтения. По-прежнему без tax code, медицины, notes и документов. Никогда не public `/storage`.
 
-**Профиль parent:** `id`, `first_name`, `last_name`, `display_name`, `children[]` с `id`, `first_name`, `last_name`, `display_name`, `academy_class`. Только дети из `student_parent`.
+**Профиль parent:** `id`, `first_name`, `last_name`, `display_name`, `children[]` с `id`, `first_name`, `last_name`, `display_name`, `photo_url`, `academy_class`. Только дети из `student_parent`.
 
-**Профиль teacher:** `id`, `first_name`, `last_name`, `display_name`.
+**Профиль teacher:** `id`, `first_name`, `last_name`, `display_name`, `photo_url`, `photo`.
+
+### GET `/files/{uuid}`
+
+Аутентифицированный бинарь. Sanctum + `mobile.actor` + `FileAccessService`. Без auth → `401`. Чужой или неизвестный UUID → `404 not_found` (одинаковое тело). Без token в query. См. [Security/Secure_Files.md](Security/Secure_Files.md).
 
 ### PUT `/me/password`
 
@@ -204,7 +208,7 @@ Whitelist: student `{id, display_name, academy_class}`, урок `{id, starts_at
 
 Roster — **текущий** состав `academy_class_student` класса `scheduled_lesson.academy_class_id`, сортировка `last_name`, `first_name`, `id`. Нет `AttendanceRecord` → `attendance: null` (не отмечен). Строки заранее не создаются.
 
-Whitelist ученика: `id`, `display_name`, `photo_url` (URL public disk или `null`). Без email, phone, address, parents, medical, tax_code, notes, documents.
+Whitelist ученика: `id`, `display_name`, `photo_url` (аутентифицированный `/api/v1/files/{uuid}` или `null`). Без email, phone, address, parents, medical, tax_code, notes, documents.
 
 Cancelled: HTTP 200, roster показан, `attendance_editable: false`, `reason: cancelled`.
 

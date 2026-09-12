@@ -6,7 +6,6 @@ use App\Models\Customer;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -325,29 +324,7 @@ class CustomersController extends Controller
      */
     private function storeUploadedFiles(Request $request, Customer $customer): array
     {
-        $fileMap = [
-            'student_photo' => 'student_photo_path',
-            'parent_id_document' => 'parent_id_document_path',
-            'general_regulation_form' => 'general_regulation_form_path',
-            'minor_entry_exit_form' => 'minor_entry_exit_form_path',
-            'rights_release_form' => 'rights_release_form_path',
-        ];
-
-        $updates = [];
-        foreach ($fileMap as $input => $column) {
-            if (! $request->hasFile($input)) {
-                continue;
-            }
-
-            $existing = $customer->{$column};
-            if ($existing) {
-                Storage::disk('public')->delete($existing);
-            }
-
-            $updates[$column] = $request->file($input)->store("students/{$customer->id}/documents", 'public');
-        }
-
-        return $updates;
+        return [];
     }
 
     /**

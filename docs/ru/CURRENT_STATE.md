@@ -1,6 +1,6 @@
 # AUB — Текущее состояние
 
-Документ отражает **проверенное** состояние на **2026-09-11** (демо-данные для текущих недель `Europe/Rome` в production + Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 / 2026-09-09 считается устаревшим там, где он противоречит фактам.
+Документ отражает **проверенное** состояние на **2026-09-12** (глобальный foundation безопасных файлов + демо-данные для текущих недель `Europe/Rome` в production + Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + часовой пояс приложения `Europe/Rome` + Student/Parent schedule API + Identity Layer + MySQL test DB + API Foundation `/api/v1`). Текст от 2026-07-20 / 2026-09-07 / 2026-09-08 / 2026-09-09 / 2026-09-11 считается устаревшим там, где он противоречит фактам.
 
 См. также [ARCHITECTURE.md](ARCHITECTURE.md) — двухрепозиторная модель.
 
@@ -61,6 +61,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 | GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
 | GET | `/api/v1/attendance` | `api.v1.attendance.student` |
 | GET | `/api/v1/children/{student}/attendance` | `api.v1.attendance.child` |
+| GET | `/api/v1/files/{uuid}` | `api.v1.files.show` |
 | GET | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.show` |
 | PUT | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.update` |
 
@@ -68,7 +69,7 @@ Production-сборка есть **на сервере** (`public/build/manifest
 
 ### Демо-данные для mobile
 
-`php artisan aub:fill-mobile-demo --force` публикует предыдущую / текущую / следующую недели пн–пт в `Europe/Rome`, ставит демо-занятия на класс Mobile Test (аккаунты `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), пишет `attendance_records` по уже начавшимся официальным занятиям и заполняет демо-контакты студентов (телефон, дата рождения, адрес в Милане) плюс портреты, если файлы есть на public disk. Повторный запуск идемпотентен (демо-строки с `notes=__mobile_demo__`). Изолированная неделя `2026-12-28` не трогается. Пароли существующих аккаунтов не меняются. Вне `testing` нужен `--force`.
+`php artisan aub:fill-mobile-demo --force` публикует предыдущую / текущую / следующую недели пн–пт в `Europe/Rome`, ставит демо-занятия на класс Mobile Test (аккаунты `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), пишет `attendance_records` по уже начавшимся официальным занятиям и заполняет демо-контакты студентов (телефон, дата рождения, адрес в Милане). Портреты живут в `secure_files` на `aub_private` после `aub:secure-files:migrate`. Повторный запуск идемпотентен (демо-строки с `notes=__mobile_demo__`). Изолированная неделя `2026-12-28` не трогается. Пароли существующих аккаунтов не меняются. Вне `testing` нужен `--force`.
 
 ### Auth
 
@@ -263,7 +264,7 @@ Field-level ограничений нет: роль с доступом к `cust
 | 2 | Зачисления | Частично — unique один Class; workflow статусов OPEN |
 | 2 | Каталог уроков | Готово (Настройки → Академия) |
 | 3 | Недельное расписание | Готово + гибридный ИИ (2026-07-20) |
-| 3 | Загрузка файлов студента | Частично — public disk, нет модуля документов |
+| 3 | Загрузка файлов студента | **Готово** — `SecureFileService` + `aub_private`. См. [Security/Secure_Files.md](Security/Secure_Files.md) |
 | 3 | **Student Attendance** | Teacher write + история Student/Parent **сделаны** 2026-09-09 (`attendance_records`; нет `AttendanceRecord` ≠ `absent`) |
 | 3 | **Teacher Check-in** | Не начато (**DECIDED**: daily GPS snapshot + geofence; не per lesson) |
 | 3 | Документы / коммуникации в меню | Заглушки |

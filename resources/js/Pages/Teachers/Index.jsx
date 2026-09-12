@@ -102,9 +102,9 @@ export default function TeachersIndex({ teachers = [] }) {
                                         onClick={() => router.visit(route('teachers.show', teacher.id))}
                                     >
                                         <Td>
-                                            {teacher.photo_path ? (
+                                            {teacher.photo_url ? (
                                                 <img
-                                                    src={`/storage/${teacher.photo_path}`}
+                                                    src={teacher.photo_url}
                                                     alt={teacher.name}
                                                     className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-200"
                                                 />

@@ -210,8 +210,8 @@ export default function TeacherProfile({ mode = 'create', teacher = null, linkab
             return URL.createObjectURL(form.data.photo);
         }
 
-        return teacher?.photo_path ? `/storage/${teacher.photo_path}` : null;
-    }, [form.data.photo, teacher?.photo_path]);
+        return teacher?.photo_url || null;
+    }, [form.data.photo, teacher?.photo_url]);
 
     useEffect(() => {
         return () => {

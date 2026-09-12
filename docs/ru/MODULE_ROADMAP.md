@@ -23,7 +23,7 @@
 | # | Направление | Примечание |
 |---|-------------|------------|
 | 0 | Baseline / GitHub / documentation | Живые docs |
-| 1 | **Security Foundation** | **Обязательно до широкого mobile rollout.** Private storage файлов детей; field-level ACL; scoped teacher access; access/view audit; матрица API-авторизации; mobile token security; **2FA для админ-персонала**; consent/privacy records. **Не реализовано.** |
+| 1 | **Security Foundation** | Private storage персональных файлов **сделан** (`SecureFileService`, [Security/Secure_Files.md](Security/Secure_Files.md)). Дальше: field-level ACL, 2FA админов, consent product. |
 | 2 | **Core Data Model refactor** | **Сделан** 2026-09-08. `students`, `parents`, `AcademyClass`, `ClassLesson`. `customers` leftover. |
 | 3 | **Identity model implementation** | **Сделан** 2026-09-08. Один User = один actor type (`staff` / `student` / `parent` / `teacher`). Identity ≠ admin web RBAC. |
 | 4 | **API Foundation** | **Сделан** 2026-09-08. `/api/v1`, Sanctum v4.3.3, login/logout/me/health. См. [API.md](API.md). |

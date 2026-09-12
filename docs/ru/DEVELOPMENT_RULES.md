@@ -88,7 +88,9 @@ php artisan optimize:clear
 php artisan view:cache       # production
 php artisan config:cache     # production
 php artisan route:cache      # production
-php artisan storage:link     # upload студентов/преподавателей (сейчас public disk)
+php artisan storage:link     # только для публичных website assets, не для персональных файлов
+php artisan aub:secure-files:migrate --dry-run
+php artisan aub:secure-files:migrate
 ```
 
 Деплой на production — **копирование файлов сразу после push**, не `git pull`. Путь: `deploy@178.156.234.23:/var/www/aub`.

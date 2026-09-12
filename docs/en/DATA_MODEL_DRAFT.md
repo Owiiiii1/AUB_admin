@@ -27,7 +27,7 @@ Kit columns remain. Academy student profiles live in `students`. Production test
 
 Relations in code: `hasMany Order` (legacy).
 
-Student files: public disk `students/{id}/documents` — **privacy gap**.
+Student files: private disk `aub_private` via `SecureFileService`. Legacy public paths are migrated by `aub:secure-files:migrate`. See [Security/Secure_Files.md](Security/Secure_Files.md).
 
 Privacy: Children’s data / Personal data.
 
@@ -86,7 +86,7 @@ Student profile: `name`, `first_name`, `last_name`, `gender`, `tax_code`, `birth
 
 `type`, `first_name`, `last_name`, `name`, `email`, `phone`, `tax_code`, `description`, `photo_path`, nullable unique `user_id`.  
 `belongsToMany Lesson` (`lesson_teacher`), `belongsToMany ClassLesson` (`class_lesson_teacher`). `belongsTo User`. Identity Layer implemented (create/link from teacher profile).  
-Photos: public disk `teachers/{id}/photos`.
+Photos: `secure_files` category `profile_photo` on `aub_private`.
 
 ### courses / academy_classes / academy_class_student
 
@@ -176,7 +176,7 @@ Target entities: `ConsentType`, `ConsentDocumentVersion`, `ConsentRecord`. Possi
 | Final Assessment | `StudentFinalResult` / `ReportCard`. Scale OPEN | DECIDED core / details OPEN |
 | Unified calendar | Variant A vs B. Tech Lead not decided. **Do not change `scheduled_lessons` now** | OPEN |
 | Additional groups / Productions | ≠ `Class`; late future; do not finalize schema | DECIDED split / workflow OPEN |
-| Document entity + **private** storage | Today: public disk paths | OPEN (required before wide mobile) |
+| Document entity + **private** storage | `secure_files` + `SecureFileService` | **Done** as global foundation |
 | ConsentType / ConsentDocumentVersion / ConsentRecord | Do not hardcode age | DECIDED direction / not implemented |
 | Teacher.user_id + mobile Teacher account | Link and web create/link exist; no mobile API | Identity implemented / API OPEN |
 | Payment / Invoice | Not started | OPEN |

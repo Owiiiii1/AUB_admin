@@ -429,10 +429,10 @@ function Modal({ title, children, onClose, wide = false }) {
 function StudentAvatar({ student, size = 'sm' }) {
     const sizeClass = size === 'md' ? 'h-8 w-8 text-xs' : 'h-7 w-7 text-[10px]';
 
-    if (student.student_photo_path) {
+    if (student.student_photo_url) {
         return (
             <img
-                src={`/storage/${student.student_photo_path}`}
+                src={student.student_photo_url}
                 alt={student.name}
                 className={`${sizeClass} shrink-0 rounded-full object-cover ring-1 ring-slate-200`}
             />

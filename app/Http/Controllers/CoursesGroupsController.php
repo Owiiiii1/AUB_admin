@@ -36,7 +36,7 @@ class CoursesGroupsController extends Controller
                     ->orderBy('sort_order')
                     ->orderBy('name')
                     ->with([
-                        'students' => fn ($studentQuery) => $studentQuery->orderBy('name'),
+                        'students' => fn ($studentQuery) => $studentQuery->orderBy('name')->with('secureFiles'),
                     ]),
             ])
             ->orderBy('sort_order')
@@ -62,13 +62,15 @@ class CoursesGroupsController extends Controller
             ->all();
 
         $students = Student::query()
+            ->with('secureFiles')
             ->orderBy('name')
-            ->get(['id', 'name', 'first_name', 'last_name', 'email', 'student_photo_path'])
+            ->get(['id', 'name', 'first_name', 'last_name', 'email'])
             ->map(fn (Student $student): array => [
                 'id' => $student->id,
                 'name' => $this->studentLabel($student),
                 'email' => $student->email,
-                'student_photo_path' => $student->student_photo_path,
+                'student_photo_path' => null,
+                'student_photo_url' => $student->profilePhotoWebUrl(),
             ])
             ->all();
 
@@ -670,7 +672,8 @@ class CoursesGroupsController extends Controller
                     'id' => $student->id,
                     'name' => $this->studentLabel($student),
                     'email' => $student->email,
-                    'student_photo_path' => $student->student_photo_path,
+                    'student_photo_path' => null,
+                    'student_photo_url' => $student->profilePhotoWebUrl(),
                 ])->all(),
                 'lessons' => $this->serializeGroupLessons($group->id, $teacherNames),
             ])->all(),

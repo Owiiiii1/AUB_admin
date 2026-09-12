@@ -384,8 +384,8 @@ export default function CustomerProfile({
             return URL.createObjectURL(form.data.student_photo);
         }
 
-        return customer?.student_photo_path ? `/storage/${customer.student_photo_path}` : null;
-    }, [form.data.student_photo, customer?.student_photo_path]);
+        return customer?.student_photo_url || null;
+    }, [form.data.student_photo, customer?.student_photo_url]);
     const age = calculateAge(form.data.birth_date);
     const quickCourse = form.data.course_aa_2026_27 || t.noCourse;
 
@@ -572,10 +572,10 @@ export default function CustomerProfile({
 
                     <Section title={t.documents}>
                         <Grid>
-                            <FileField t={t} form={form} field="parent_id_document" label={t.parentDocument} existingPath={customer?.parent_id_document_path} />
-                            <FileField t={t} form={form} field="general_regulation_form" label={t.regulationForm} existingPath={customer?.general_regulation_form_path} />
-                            <FileField t={t} form={form} field="minor_entry_exit_form" label={t.minorEntryForm} existingPath={customer?.minor_entry_exit_form_path} />
-                            <FileField t={t} form={form} field="rights_release_form" label={t.rightsForm} existingPath={customer?.rights_release_form_path} />
+                            <FileField t={t} form={form} field="parent_id_document" label={t.parentDocument} existingUrl={customer?.parent_id_document_url} />
+                            <FileField t={t} form={form} field="general_regulation_form" label={t.regulationForm} existingUrl={customer?.general_regulation_form_url} />
+                            <FileField t={t} form={form} field="minor_entry_exit_form" label={t.minorEntryForm} existingUrl={customer?.minor_entry_exit_form_url} />
+                            <FileField t={t} form={form} field="rights_release_form" label={t.rightsForm} existingUrl={customer?.rights_release_form_url} />
                         </Grid>
                     </Section>
 
@@ -837,7 +837,7 @@ function ParentFormFields({ t, form, prefix, customer = null, canWrite = false, 
     );
 }
 
-function FileField({ t, form, field, label, existingPath }) {
+function FileField({ t, form, field, label, existingUrl }) {
     return (
         <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-[0.08em] text-[#44474d]">{label}</label>
@@ -846,8 +846,10 @@ function FileField({ t, form, field, label, existingPath }) {
                 onChange={(e) => form.setData(field, e.target.files?.[0] ?? null)}
                 className="block h-10 w-full rounded-md border border-[#E5E5E5] bg-white px-3 text-sm text-[#1b1c1c] file:mr-2 file:border-0 file:bg-[#f0eded] file:px-2 file:py-1"
             />
-            {existingPath ? (
-                <a href={`/storage/${existingPath}`} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-[#1A2B44] underline">
+            {existingUrl ? (
+                <a href={existingUrl} target="_blank" rel="noreferrer" className="mt-1 block text-xs text-[#1A2B44] underline">
+                    {t.currentFile}
+                </a>
                     {t.currentFile}
                 </a>
             ) : (

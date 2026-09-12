@@ -1,6 +1,6 @@
 # AUB — Current State
 
-Document reflects the **verified** state as of **2026-09-11** (production mobile demo data for current `Europe/Rome` weeks + Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 / 2026-09-09 is superseded where it conflicts.
+Document reflects the **verified** state as of **2026-09-12** (global secure files foundation + production mobile demo data for current `Europe/Rome` weeks + Student/Parent Attendance History API + Teacher Attendance API + Teacher schedule API + application timezone `Europe/Rome` + Student/Parent schedule API + Identity Layer + isolated MySQL test DB + API Foundation `/api/v1`). Previous text dated 2026-07-20 / 2026-09-07 / 2026-09-08 / 2026-09-09 / 2026-09-11 is superseded where it conflicts.
 
 See also [ARCHITECTURE.md](ARCHITECTURE.md) for the two-repository model.
 
@@ -61,6 +61,7 @@ Application timezone: **`Europe/Rome`** (`APP_TIMEZONE` in `.env`, `config('app.
 | GET | `/api/v1/teacher/schedule` | `api.v1.schedule.teacher` |
 | GET | `/api/v1/attendance` | `api.v1.attendance.student` |
 | GET | `/api/v1/children/{student}/attendance` | `api.v1.attendance.child` |
+| GET | `/api/v1/files/{uuid}` | `api.v1.files.show` |
 | GET | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.show` |
 | PUT | `/api/v1/teacher/lessons/{scheduledLesson}/attendance` | `api.v1.attendance.update` |
 
@@ -68,7 +69,7 @@ Only `student` / `parent` / `teacher`. `staff` cannot use this login. Student sc
 
 ### Mobile demo data
 
-`php artisan aub:fill-mobile-demo --force` publishes the previous / current / next Monday–Friday weeks in `Europe/Rome`, places demo lessons on the existing Mobile Test class (linked `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), writes `attendance_records` for past official lessons, and fills demo student contact fields (phone, birth date, Milan address) plus portraits when files exist on the public disk. Re-run is idempotent (demo rows are tagged `notes=__mobile_demo__`). Isolated week `2026-12-28` is not touched. Existing account passwords are not changed. Requires `--force` outside `testing`.
+`php artisan aub:fill-mobile-demo --force` publishes the previous / current / next Monday–Friday weeks in `Europe/Rome`, places demo lessons on the existing Mobile Test class (linked `student@admin.com` / `teacher@admin.com` / `parent@admin.com`), writes `attendance_records` for past official lessons, and fills demo student contact fields (phone, birth date, Milan address). Portraits live in `secure_files` on `aub_private` after `aub:secure-files:migrate`. Re-run is idempotent (demo rows are tagged `notes=__mobile_demo__`). Isolated week `2026-12-28` is not touched. Existing account passwords are not changed. Requires `--force` outside `testing`.
 
 ### Auth
 
@@ -263,7 +264,7 @@ No field-level restriction: a role that can open `customers.*` sees parent conta
 | 2 | Enrollments | Partial — unique one Class; status workflow OPEN |
 | 2 | Lessons catalog | Complete (Settings → Academy) |
 | 3 | Weekly schedule | Complete + hybrid AI (2026-07-20) |
-| 3 | Student file uploads | Partial — public disk, no documents module |
+| 3 | Student file uploads | **Done** — `SecureFileService` + `aub_private`. See [Security/Secure_Files.md](Security/Secure_Files.md) |
 | 3 | **Student Attendance** | Teacher write + Student/Parent history **done** 2026-09-09 (`attendance_records`; `no AttendanceRecord` ≠ `absent`) |
 | 3 | **Teacher Check-in** | Not started (**DECIDED**: daily GPS snapshot + geofence; not per lesson) |
 | 3 | Documents / communication menus | Placeholders |

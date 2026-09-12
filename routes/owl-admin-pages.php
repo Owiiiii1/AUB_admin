@@ -33,6 +33,13 @@ Route::middleware(array_merge(
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
+    Route::get('/secure-files/{uuid}', [\App\Http\Controllers\SecureFileController::class, 'show'])
+        ->whereUuid('uuid')
+        ->name('secure-files.show');
+    Route::get('/secure-files/{uuid}/download', [\App\Http\Controllers\SecureFileController::class, 'download'])
+        ->whereUuid('uuid')
+        ->name('secure-files.download');
+
     Route::get('/customers', [StudentsController::class, 'index'])->name('customers.index');
     Route::get('/customers/create', [StudentsController::class, 'create'])->name('customers.create');
     Route::get('/customers/{student}', [StudentsController::class, 'show'])->name('customers.show');

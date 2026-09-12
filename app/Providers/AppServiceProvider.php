@@ -3,8 +3,14 @@
 namespace App\Providers;
 
 use App\Models\AcademyParent;
+use App\Models\Student;
+use App\Models\Teacher;
+use App\Models\User;
+use App\Services\SecureFiles\FileSecurityScanner;
+use App\Services\SecureFiles\NullFileSecurityScanner;
 use App\Testing\TestDatabaseGuard;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
@@ -18,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(FileSecurityScanner::class, NullFileSecurityScanner::class);
     }
 
     /**
@@ -29,6 +35,13 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('testing')) {
             TestDatabaseGuard::assertSafe();
         }
+
+        Relation::enforceMorphMap([
+            'student' => Student::class,
+            'teacher' => Teacher::class,
+            'parent' => AcademyParent::class,
+            'user' => User::class,
+        ]);
 
         $this->configureApiRateLimiting();
 

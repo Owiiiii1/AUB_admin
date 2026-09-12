@@ -160,7 +160,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. Mobile API: Laravel Sanctum **v4.
 
 **Implemented:** RBAC, `can_write`, `can_delete`, CRUD activity logging, session auth, encrypted AI keys.
 
-**Not implemented (do not describe as done):** field-level ACL; teacher-only-assigned-students; view/access audit of sensitive records; consent entities; API authorization matrix; private disk for children’s documents (uploads use the **public** disk); admin **2FA**. These are **Security Foundation** before wide mobile rollout.
+**Not implemented (do not describe as done):** field-level ACL beyond files; teacher-only-assigned-students for non-photo records; consent product entities; admin **2FA**. These remain later Security Foundation slices. **Private files** are implemented: see [Security/Secure_Files.md](Security/Secure_Files.md).
 
 `config/aub-menu.php` `always_allowed_route_patterns` grants every authenticated user **with a role** access to `courses-groups.*`, `lessons.*`, `weekly-schedule.*`, placeholders, profile, workplace — wider than `role_menu_items`.
 
@@ -172,7 +172,7 @@ Web auth: Laravel `web` guard, sessions, CSRF. Mobile API: Laravel Sanctum **v4.
 | `routes/owl-admin-auth.php` | `/login` redirect, `POST /logout` |
 | `routes/owl-admin-pages.php` | All protected Inertia/web CRM routes |
 | `routes/owl-admin-core.php` | `GET /owl-admin/health` |
-| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, student/parent/teacher schedule, teacher attendance, student/parent attendance history |
+| `routes/api.php` | `/api/v1` health, login, logout, logout-all, me, files, student/parent/teacher schedule, teacher attendance, student/parent attendance history |
 | `bootstrap/app.php` | `web` + `api` + `commands` + health `/up` |
 
 Production `php artisan route:list --path=api`: **10** routes. Web CRM unchanged. Details: [API.md](API.md).

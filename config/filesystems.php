@@ -47,6 +47,22 @@ return [
             'report' => false,
         ],
 
+        'aub_private' => [
+            'driver' => 'local',
+            'root' => env('AUB_PRIVATE_DISK_ROOT', storage_path('app/aub-private')),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
+        'aub_legacy_quarantine' => [
+            'driver' => 'local',
+            'root' => env('AUB_LEGACY_QUARANTINE_DISK_ROOT', storage_path('app/aub-legacy-quarantine')),
+            'visibility' => 'private',
+            'throw' => true,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

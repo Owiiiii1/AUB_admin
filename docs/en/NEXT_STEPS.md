@@ -9,7 +9,7 @@ What is built: [CURRENT_STATE.md](CURRENT_STATE.md). Full question list: [OPEN_Q
 ## Immediate technical track
 
 1. Keep docs honest (this stream).
-2. **Security Foundation** before wide mobile (private storage, field-level ACL, scoped teachers, view audit, API authz matrix, token security, **admin 2FA**, consent records) — design/implement in dedicated tasks.
+2. **Security Foundation** — **private files done** ([Security/Secure_Files.md](Security/Secure_Files.md)). Remaining later slices: field-level ACL, admin 2FA, consent records as a product.
 3. **Core Data Model refactor** — **done** (`students` / `parents` / `AcademyClass` / `ClassLesson`).
 4. **Identity model implementation** — **done** (`account_type`, profile `user_id`, `AccountIdentityService`, admin UI).
 5. **Test infrastructure** — **done** (MySQL `aub_test`, hard guard against production `aub`; no SQLite).

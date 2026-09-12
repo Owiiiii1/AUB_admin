@@ -99,9 +99,9 @@ export default function CustomersIndex({ customers = [] }) {
                                         onClick={() => router.visit(route('customers.show', customer.id))}
                                     >
                                         <Td>
-                                            {customer.student_photo_path ? (
+                                            {customer.student_photo_url ? (
                                                 <img
-                                                    src={`/storage/${customer.student_photo_path}`}
+                                                    src={customer.student_photo_url}
                                                     alt={[customer.first_name, customer.last_name].filter(Boolean).join(' ') || customer.name || 'Student'}
                                                     className="h-10 w-10 rounded-lg object-cover ring-1 ring-slate-200"
                                                 />
