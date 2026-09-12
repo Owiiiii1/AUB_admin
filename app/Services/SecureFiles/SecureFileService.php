@@ -60,7 +60,7 @@ class SecureFileService
         string $category,
         string $binary,
         string $originalName,
-        ?User $uploader,
+        ?User $uploader = null,
         ?Request $request = null,
         string $auditAction = 'secure_file.uploaded',
     ): SecureFile {

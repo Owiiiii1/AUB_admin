@@ -36,6 +36,8 @@ class SecureFilesTest extends TestCase
         parent::setUp();
         $this->identity = $this->app->make(AccountIdentityService::class);
         $this->files = $this->app->make(SecureFileService::class);
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
     }
 
     public function test_upload_never_lands_on_public_disk_and_path_is_opaque(): void
@@ -196,6 +198,9 @@ class SecureFilesTest extends TestCase
 
     public function test_migration_dry_run_is_idempotent_and_switches_relation(): void
     {
+        Storage::fake('public');
+        Storage::fake('aub_legacy_quarantine');
+
         $student = $this->makeStudent('Mario', 'Rossi');
         $bytes = $this->jpegBytes();
         $legacy = 'students/'.$student->id.'/documents/face.jpg';
@@ -263,6 +268,9 @@ class SecureFilesTest extends TestCase
 
     private function assertApiFile(User $user, SecureFile $file, int $status): void
     {
+        $this->flushSession();
+        $this->app['auth']->forgetGuards();
+
         $this->withToken($this->loginToken($user))
             ->get('/api/v1/files/'.$file->uuid)
             ->assertStatus($status);
