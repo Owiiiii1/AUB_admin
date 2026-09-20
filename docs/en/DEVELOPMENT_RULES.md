@@ -101,6 +101,14 @@ Production deploy is **file copy immediately after push**, not `git pull`. Targe
 - Russian = full translation
 - After each Cursor task, overwrite `docs/Development/Cursor_Work_Report.md`
 - Status vocabulary: **DECIDED** / **PRELIMINARY** / **OPEN**. Do not present assumptions as decisions. See [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+- Living product passport: [FUNCTIONALITY_MATRIX.md](../Product/FUNCTIONALITY_MATRIX.md)
+
+Before a functional task is complete:
+
+- update `docs/Product/FUNCTIONALITY_MATRIX.md`
+- ensure status/permissions for Administration, Student, Parent, Teacher match actual code
+
+If the task did not change product functionality, say so in the work report (`FUNCTIONALITY_MATRIX updated: no`).
 
 ## Cursor workflow (mandatory)
 
@@ -131,7 +139,7 @@ An `AUB_admin` task is **not finished** until the files are on the server. Never
 
 - Design with RBAC from the start
 - Field-level and scoped access are **not** implemented yet — do not assume they are
-- Children’s files currently sit on the **public** disk — treat as a known gap
+- Person files go through `SecureFileService` on `aub_private`, never the public disk
 
 ## Code style
 

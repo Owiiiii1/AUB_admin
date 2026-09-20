@@ -101,6 +101,14 @@ php artisan aub:secure-files:migrate
 - Русская версия — полный перевод
 - После каждой задачи Cursor перезаписывать `docs/Development/Cursor_Work_Report.md`
 - Словарь статусов: **DECIDED** / **PRELIMINARY** / **OPEN**. Не выдавать предположения за решения. См. [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md).
+- Живой паспорт продукта: [FUNCTIONALITY_MATRIX.md](../Product/FUNCTIONALITY_MATRIX.md)
+
+Перед завершением функциональной задачи:
+
+- обновить `docs/Product/FUNCTIONALITY_MATRIX.md`
+- сверить статусы и права Administration, Student, Parent, Teacher с фактическим кодом
+
+Если задача не меняла продуктовый функционал, это нужно явно написать в work report (`FUNCTIONALITY_MATRIX updated: no`).
 
 ## Рабочий процесс Cursor (обязательно)
 
@@ -131,7 +139,7 @@ Tech Lead затем проверяет report + GitHub diff.
 
 - Проектировать с RBAC с самого начала
 - Field-level и scoped access **ещё не реализованы** — не считать их готовыми
-- Файлы детей сейчас на диске **public** — известный разрыв
+- Файлы людей идут через `SecureFileService` на `aub_private`, не на public disk
 
 ## Стиль кода
 

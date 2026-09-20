@@ -1,0 +1,35 @@
+---
+description: Keep AUB functionality matrix synchronized with every product change
+alwaysApply: true
+---
+
+# AUB Functionality Matrix
+
+Whenever any task changes user-visible functionality, UI, API capability, routes, permissions, roles, access control, account behavior, student / parent / teacher / administration functionality, file or document access, schedule, attendance, messages, payments, assessments, productions, or any other product capability, you MUST review and update `docs/Product/FUNCTIONALITY_MATRIX.md` before considering the task complete.
+
+This file is the living product passport. It describes what each of Administration, Student, Parent, and Teacher can do **today**. Code is the source of truth. Do not copy Cursor Work Reports into the matrix.
+
+## How to update
+
+1. Do not change `Last updated` if the functional state did not change.
+2. If a feature is added: add or update the matching row (status, channel, notes, restrictions).
+3. If a feature is removed: delete the row or change the status.
+4. If a permission changed: update that actor/role, including the restrictions lists.
+5. Backend without UI: `🔵 Foundation / backend ready`, never `✅`.
+6. UI exists but the flow is incomplete: `🟡 Partial`.
+7. Idea only: `⚪ Planned`, and keep it in **Planned / next major capabilities** if it is a major module.
+8. Usable through the intended UI/API: `✅ Implemented`.
+9. Out of scope or blocked by design: `🚫 Not available / intentionally restricted`.
+10. Do not mix actor type (Student / Parent / Teacher) with staff web roles. A Teacher app account is not Administration.
+
+Do not invent product capabilities from old README or roadmap text.
+
+## After every task
+
+In the Cursor Work Report (not in the user-facing reply when the project requires only `готово`), record:
+
+```text
+FUNCTIONALITY_MATRIX updated: yes/no
+```
+
+If `no`, explain why the change did not affect product functionality.

@@ -2,130 +2,58 @@
 
 ## Task
 
-Global Secure Files Foundation: one private-file mechanism for every AUB user/person/internal file (not Student-only).
+Create a living product functionality matrix and a permanent process so it stays in sync with the code.
 
-## Legacy audit (actual code)
+## Audit sources
 
-All personal files used Laravel `disk('public')` → `storage/app/public` → `/storage/{path}` via `storage:link`.
+Checked against the current trees, not old roadmap copy:
 
-| Source | Path / column | Planned category |
-|--------|---------------|------------------|
-| `StudentsController::storeUploadedFiles` | `students/{id}/documents` → `student_photo_path`, `parent_id_document_path`, `general_regulation_form_path`, `minor_entry_exit_form_path`, `rights_release_form_path` | `profile_photo`, `identity_document`, `consent_*` |
-| `TeachersController::storeUploadedPhoto` | `teachers/{id}/photos` → `photo_path` | `profile_photo` |
-| `TeachersSeeder` | `teachers/{id}/photos/avatar.jpg` | `profile_photo` |
-| `MobileDemoDataService` | `students/{id}/portrait.jpg`, `portraits/students/{id}.jpg`, `teachers/{id}/photos/avatar.jpg` | (stopped writing public paths) |
-| `CustomersController` leftover | same public store as students | neutralized (`[]`, no Storage) |
-| API | `StudentProfileResource`, `TeacherAttendanceService` `Storage::disk('public')->url()` | authenticated `/api/v1/files/{uuid}` |
-| Admin JS | `/storage/${path}` on Students, Teachers, CoursesGroups | `/secure-files/{uuid}` |
+- `routes/owl-admin-pages.php`, `routes/api.php`, `config/aub-menu.php`, `config/aub-files.php`
+- Admin pages/controllers: students, teachers, courses, schedule, documents, chat, notices, news, settings, dashboard, activity log
+- `FileAccessService`, Identity / `User` actor types vs web roles
+- Flutter shells: Student (Home / Orario / Eventi / Profilo), Parent (Home / Figli / Orario / Profilo), Teacher (Oggi / Orario / Presenze / Profilo)
+- `docs/en/CURRENT_STATE.md`, `docs/en/API.md`, `docs/en/Security/Secure_Files.md`, Flutter `docs/CURRENT_STATE.md`
 
-No MIME sniff, unsafe replace (delete old first), guessable paths, no auth on file bytes.
+Where CURRENT_STATE disagreed with code, code won (Dashboard is a medical attention inbox, not an empty placeholder; student Presenze is not in the nav; Eventi is an empty tab; documents/chat/news are live).
 
-## Production legacy paths found
+## Delivered
 
-26 DB references, 26 physical files, 0 missing, 0 conflicts. All `profile_photo`. No identity/consent documents on production at migrate time.
+- `docs/Product/FUNCTIONALITY_MATRIX.md` created
+- `.cursor/rules/aub-functionality-matrix.mdc` (`alwaysApply: true`) created
+- Definition of Done added to `docs/en/DEVELOPMENT_RULES.md` and `docs/ru/DEVELOPMENT_RULES.md`
+- Stale “children’s files on public disk” line in Development Rules corrected to `aub_private`
 
-| Type | IDs | Legacy path pattern |
-|------|------|---------------------|
-| Student photos | 8–13 | `portraits/students/{id}.jpg` |
-| Teacher photos | 4–23 | `teachers/{id}/photos/avatar.jpg` |
+## Classification (detailed capability rows, excluding the executive summary)
 
-## Migrated
+| Status | Count |
+|--------|-------|
+| ✅ Implemented | 96 |
+| 🟡 Partial | 9 |
+| 🔵 Foundation / backend ready | 5 |
+| ⚪ Planned (in actor tables) | 9 |
+| 🚫 Not available / restricted (in actor tables) | 16 |
 
-Phase A `php artisan aub:secure-files:migrate` (no `--purge-legacy`): 26 migrated, 0 conflicts. Second run: 0 db_references (idempotent). Legacy path columns nulled. Public objects moved to `storage/app/aub-legacy-quarantine`. 26 originals + 26 thumbnails = 52 private objects. PHPUnit orphan objects (103) removed from production disk after isolating test roots.
+Major planned modules are listed separately at the end of the matrix (secretariat desk, tasks, pagelle, payments, consent product, productions, costume, teacher check-in, student Presenze tab, admin attendance, PDF export, week lock UI, academic-year UI, FCM, 2FA).
 
-## What landed
+## Ambiguous / easy-to-misread items
 
-- Disk `aub_private` (`storage/app/aub-private`) + `aub_legacy_quarantine`. No public visibility, no nginx alias. Dirs `2770` `deploy:www-data`, files `0640` (php-fpm can read; Flysystem 0600/0700 overridden).
-- Table `secure_files` (uuid, morph attachable, category, variant, opaque path, sha256, SoftDeletes).
-- `config/aub-files.php` category registry; unknown = DENY.
-- `SecureFileService` (sniff, size, re-encode images, opaque name, hash, replace-after-validate, soft delete).
-- `FileAccessService` category-aware ACL. Unauthorized known UUID → 404. Unauthenticated API → 401.
-- Web `GET /secure-files/{uuid}` (+ `/download`). API `GET /api/v1/files/{uuid}`.
-- `php artisan aub:secure-files:migrate` (`--dry-run`, Phase A quarantine, not default purge).
-- Architecture guard `PublicStorageArchitectureGuard` + PHPUnit.
-- Flutter `AuthenticatedImage` / `AubAvatar` via existing Dio Bearer. No token in URL. Memory cache only.
-- Docs + `.cursor/rules/aub-secure-files.mdc`.
-- PHPUnit disks isolated to `/tmp/aub-phpunit-*`.
+- Student **Eventi** tab exists and is empty — 🟡, not a real events product
+- Student attendance **API** exists, no student Presenze tab — 🔵
+- Parent attendance is on **Figli**, not a separate Presenze tab — ✅
+- Admin Home is medical attention cards only, not a full operational dashboard
+- `locked` weeks are official on mobile; admin cannot lock a week in the UI
+- File categories for identity/consent/report cards exist; no consent/pagelle product
+- A Teacher **app** account is not staff; the same person may also have a web role
+- Hall occupancy is student + teacher only; parent is 403
 
-## DB schema
+## FUNCTIONALITY_MATRIX updated: yes
 
-`secure_files`: id, uuid, attachable_type/id, category, variant, parent_id, disk, path, original_name, stored_name, mime_type, extension, size_bytes, sha256, uploaded_by, timestamps, deleted_at.
+New living passport; first version.
 
-Morph map: `student`, `teacher`, `parent`, `user`.
+## Admin
 
-## Category registry
-
-See `docs/en/Security/Secure_Files.md`. Unknown category DENY. Images jpeg/png/webp; documents pdf (identity/medical also jpeg/png). No SVG/php/html/js/exe/zip.
-
-## ACL (foundation)
-
-- Admin: full within existing RBAC.
-- Staff web: `profile_photo` view for any web role (courses-groups avatars). Sensitive student docs: `customers.*`. Teacher files: `teachers.*`. Mutations: `can_write` / `can_delete`.
-- Teacher: own `profile_photo`; student `profile_photo` only if class_lesson_teacher or scheduled_lessons + academy_class_student. Sensitive student docs: DENY.
-- Parent: linked children `profile_photo` only. Identity/consent: DENY even for own child.
-- Student: self `profile_photo` only.
-- Inactive: DENY.
-
-## Web / API endpoints
-
-- Web (session + RBAC + policy): `GET /secure-files/{uuid}`, `GET /secure-files/{uuid}/download`
-- API: `GET /api/v1/files/{uuid}` (`auth:sanctum` + `mobile.actor`). Binary. No signed URLs. No token in query.
+Docs + Cursor rule + Development Rules. No PHP/JS/product behavior change.
 
 ## Flutter
 
-`lib/core/media/authenticated_image.dart`, `api_client_scope.dart`, `ApiClient.getBytes`. Student / Parent / Teacher UI unchanged except authenticated media. Tests: 112 passed, `flutter analyze` clean. Commit `55b9963 feat: support authenticated secure media`.
-
-## Architecture guard
-
-`tests/Feature/SecureFileArchitectureGuardTest.php` scans `app/`, `resources/js/`, `routes/`, `database/seeders/`. Whitelist: migrate command + the guard class. Fixture: `tests/Fixtures/Architecture/ForbiddenPublicStorageSample.php`.
-
-## Tests
-
-Backend: `tests/Feature/SecureFilesTest.php`, `SecureFileArchitectureGuardTest.php`, updated `/me` key lists. Production `aub_test`: **118 passed** (924 assertions). Flutter: 112 passed.
-
-## Production dry run
-
-```
-db_references 26
-physical_found 26
-missing 0
-conflicts 0
-planned categories {"profile_photo":26}
-```
-
-## Production migration
-
-Phase A completed. Idempotent remigrate empty. `.env` not changed.
-
-## Production smoke (2026-09-12)
-
-| Check | Result |
-|-------|--------|
-| Admin authorized image (controller + FileAccessService) | 200, `nosniff`, `Cache-Control: private` |
-| Parent own allowed photo | 200 |
-| Unrelated parent | 404 |
-| Student own photo | 200 |
-| Student other file | 404 |
-| Teacher sensitive identity doc | 404 |
-| Mobile authenticated photo | 200 |
-| Unauthenticated API | 401 |
-| Unauthenticated web | 302 (login) |
-| Legacy `/storage/portraits/students/8.jpg` | 403 (not served) |
-| Legacy `/storage/teachers/4/photos/avatar.jpg` | 403 (not served) |
-
-Smoke tokens/users/temp identity doc removed. No leftover `smoke-%` accounts.
-
-## Cleanup status
-
-Phase A: quarantine kept, `--purge-legacy` **not** run. Empty public `portraits/students` directory remains. `storage:link` remains for genuine public website assets. Empty `objects/{aa}` prefix dirs from PHPUnit may remain after orphan file delete.
-
-## Known remaining risks
-
-- Field-level ACL for non-file CRM fields is still not this stage.
-- ClamAV not wired (`NullFileSecurityScanner` hook).
-- Quarantine is not purged; leftover empty public directories may exist.
-- `storage:link` remains for genuine public website assets.
-- Legacy `/storage/...` missing objects currently return **403** from nginx (not 404); bytes are not served.
-- Teacher photos in `/me` are new keys (`photo_url`, `photo`); Flutter ignores extras except where wired.
-- SVG/DOCX still forbidden until an explicit future category change.
-- Local Windows workstation has no PHP; PHPUnit runs on the production host against `aub_test` only.
+No change in this task.
