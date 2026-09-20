@@ -2,58 +2,42 @@
 
 ## Task
 
-Create a living product functionality matrix and a permanent process so it stays in sync with the code.
+One-time client security snapshot: `docs/Product/SECURITY_REPORT_CLIENT.md` for Accademia Ucraina Ballet leadership (not living product docs).
 
 ## Audit sources
 
-Checked against the current trees, not old roadmap copy:
-
-- `routes/owl-admin-pages.php`, `routes/api.php`, `config/aub-menu.php`, `config/aub-files.php`
-- Admin pages/controllers: students, teachers, courses, schedule, documents, chat, notices, news, settings, dashboard, activity log
-- `FileAccessService`, Identity / `User` actor types vs web roles
-- Flutter shells: Student (Home / Orario / Eventi / Profilo), Parent (Home / Figli / Orario / Profilo), Teacher (Oggi / Orario / Presenze / Profilo)
-- `docs/en/CURRENT_STATE.md`, `docs/en/API.md`, `docs/en/Security/Secure_Files.md`, Flutter `docs/CURRENT_STATE.md`
-
-Where CURRENT_STATE disagreed with code, code won (Dashboard is a medical attention inbox, not an empty placeholder; student Presenze is not in the nav; Eventi is an empty tab; documents/chat/news are live).
+- Laravel routes (`web.php`, `api.php`, `owl-admin-pages.php`), middleware, Sanctum, `EnsureMobileActorIsValid`, `User` actor/web gates
+- Rate limiters in `AppServiceProvider` / `config/aub.php`; web `LoginRequest` lockout
+- Password hashing casts; `admin_visible_password` encrypted; AI `api_key` encrypted
+- `config/aub-files.php`, `SecureFileService`, `FileAccessService`, `ImageNormalizer`, `NullFileSecurityScanner`
+- Flutter `SecureTokenStorage`, HTTPS release gate, `AuthenticatedImage` memory cache, Bearer header (not query)
+- `TestDatabaseGuard`, `PublicStorageArchitectureGuard`, feature tests (`SecureFilesTest`, API isolation tests)
+- `.cursor/rules/aub-secure-files.mdc`
+- Production 20 Sep 2026: HTTPS headers, HTTP 301, API/files 401, `/storage/` 403, `aub-private` outside web root, Let’s Encrypt, Nginx 1.24, `APP_ENV=local` / `APP_DEBUG=true`, fail2ban absent, ufw service active
 
 ## Delivered
 
-- `docs/Product/FUNCTIONALITY_MATRIX.md` created
-- `.cursor/rules/aub-functionality-matrix.mdc` (`alwaysApply: true`) created
-- Definition of Done added to `docs/en/DEVELOPMENT_RULES.md` and `docs/ru/DEVELOPMENT_RULES.md`
-- Stale “children’s files on public disk” line in Development Rules corrected to `aub_private`
+- Client report: data held, layers, infra, transport, auth, actor validation, throttles, passwords, RBAC, family isolation, secure files, ACL, validation, mobile media, DB, API minimization, audit, AI, app controls, development rules, tests, production probes, matrices, diagrams, known gaps, GDPR wording without “fully compliant”, technical appendix
+- No application/production code changed
 
 ## Classification (detailed capability rows, excluding the executive summary)
 
-| Status | Count |
-|--------|-------|
-| ✅ Implemented | 96 |
-| 🟡 Partial | 9 |
-| 🔵 Foundation / backend ready | 5 |
-| ⚪ Planned (in actor tables) | 9 |
-| 🚫 Not available / restricted (in actor tables) | 16 |
+Docs-only snapshot. Product behaviour unchanged.
 
-Major planned modules are listed separately at the end of the matrix (secretariat desk, tasks, pagelle, payments, consent product, productions, costume, teacher check-in, student Presenze tab, admin attendance, PDF export, week lock UI, academic-year UI, FCM, 2FA).
+FUNCTIONALITY_MATRIX updated: no
+
+Reason: one-time security report; no user-visible capability, route, permission, or access-control change.
+
+## Confirmed controls (short)
+
+HTTPS/TLS, Sanctum + session/CSRF, mobile actor re-check + token revoke, parent/student/teacher isolation with 404, `aub_private` + FileAccessService, MIME/image rebuild, secure token storage, hashed passwords, encrypted AI keys, TestDatabaseGuard, architecture guard, selected activity logging
+
+## Known gaps recorded (not fixed)
+
+Admin 2FA, field-level CRM ACL, broader staff route tightening, malware scanner, pinning (optional), backup encryption proof, SSH extra hardening, fail2ban, monitoring, consent/GDPR product workflow, retention policy, production `APP_DEBUG`/`APP_ENV`
 
 ## Ambiguous / easy-to-misread items
 
-- Student **Eventi** tab exists and is empty — 🟡, not a real events product
-- Student attendance **API** exists, no student Presenze tab — 🔵
-- Parent attendance is on **Figli**, not a separate Presenze tab — ✅
-- Admin Home is medical attention cards only, not a full operational dashboard
-- `locked` weeks are official on mobile; admin cannot lock a week in the UI
-- File categories for identity/consent/report cards exist; no consent/pagelle product
-- A Teacher **app** account is not staff; the same person may also have a web role
-- Hall occupancy is student + teacher only; parent is 403
-
-## FUNCTIONALITY_MATRIX updated: yes
-
-New living passport; first version.
-
-## Admin
-
-Docs + Cursor rule + Development Rules. No PHP/JS/product behavior change.
-
-## Flutter
-
-No change in this task.
+- Staff “always allowed” academy routes are wider than the role menu; file bytes still go through FileAccessService
+- Parent file API allows catalog + medical for linked children, not identity_document
+- No named historical production smoke-report file; live probes + tests used instead
