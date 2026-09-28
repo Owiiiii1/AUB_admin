@@ -55,7 +55,7 @@ DPA рекомендуется; это не функция системы.
 
 ### Реализовано
 
-- HTTPS (`https://aub.owlsolutions.net`)
+- HTTPS (`https://staff.accademiaucraina.it`)
 - Session authentication (web)
 - Хеширование паролей
 - CSRF (Laravel + Inertia)

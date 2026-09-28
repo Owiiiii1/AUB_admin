@@ -15,7 +15,7 @@
 | AUB_admin | `Owiiiii1/AUB_admin` | Ядро: CRM, БД, логика, web-workplaces, API |
 | AUB_app | `Owiiiii1/AUB_app` | Только Flutter; клиент HTTPS API |
 
-Production `/var/www/aub` **не** git-репозиторий. Деплой — **копирование файлов** на `deploy@178.156.234.23:/var/www/aub` сразу после push. Не `git pull` на сервере.
+Production `/var/www/aub` **не** git-репозиторий. Деплой — **копирование файлов** на `deploy@195.201.37.229:/var/www/aub` сразу после push. Не `git pull` на сервере.
 
 Во Flutter **нельзя** класть Bitrix/webhook, учётные данные БД или `APP_KEY`. Только API.
 
@@ -93,7 +93,7 @@ php artisan aub:secure-files:migrate --dry-run
 php artisan aub:secure-files:migrate
 ```
 
-Деплой на production — **копирование файлов сразу после push**, не `git pull`. Путь: `deploy@178.156.234.23:/var/www/aub`.
+Деплой на production — **копирование файлов сразу после push**, не `git pull`. Путь: `deploy@195.201.37.229:/var/www/aub`.
 
 ## Документация
 
@@ -120,7 +120,7 @@ php artisan aub:secure-files:migrate
 4. **Полностью перезаписывает** `docs/Development/Cursor_Work_Report.md`
 5. Commit
 6. Push в `main`
-7. **Сразу выложить изменённые файлы AUB_admin на production** `deploy@178.156.234.23:/var/www/aub` (без исключений, включая docs)
+7. **Сразу выложить изменённые файлы AUB_admin на production** `deploy@195.201.37.229:/var/www/aub` (без исключений, включая docs)
 8. Отвечает пользователю **только**: `готово`
 
 Tech Lead затем проверяет report + GitHub diff.

@@ -15,7 +15,7 @@ Rules for Cursor and all AUB development.
 | AUB_admin | `Owiiiii1/AUB_admin` | Core: CRM, DB, business logic, web workplaces, API |
 | AUB_app | `Owiiiii1/AUB_app` | Flutter only; HTTPS API client |
 
-Production `/var/www/aub` is **not** a git repository. Deploy is **file copy** to `deploy@178.156.234.23:/var/www/aub` immediately after push. Do not `git pull` on the server.
+Production `/var/www/aub` is **not** a git repository. Deploy is **file copy** to `deploy@195.201.37.229:/var/www/aub` immediately after push. Do not `git pull` on the server.
 
 Flutter must **never** contain Bitrix/webhooks, DB credentials, or `APP_KEY`. Only the API.
 
@@ -93,7 +93,7 @@ php artisan aub:secure-files:migrate --dry-run
 php artisan aub:secure-files:migrate
 ```
 
-Production deploy is **file copy immediately after push**, not `git pull`. Target: `deploy@178.156.234.23:/var/www/aub`.
+Production deploy is **file copy immediately after push**, not `git pull`. Target: `deploy@195.201.37.229:/var/www/aub`.
 
 ## Documentation
 
@@ -120,7 +120,7 @@ After every Cursor task:
 4. **Fully overwrite** `docs/Development/Cursor_Work_Report.md`
 5. Commit
 6. Push to `main`
-7. **Immediately copy changed AUB_admin files to production** `deploy@178.156.234.23:/var/www/aub` (no exceptions, including docs)
+7. **Immediately copy changed AUB_admin files to production** `deploy@195.201.37.229:/var/www/aub` (no exceptions, including docs)
 8. Reply to the user **only**: `готово`
 
 Tech Lead then reviews the report + GitHub diff.

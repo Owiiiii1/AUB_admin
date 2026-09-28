@@ -7,20 +7,20 @@
 | Параметр | Значение |
 |----------|----------|
 | GitHub (истина для Tech Lead) | `https://github.com/Owiiiii1/AUB_admin` |
-| IP | `178.156.234.23` |
+| IP | `195.201.37.229` |
 | Linux user | `deploy` |
 | Путь проекта | `/var/www/aub` |
 | Git на сервере | **Не git-репозиторий** (2026-09-07) |
 | Web root | `/var/www/aub/public` |
-| Домен | `https://aub.owlsolutions.net` |
+| Домен | `https://staff.accademiaucraina.it` |
 | Admin kit | `owlsolutions/custom-admin-kit` v0.4.0 |
-| PHP | 8.3.6 |
-| Node.js | 20.20.0 |
-| MySQL | 8.0.46 |
-| Nginx | 1.24.0 (Ubuntu) |
+| PHP | 8.5.4 |
+| Node.js | 20.20.2 |
+| MySQL | 8.4.11 |
+| Nginx | 1.28.3 (Ubuntu) |
 
-Nginx: `/etc/nginx/sites-available/aub.owlsolutions.net`  
-`server_name aub.owlsolutions.net;`  
+Nginx: `/etc/nginx/sites-available/staff.accademiaucraina.it`  
+`server_name staff.accademiaucraina.it;`  
 `root /var/www/aub/public;`
 
 ## GitHub vs production
@@ -47,6 +47,14 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+Cron (нужен для watcher медсправки):
+
+```bash
+* * * * * cd /var/www/aub && php artisan schedule:run >> /dev/null 2>&1
+```
+
+Расписание запускает `medical-certificates:watch` ежедневно в 07:00 Europe/Rome. Без crontab уведомления о сроке не уходят.
 
 Обновление только документации не требует migrate или npm build.
 
@@ -92,10 +100,10 @@ php artisan owl-admin:smoke --preset=admin
 php artisan owl-admin:doctor --preset=admin
 tail -80 storage/logs/laravel.log
 
-curl -I https://aub.owlsolutions.net/
-curl -I https://aub.owlsolutions.net/owl-admin/health
-curl -I https://aub.owlsolutions.net/customers
-curl -I https://aub.owlsolutions.net/dashboard
+curl -I https://staff.accademiaucraina.it/
+curl -I https://staff.accademiaucraina.it/owl-admin/health
+curl -I https://staff.accademiaucraina.it/customers
+curl -I https://staff.accademiaucraina.it/dashboard
 ```
 
 | URL | Ожидается |
@@ -137,6 +145,7 @@ sudo systemctl reload nginx
 - Если config **не** закэширован, Laravel грузит `.env`, затем `.env.testing`; username/password берутся из `.env.testing`.
 - `php artisan … --env=testing` загружает `.env.testing` (проверено: `migrate:status --env=testing` и `db:show --env=testing` показывают database `aub_test`).
 - `App\Testing\TestDatabaseGuard` прерывает запуск, если resolved database не строго `aub_test`.
+- Laravel 13 `LoadConfiguration` после `config:cache` перезаписывает `$app['env']` из кэша. PHPUnit всё ещё держит `APP_ENV=testing` в `$_ENV`, но `$this->app->environment('testing')` становится `local`, и наивный guard не срабатывает. `TestDatabaseGuard::shouldProtect()` смотрит на PHPUnit/`$_ENV`, а `tests/TestCase` всегда вызывает `assertSafe()`.
 
 Перед любым прогоном тестов: `php artisan optimize:clear`. **Не** запускать `php artisan test` после `config:cache`.
 
@@ -155,9 +164,15 @@ php artisan owl-admin:make-admin --email=admin@admin.com --password=admin
 php artisan owl-admin:doctor --preset=admin
 php artisan owl-admin:smoke --preset=admin
 php artisan aub:fill-mobile-demo --force
+php artisan aub:fill-demo-portraits --force --seed-teachers
+php artisan aub:fill-news-covers --force
 ```
 
 `aub:fill-mobile-demo --force` заполняет опубликованные недели `Europe/Rome`, занятия и посещаемость, чтобы mobile-приложения не были пустыми. Пароли существующих аккаунтов не меняет. Изолированную неделю `2026-12-28` не трогает.
+
+`aub:fill-demo-portraits --force --seed-teachers` восстанавливает 20 преподавателей и вешает недостающие `profile_photo` (bundled-портреты с полом и возрастом для демо-людей; randomuser для остальных преподавателей). Не запускать `php artisan test` на production после `config:cache`.
+
+`aub:fill-news-covers --force` вешает каталожные обложки `news_image` на новости без картинки. Уже сохранённые обложки не трогает.
 
 Тестовый email администратора — только для разработки.
 

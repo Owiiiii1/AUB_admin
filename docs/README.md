@@ -49,7 +49,7 @@ Flutter talks to the core **only** through HTTPS API (`/api/v1`, Sanctum Bearer 
 
 - **AUB_admin GitHub:** `Owiiiii1/AUB_admin` (source of truth for Tech Lead)
 - **Production path:** `/var/www/aub` (file tree; **not** a git repository as of 2026-09-07)
-- **Domain:** `https://aub.owlsolutions.net`
+- **Domain:** `https://staff.accademiaucraina.it`
 - **Admin foundation:** `owlsolutions/custom-admin-kit` v0.4.0
 - **Flutter package:** `aub` — bundle / application id `com.owlsolutions.aub`
 - **Phase 1 (roles):** Complete (2026-07-06)

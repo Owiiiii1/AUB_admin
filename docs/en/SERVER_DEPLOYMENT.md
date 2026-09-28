@@ -7,20 +7,20 @@ This document covers **AUB_admin** production (web core). Flutter (`AUB_app`) is
 | Item | Value |
 |------|-------|
 | GitHub (source of truth for Tech Lead) | `https://github.com/Owiiiii1/AUB_admin` |
-| Server IP | `178.156.234.23` |
+| Server IP | `195.201.37.229` |
 | Linux user | `deploy` |
 | Project path | `/var/www/aub` |
 | Git on server | **Not a git repository** (2026-09-07) |
 | Web root | `/var/www/aub/public` |
-| Domain | `https://aub.owlsolutions.net` |
+| Domain | `https://staff.accademiaucraina.it` |
 | Admin kit | `owlsolutions/custom-admin-kit` v0.4.0 |
-| PHP | 8.3.6 |
-| Node.js | 20.20.0 |
-| MySQL | 8.0.46 |
-| Nginx | 1.24.0 (Ubuntu) |
+| PHP | 8.5.4 |
+| Node.js | 20.20.2 |
+| MySQL | 8.4.11 |
+| Nginx | 1.28.3 (Ubuntu) |
 
-Nginx: `/etc/nginx/sites-available/aub.owlsolutions.net`  
-`server_name aub.owlsolutions.net;`  
+Nginx: `/etc/nginx/sites-available/staff.accademiaucraina.it`  
+`server_name staff.accademiaucraina.it;`  
 `root /var/www/aub/public;`
 
 ## GitHub vs production
@@ -47,6 +47,14 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+Cron (required for medical-certificate watcher):
+
+```bash
+* * * * * cd /var/www/aub && php artisan schedule:run >> /dev/null 2>&1
+```
+
+The schedule runs `medical-certificates:watch` daily at 07:00 Europe/Rome. Without this crontab the expiry notices never fire.
 
 Docs-only updates do not require migrate or npm build.
 
@@ -92,10 +100,10 @@ php artisan owl-admin:smoke --preset=admin
 php artisan owl-admin:doctor --preset=admin
 tail -80 storage/logs/laravel.log
 
-curl -I https://aub.owlsolutions.net/
-curl -I https://aub.owlsolutions.net/owl-admin/health
-curl -I https://aub.owlsolutions.net/customers
-curl -I https://aub.owlsolutions.net/dashboard
+curl -I https://staff.accademiaucraina.it/
+curl -I https://staff.accademiaucraina.it/owl-admin/health
+curl -I https://staff.accademiaucraina.it/customers
+curl -I https://staff.accademiaucraina.it/dashboard
 ```
 
 | URL | Expected |
@@ -137,6 +145,7 @@ How Laravel picks the test connection:
 - If config is **not** cached, Laravel loads `.env` then `.env.testing`; username/password come from `.env.testing`.
 - `php artisan … --env=testing` loads `.env.testing` (confirmed: `migrate:status --env=testing` and `db:show --env=testing` report database `aub_test`).
 - `App\Testing\TestDatabaseGuard` aborts unless the resolved database is exactly `aub_test`.
+- Laravel 13 `LoadConfiguration` overwrites `$app['env']` from **cached** `app.env`. After `config:cache`, PHPUnit still has `APP_ENV=testing` in `$_ENV`, but `$this->app->environment('testing')` becomes `local` and a naive guard never runs. `TestDatabaseGuard::shouldProtect()` therefore keys off PHPUnit/`$_ENV`, and `tests/TestCase` always calls `assertSafe()`.
 
 Before any test run: `php artisan optimize:clear`. Do **not** run `php artisan test` after `config:cache`.
 
@@ -155,9 +164,15 @@ php artisan owl-admin:make-admin --email=admin@admin.com --password=admin
 php artisan owl-admin:doctor --preset=admin
 php artisan owl-admin:smoke --preset=admin
 php artisan aub:fill-mobile-demo --force
+php artisan aub:fill-demo-portraits --force --seed-teachers
+php artisan aub:fill-news-covers --force
 ```
 
 `aub:fill-mobile-demo --force` fills published `Europe/Rome` weeks, lessons, and attendance so mobile apps are not empty. It does not change existing account passwords. Isolated week `2026-12-28` is left alone.
+
+`aub:fill-demo-portraits --force --seed-teachers` restores the 20 academy teachers and attaches missing `profile_photo` files (bundled age/gender portraits for demo people; randomuser for other teachers). Do not run `php artisan test` on production after `config:cache`.
+
+`aub:fill-news-covers --force` attaches catalog `news_image` covers to posts that have none. Existing covers are left alone.
 
 Test admin email is for development only.
 

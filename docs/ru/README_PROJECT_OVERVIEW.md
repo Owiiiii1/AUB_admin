@@ -32,7 +32,7 @@
 
 Flutter обязан использовать **только HTTPS API** (`/api/v1`, Sanctum Bearer). Контракт: [API.md](API.md). Passport / JWT нет.
 
-Production ядра: `/var/www/aub`, `https://aub.owlsolutions.net`. Папка **не** git-репозиторий. Для Tech Lead источник истины — GitHub.
+Production ядра: `/var/www/aub`, `https://staff.accademiaucraina.it`. Папка **не** git-репозиторий. Для Tech Lead источник истины — GitHub.
 
 ## Установленное ядро (web)
 
@@ -53,7 +53,9 @@ Production ядра: `/var/www/aub`, `https://aub.owlsolutions.net`. Папка 
 | `/statistics/logs` | Журнал CRUD | Не полный access audit |
 | `/profile` | Текущий пользователь | |
 | `/workplace` | Landing non-admin | Тонкая страница |
-| `/documents`, `/communication`, `/events`, `/archive`, `/costume-service` | Скоро будет | Заглушки |
+| `/documents` | Каталог типов (PDF-шаблон на типе) | Реализовано |
+| `/events`, `/archive`, `/costume-service` | Скоро будет | Заглушки |
+| `/communication` | Чат академии | Реализовано |
 | `/owl-admin/health` | Health kit | |
 
 **Снято с маршрутов и меню** (таблицы kit остались): `/orders`, `/services`, `/staff`, `/calendar`.
@@ -91,8 +93,8 @@ Productions / шоу — **поздний future** / discovery-needed (activity 
 | GitHub ядра | `Owiiiii1/AUB_admin` |
 | Production path | `/var/www/aub` (не git-репо) |
 | Web root | `/var/www/aub/public` |
-| Домен | `https://aub.owlsolutions.net` |
-| IP | `178.156.234.23` |
+| Домен | `https://staff.accademiaucraina.it` |
+| IP | `195.201.37.229` |
 | Linux user | `deploy` |
 | Admin kit | `owlsolutions/custom-admin-kit` v0.4.0 |
 

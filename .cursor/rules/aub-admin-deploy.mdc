@@ -7,8 +7,8 @@ alwaysApply: true
 
 Any change in `AUB_admin` is not finished until it is on production. No exceptions: docs, PHP, JS, migrations, config in git — all go to the server in the same task.
 
-- Production: `deploy@178.156.234.23:/var/www/aub`
-- Domain: `https://aub.owlsolutions.net`
+- Production: `deploy@195.201.37.229:/var/www/aub`
+- Domain: `https://staff.accademiaucraina.it`
 - After GitHub `git push origin main`, copy the changed files to `/var/www/aub` immediately.
 - Production is a file tree, not a git repo. Do not `git pull` on the server. Do not init git there.
 - Deploy only required files. Never upload Flutter apps, `.env`, `vendor`, `node_modules`, or storage runtime files. Never overwrite production `.env`.

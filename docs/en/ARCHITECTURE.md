@@ -34,7 +34,7 @@ Central academy kernel:
 |------|-------|
 | GitHub | [`Owiiiii1/AUB_admin`](https://github.com/Owiiiii1/AUB_admin) |
 | Production path | `/var/www/aub` |
-| Domain | `https://aub.owlsolutions.net` |
+| Domain | `https://staff.accademiaucraina.it` |
 | Application timezone | `Europe/Rome` via `APP_TIMEZONE` (`config/app.php`) |
 | Git on production | **No** `.git` as of 2026-09-07 — do not change that in docs-only tasks |
 

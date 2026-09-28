@@ -32,7 +32,7 @@ Create one digital platform that:
 
 Flutter must use **HTTPS API only** (`/api/v1`, Sanctum Bearer). Contract: [API.md](API.md). No Passport / JWT.
 
-Production of the core: `/var/www/aub` at `https://aub.owlsolutions.net`. That folder is **not** a git repository. Tech Lead uses GitHub as source of truth.
+Production of the core: `/var/www/aub` at `https://staff.accademiaucraina.it`. That folder is **not** a git repository. Tech Lead uses GitHub as source of truth.
 
 ## Installed core (web)
 
@@ -53,7 +53,9 @@ Login is at **`/`**. `/login` redirects to `/`.
 | `/statistics/logs` | CRUD activity log | Not a full access audit |
 | `/profile` | Current user | |
 | `/workplace` | Non-admin landing | Thin page |
-| `/documents`, `/communication`, `/events`, `/archive`, `/costume-service` | Coming soon | Placeholders |
+| `/documents` | Document catalog (PDF template per type) | Implemented |
+| `/events`, `/archive`, `/costume-service` | Coming soon | Placeholders |
+| `/communication` | Academy chat | Implemented |
 | `/owl-admin/health` | Kit health | |
 
 **Removed from routing/menu** (legacy kit tables remain): `/orders`, `/services`, `/staff`, `/calendar`.
@@ -91,8 +93,8 @@ Productions / shows are **late future** / discovery-needed (activity groups ≠ 
 | GitHub core | `Owiiiii1/AUB_admin` |
 | Production path | `/var/www/aub` (not a git repo) |
 | Web root | `/var/www/aub/public` |
-| Domain | `https://aub.owlsolutions.net` |
-| Server IP | `178.156.234.23` |
+| Domain | `https://staff.accademiaucraina.it` |
+| Server IP | `195.201.37.229` |
 | Linux user | `deploy` |
 | Admin kit | `owlsolutions/custom-admin-kit` v0.4.0 |
 

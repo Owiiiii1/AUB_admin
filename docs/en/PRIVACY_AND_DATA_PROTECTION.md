@@ -55,7 +55,7 @@ Student files are stored on the private `aub_private` disk via `SecureFileServic
 
 ### Implemented
 
-- HTTPS (`https://aub.owlsolutions.net`)
+- HTTPS (`https://staff.accademiaucraina.it`)
 - Session authentication (web)
 - Password hashing
 - CSRF (Laravel + Inertia)
