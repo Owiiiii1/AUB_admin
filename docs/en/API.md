@@ -37,6 +37,7 @@ Each user must be `is_active` and have the matching linked profile (`students.us
 | GET | `/me` | Bearer |
 | POST | `/me/photo` | Bearer |
 | PUT | `/me/password` | Bearer |
+| POST | `/account/deletion-request` | Bearer, `student` / `parent` / `teacher` |
 | GET | `/me/devices` | Bearer |
 | DELETE | `/me/devices/{id}` | Bearer |
 | POST | `/auth/logout` | Bearer |
@@ -204,6 +205,10 @@ Authenticated binary. Sanctum + `mobile.actor` + `FileAccessService`. Unauthenti
 ### POST `/me/photo`
 
 Parent and teacher only. Students can view the photo set in admin but cannot upload. Multipart field `photo` (jpeg/png/webp, max 5 MB). Stored as `profile_photo` on the actor via `SecureFileService`. Success returns `{ photo_url, photo: { file_uuid, url } }`. Invalid file is `422`. Student → `404`. The photo is optional. Admin CRM shows the parent photo on the student profile.
+
+### POST `/account/deletion-request`
+
+Body: `password` (required), `confirm` (must be accepted), `message` (optional). Staff accounts are rejected. A wrong password is a validation error. The call records a pending request and revokes the caller’s tokens. It does not anonymize academy records; an administrator completes that later. The JSON does not include another person’s data.
 
 ### PUT `/me/password`
 

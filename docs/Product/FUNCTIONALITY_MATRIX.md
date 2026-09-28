@@ -1,6 +1,6 @@
 # AUB Functionality Matrix
 
-Last updated: 2026-09-24
+Last updated: 2026-09-28
 Source of truth: actual codebase and deployed product state.
 
 This document describes what each user type can currently do in AUB.
@@ -428,6 +428,20 @@ A teacher app account is **not** staff. Website access exists only if the same p
 
 ---
 
+## Privacy and data protection
+
+Public pages, no login: `/privacy` and `/data-deletion` on the staff site. Italian is the reference text. English, Russian, and Ukrainian follow the same facts.
+
+| Capability | Status | Channel | Notes |
+|---|---|---|---|
+| Privacy policy | ✅ | Public web | Names Accademia Ucraina Ballet as controller. Address and privacy email stay blank until the academy provides them |
+| Public deletion request | ✅ | Public web | Email, role, optional message, two confirmations. Stores a pending request. Does not delete the account. Does not say whether the email exists |
+| In-app deletion request | ✅ | Student, parent, teacher app | Profile → Privacy e dati → Elimina account, and the header menu. Password and a second confirmation. Closes the current session. An administrator still has to complete it |
+| Admin review and completion | ✅ | Administration | Settings → Privacy. Shows what would be removed and what stays. Completion needs the delete permission and a confirmation |
+| Staff self-service deletion | 🚫 | — | Staff have no in-app deletion. An administrator can still complete a request that matches a staff login |
+
+What completion actually does is in `docs/Product/PRIVACY_AND_DELETION_AUDIT.md`. A parent request does not delete the child. A student request does not delete the student card, attendance, documents, or medical certificate. A teacher request does not delete lessons or attendance. Login, tokens, and that person’s own chat text are removed when the request is completed.
+
 ## Permissions / Restrictions (cross-cutting)
 
 | Rule | Status |
@@ -453,7 +467,7 @@ These are **not** implemented. Do not present them to the client as available.
 - Tasks / Problems
 - Final Assessment / Pagelle / report cards
 - Payments / invoices
-- Consent / GDPR product (signed versions, records) — storage categories exist only as foundation
+- Consent records (signed versions) — the public privacy pages and account-deletion requests exist; signed consent records do not
 - Event tickets, costume payments, and photo-gallery contents (admin and student Eventi are otherwise usable)
 - Costume service
 - Teacher daily check-in (GPS snapshot + geofence; decided, not built)

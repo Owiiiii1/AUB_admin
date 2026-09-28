@@ -2,6 +2,30 @@
 
 ## Task
 
+Public privacy policy, public deletion requests, and in-app account deletion.
+
+## Delivered
+
+- `/privacy` and `/data-deletion` are public. Italian is the reference text
+- A public form stores a pending request and does not delete the account
+- The app path is Profile → Privacy e dati → Elimina account for student, parent, and teacher
+- An administrator completes the request. Parent completion does not delete the child. Student and teacher history that has no defined retention period stays
+
+FUNCTIONALITY_MATRIX updated: yes
+
+## Previous task
+
+Change the mobile application id to it.accademiaucraina.aub.
+
+## Delivered
+
+- Android applicationId, iOS and macOS bundle id, and the Linux application id are `it.accademiaucraina.aub`
+- The previous id `com.owlsolutions.aub` is no longer the app id
+
+FUNCTIONALITY_MATRIX updated: no. The identifier changed. What each role can do did not.
+
+## Previous task
+
 Move production to staff.accademiaucraina.it.
 
 ## Delivered

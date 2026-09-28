@@ -1,6 +1,6 @@
 # AUB — Privacy and Data Protection
 
-> Technical/project notes, **not** final legal text. Counsel must review before App Store / public policies.
+> Technical/project notes, **not** the public legal text. The public pages are `/privacy` and `/data-deletion`. The data inventory and the deletion rules are in `docs/Product/PRIVACY_AND_DELETION_AUDIT.md`. Counsel still has to supply the registered address, privacy email, and retention periods. This file is older than the app and is not the policy.
 
 AUB processes **personal data** and **children’s data**. Interfaces: web admin, staff workplaces, future Flutter (`AUB_app`) via HTTPS API (API not built).
 

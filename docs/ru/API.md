@@ -37,6 +37,7 @@ Authorization: Bearer <token>
 | GET | `/me` | Bearer |
 | POST | `/me/photo` | Bearer |
 | PUT | `/me/password` | Bearer |
+| POST | `/account/deletion-request` | Bearer, `student` / `parent` / `teacher` |
 | GET | `/me/devices` | Bearer |
 | DELETE | `/me/devices/{id}` | Bearer |
 | POST | `/auth/logout` | Bearer |
@@ -204,6 +205,10 @@ Actor-aware whitelist. Никогда не включает password hash, `reme
 ### POST `/me/photo`
 
 Любой mobile-актор parent или teacher. Студент фото только смотрит (его задаёт админка). Multipart-поле `photo` (jpeg/png/webp, до 5 MB). Пишется как `profile_photo` через `SecureFileService`. Успех: `{ photo_url, photo: { file_uuid, url } }`. Неверный файл → `422`. Ученик → `404`. Фото необязательно. В админке фото родителя видно в профиле студента.
+
+### POST `/account/deletion-request`
+
+Тело: `password` (обязателен), `confirm` (должен быть принят), `message` (необязательно). Учётные записи персонала отклоняются. Неверный пароль — ошибка валидации. Вызов записывает запрос со статусом pending и отзывает токены вызывающего. Карточки академии при этом не анонимизируются: это делает администратор позже. В JSON нет данных другого человека.
 
 ### PUT `/me/password`
 
