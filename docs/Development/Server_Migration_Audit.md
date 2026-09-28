@@ -589,7 +589,7 @@ Completed 2026-09-28. Secrets, `APP_KEY`, and database passwords are not recorde
 9. Flutter switched: **YES**. Default API base URL is the new host. The app was not published.
 10. Deploy rule switched: **YES**. `.cursor/rules/aub-admin-deploy.mdc` points at `deploy@195.201.37.229:/var/www/aub` and `https://staff.accademiaucraina.it`.
 11. Remaining blockers: none for serving the new host. Staff must sign in again on the new hostname. Authenticated browser clicks were not done because no staff password was used. The old host stays in maintenance until an explicit decision to bring it back or remove it.
-12. Backend commit SHA: filled in after the commit.
-13. Flutter commit SHA: filled in after the commit.
+12. Backend commit SHA: `e666f3ad8da396028fa20a6300a0d394ce8bc7ef`
+13. Flutter commit SHA: `9689f269c15af1a8a9f4ad905593d759fbb9c03c`
 
 Also done: 2 GB swap, `.env` mode 640 `deploy:www-data`, MySQL only on `127.0.0.1`, UFW allows 22/80/443, Fail2ban active, cron `schedule:run` for `deploy`, no queue worker, `PermitRootLogin no`, password SSH disabled after a fresh deploy key login succeeded. Composer 2.10.3 and Node 20.20.2 are on the default PATH via `/usr/local/bin`.
